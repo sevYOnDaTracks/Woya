@@ -27,12 +27,50 @@
     <article *ngFor="let s of filtered"
              class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition">
 
-      <!-- Image -->
-      <div class="h-40 bg-[#FFE3CC] flex items-center justify-center text-[#FF7A00] text-sm"
-           [style.background-image]="s.coverUrl ? 'url(' + s.coverUrl + ')' : ''"
-           [class.bg-cover]="!!s.coverUrl" [class.bg-center]="!!s.coverUrl">
-        <span *ngIf="!s.coverUrl">Illustration</span>
-      </div>
+      <!-- Image CLiquable -->
+<div class="relative h-40 rounded-t-2xl overflow-hidden cursor-pointer select-none"
+     (click)="goToDetails(s.id!)">
+
+<img
+  [src]="getCurrentImage(s)"
+  class="w-full h-full object-cover transition-transform duration-200"
+  [style.transform]="'translateX(' + (translateX[s.id!] || 0) + 'px)'"
+  (touchstart)="onTouchStart(s, $event)"
+  (touchmove)="onTouchMove(s, $event)"
+  (touchend)="onTouchEnd(s)"
+/>
+
+
+
+
+<!-- Flèche gauche (uniquement si +1 image) -->
+  <button
+    *ngIf="getImages(s).length > 1"
+    (click)="prevImage(s, $event)"
+    class="absolute top-1/2 left-2 -translate-y-1/2
+           bg-black/20 hover:bg-black/40 text-white 
+           rounded-full w-6 h-6 flex items-center justify-center
+           transition backdrop-blur-sm">
+    <span class="text-xs">←</span>
+  </button>
+
+  <!-- Flèche droite -->
+  <button
+    *ngIf="getImages(s).length > 1"
+    (click)="nextImage(s, $event)"
+    class="absolute top-1/2 right-2 -translate-y-1/2
+           bg-black/20 hover:bg-black/40 text-white
+           rounded-full w-6 h-6 flex items-center justify-center
+           transition backdrop-blur-sm">
+    <span class="text-xs">→</span>
+  </button>
+
+
+</div>
+
+
+
+
 
       <!-- Contenu -->
       <div class="p-4">
@@ -53,22 +91,54 @@
           <span class="font-semibold" *ngIf="s.price">{{ s.price | number:'1.0-0' }} FCFA</span>
         </div>
 
+        <!-- 🔥 BOUTONS -->
         <div class="mt-4 flex gap-2">
+
+                      <!-- Appeler -->
+          <a
+  (click)="$event.stopPropagation()"
+  [href]="'tel:' + s.contact"
+  class="flex-1 flex items-center justify-center px-3 py-2 rounded-xl border border-[#FF7A00] text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white transition">
+
+  <!-- Icône téléphone -->
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11 19a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.09 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.81.37 1.6.72 2.34a2 2 0 0 1-.45 2.18L8.09 9.91a16 16 0 0 0 6 6l1.67-1.33a2 2 0 0 1 2.18-.45 11.36 11.36 0 0 1 2.34.72A2 2 0 0 1 22 16.92z"/>
+  </svg>
+
+</a>
+          <!-- Consulter -->
+          <button
+  class="flex-1 flex items-center justify-center px-3 py-2 rounded-xl bg-[#FF7A00] text-white hover:bg-[#e66d00] transition"
+  (click)="goToDetails(s.id!)"
+  (mousedown)="$event.stopPropagation()"
+>
+
+  <!-- Icone Voir -->
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+
+</button>
+
 
           <!-- WhatsApp -->
           <a
-            [href]="phoneToWhatsApp(s.contact)"
-            target="_blank"
-            class="flex-1 text-center px-3 py-2 rounded-xl bg-[#3BAF4A] text-white hover:opacity-90 transition">
-            WhatsApp
-          </a>
+  (click)="$event.stopPropagation()"
+  [href]="phoneToWhatsApp(s.contact)"
+  target="_blank"
+  class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#3BAF4A] text-white hover:opacity-90 transition">
 
-          <!-- Appeler -->
-          <a
-            [href]="'tel:' + s.contact"
-            class="flex-1 text-center px-3 py-2 rounded-xl border border-[#FF7A00] text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white transition">
-            Appeler
-          </a>
+  <!-- Icône WhatsApp -->
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 32 32" fill="white">
+    <path d="M16.027 3c-7.17 0-13 5.832-13 13.004 0 2.289.598 4.53 1.732 6.504L3 29l6.676-1.732a12.944 12.944 0 006.351 1.636h.002C23.196 28.904 29 23.07 29 16.002 29 8.832 23.197 3 16.027 3zm7.527 18.23c-.316.884-1.83 1.695-2.503 1.803-.642.105-1.47.152-2.375-.148-.548-.176-1.253-.407-2.157-.794-3.793-1.649-6.266-5.497-6.456-5.747-.19-.252-1.54-2.05-1.54-3.91 0-1.86.974-2.775 1.318-3.155.345-.38.753-.476 1.006-.476h.72c.23 0 .54-.086.845.646.316.762 1.072 2.625 1.165 2.816.092.19.153.413.03.665-.123.253-.185.413-.365.634-.19.222-.4.494-.57.664-.19.19-.387.397-.166.78.222.38.985 1.61 2.118 2.61 1.46 1.302 2.69 1.707 3.073 1.897.383.19.605.16.826-.096.222-.254.95-1.11 1.206-1.49.255-.381.508-.318.845-.19.345.127 2.18 1.028 2.556 1.214.377.191.63.286.723.445.094.16.094.93-.222 1.814z"/>
+  </svg>
+
+</a>
+
+
+
+
 
         </div>
       </div>
@@ -76,7 +146,6 @@
 
   </div>
 
-  <!-- AUCUN RESULTAT -->
   <div *ngIf="filtered.length === 0" class="text-center text-gray-600 mt-10">
     Aucun service ne correspond à ta recherche.
   </div>

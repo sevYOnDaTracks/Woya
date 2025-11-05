@@ -8,4 +8,5 @@ export interface WoyaService {
   contact: string;
   createdAt: number;
   coverUrl?: string;
+  extraImages?: string[];
 }
