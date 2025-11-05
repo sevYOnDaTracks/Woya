@@ -1,0 +1,11 @@
+.input {
+  @apply border rounded-xl px-4 py-3 bg-white outline-none w-full;
+}
+
+.btn-primary {
+  @apply w-full px-4 py-3 bg-[#FF7A00] text-white rounded-xl font-semibold text-lg hover:bg-[#e66d00] transition;
+}
+
+.btn-social {
+  @apply w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-medium transition;
+}
