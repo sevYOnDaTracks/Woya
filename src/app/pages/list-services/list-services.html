@@ -57,7 +57,7 @@
 
           <!-- WhatsApp -->
           <a
-            [href]="'https://wa.me/' + s.contact.replace(/[^0-9]/g, '')"
+            [href]="phoneToWhatsApp(s.contact)"
             target="_blank"
             class="flex-1 text-center px-3 py-2 rounded-xl bg-[#3BAF4A] text-white hover:opacity-90 transition">
             WhatsApp
