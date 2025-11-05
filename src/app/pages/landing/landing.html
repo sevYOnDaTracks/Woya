@@ -1,0 +1,43 @@
+<div class="min-h-screen flex flex-col bg-gray-50">
+
+  <!-- NAVBAR -->
+  <header class="p-4 flex justify-between items-center bg-white shadow-sm">
+    <h1 class="text-2xl font-bold text-blue-600">Woya</h1>
+    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm active:scale-95 transition">
+      Se connecter
+    </button>
+  </header>
+
+  <!-- HERO -->
+  <section class="flex-1 flex flex-col justify-center items-center text-center px-6 py-12">
+    <h2 class="text-3xl font-extrabold mb-4 leading-tight">
+      Trouve des services près de chez toi 🏡
+    </h2>
+    <p class="text-gray-600 mb-6 max-w-sm">
+      Jardinage, ménage, cours à domicile... Demande de l’aide en 2 minutes.
+    </p>
+
+    <button routerLink="/services"
+      class="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg active:scale-95 transition shadow-lg">
+      Explorer les services
+    </button>
+  </section>
+
+  <!-- CATÉGORIES -->
+  <section class="px-6 pb-10">
+    <h3 class="text-lg font-semibold mb-4">Catégories populaires</h3>
+
+    <div class="grid grid-cols-2 gap-4 text-center">
+      <div class="p-4 bg-white rounded-xl shadow-sm">Jardinage</div>
+      <div class="p-4 bg-white rounded-xl shadow-sm">Ménage</div>
+      <div class="p-4 bg-white rounded-xl shadow-sm">Cours</div>
+      <div class="p-4 bg-white rounded-xl shadow-sm">Transport</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="p-4 text-center text-gray-500 text-sm">
+    © 2025 Woya • Fait avec ❤️ en Côte d'Ivoire
+  </footer>
+
+</div>
