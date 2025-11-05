@@ -1,12 +1,12 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: "TA_CLE_API_ICI",
-    authDomain: "woya.firebaseapp.com",
-    projectId: "woya",
-    storageBucket: "woya.appspot.com",
-    messagingSenderId: "TON_ID_ENVOYEUR",
-    appId: "TON_APP_ID",
-    measurementId: "TON_MEASUREMENT_ID"
+    apiKey: "AIzaSyBzmyCE92in6ZROwDt_37Y2ALvupo5LI8k",
+    authDomain: "woya-93d68.firebaseapp.com",
+    projectId: "woya-93d68",
+    storageBucket: "woya-93d68.firebasestorage.app",
+    messagingSenderId: "48359088367",
+    appId: "1:48359088367:web:9c162df35286789b85bb1a",
+    measurementId: "G-Z8RM77548W"
   }
 };

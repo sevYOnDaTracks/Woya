@@ -3,11 +3,12 @@ import { Component } from '@angular/core';
 import { SharedImports } from '../../shared/shared-imports';
 import { Services } from '../../core/services/services';
 import { WoyaService } from '../../core/models/service.model';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-list-services',
   standalone: true,
-  imports: [...SharedImports],
+  imports: [...SharedImports, RouterLink],
   templateUrl: './list-services.html',
 })
 export default class ListServices implements OnInit {

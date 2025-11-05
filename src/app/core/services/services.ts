@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { collection, addDoc, getDocs, query, orderBy, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { firebaseServices } from '../../app.config';
 import { WoyaService } from '../models/service.model';
 
@@ -16,7 +16,11 @@ export class Services {
     return snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
   }
 
-  async create(data: Omit<WoyaService, 'id' | 'createdAt'>) {
-    return addDoc(this.col, { ...data, createdAt: Date.now() });
+  create(data: any) {
+    const col = collection(this.db, 'services');
+    return addDoc(col, {
+      ...data,
+      createdAt: serverTimestamp(),
+    });
   }
 }

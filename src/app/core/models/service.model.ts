@@ -4,7 +4,7 @@ export interface WoyaService {
   description: string;
   category: string;
   city: string;
-  price?: number;
+  price?: number | null;
   contact: string;
   createdAt: number;
   coverUrl?: string;
