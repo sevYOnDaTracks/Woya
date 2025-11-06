@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { firebaseServices } from '../../app.config';
-
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -26,8 +26,29 @@ export class AuthService {
   }
 
   googleLogin() {
-    return signInWithPopup(firebaseServices.auth, new GoogleAuthProvider());
-  }
+  return signInWithPopup(firebaseServices.auth, new GoogleAuthProvider())
+    .then(async (cred) => {
+
+      const userRef = doc(firebaseServices.db, "users", cred.user.uid);
+      const snap = await getDoc(userRef);
+
+      if (!snap.exists()) {
+        // Première connexion → on crée un user "propre"
+        const fullName = cred.user.displayName || "";
+        const firstname = fullName.split(" ")[0] ?? "";
+
+        await setDoc(userRef, {
+          uid: cred.user.uid,
+          firstname,
+          email: cred.user.email,
+          photoURL: cred.user.photoURL,
+          provider: "google",
+          createdAt: new Date()
+        });
+      }
+    });
+}
+
 
   facebookLogin() {
     return signInWithPopup(firebaseServices.auth, new FacebookAuthProvider());

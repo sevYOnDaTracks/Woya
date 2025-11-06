@@ -1,22 +1,13 @@
-<div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-6">
-  <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-lg border">
+<div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4 py-8 -mt-32 md:-mt-10
+">
 
-    <h1 class="text-3xl font-bold text-center text-[#1A1A1A] mb-6">
-      Connexion
+  <div class="bg-white w-full max-w-md p-12 rounded-2xl shadow-lg border ">
+
+    <h1 class="text-3xl font-bold text-center text-[#1A1A1A] mb-10">
+      Akwaba !
     </h1>
 
-    <input [(ngModel)]="email" type="email" placeholder="Adresse email"
-           class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
 
-    <input [(ngModel)]="password" type="password" placeholder="Mot de passe"
-           class="w-full border rounded-xl px-4 py-3 mb-4 outline-none" />
-
-    <button (click)="login()" [disabled]="loading"
-      class="w-full py-3 bg-[#FF7A00] text-white rounded-xl font-semibold hover:bg-[#e66d00] transition">
-      {{ loading ? 'Connexion...' : 'Se connecter' }}
-    </button>
-
-    <div class="my-5 text-center text-gray-500 text-sm">ou</div>
 
     <button (click)="loginWithGoogle()"
       class="w-full py-3 border rounded-xl flex justify-center items-center gap-2 hover:bg-gray-50 transition">
@@ -24,13 +15,28 @@
       Continuer avec Google
     </button>
 
-    <button (click)="loginWithFacebook()"
+   <!-- <button (click)="loginWithFacebook()"
   class="w-full py-3 mt-2 border rounded-xl flex justify-center items-center gap-2 hover:bg-gray-50 transition">
   
   <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" class="w-5" />
 
   Continuer avec Facebook
-</button>
+</button> --> 
+
+        <div class="my-5 text-center text-gray-500 text-sm">ou</div>
+
+    <input [(ngModel)]="email" type="email" placeholder="Adresse email"
+           class="w-full border rounded-xl px-4 py-3 mb-4 outline-none" />
+
+    <input [(ngModel)]="password" type="password" placeholder="Mot de passe"
+           class="w-full border rounded-xl px-4 py-3 mb-6 outline-none" />
+
+    <button (click)="login()" [disabled]="loading"
+      class="w-full py-3 bg-[#FF7A00] text-white rounded-xl font-semibold hover:bg-[#e66d00] transition">
+      {{ loading ? 'Connexion...' : 'Se connecter' }}
+    </button>
+
+
 
 
     <p class="mt-6 text-center text-sm text-gray-600">

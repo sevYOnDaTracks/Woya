@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth';
+import { FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
+import { firebaseServices } from '../../../app.config';
 
 @Component({
   standalone: true,
@@ -15,7 +17,7 @@ export default class Login {
   password = '';
   loading = false;
 
-  constructor(private auth: AuthService) {}
+  constructor(private auth: AuthService , private router : Router) {}
 
   async login() {
     this.loading = true;
@@ -28,11 +30,20 @@ export default class Login {
     this.loading = false;
   }
 
-  loginWithGoogle() {
-    this.auth.googleLogin();
+
+ loginWithGoogle() {
+    this.auth.googleLogin().then((result) => {
+      console.log(result);
+      this.router.navigate(['/services/']);
+    }).catch((error) => {
+      // Handle login error
+    });
   }
 
-  loginWithFacebook() {
-    this.auth.facebookLogin();
-  }
+async loginWithFacebook() {
+  const provider = new FacebookAuthProvider();
+  const cred = await signInWithPopup(firebaseServices.auth, provider);
+  return cred.user; // ✅ renvoie le user
+}
+
 }

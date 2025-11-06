@@ -1,0 +1,11 @@
+.menu-item {
+  @apply text-lg font-semibold text-gray-700 hover:text-[#FF7A00] transition;
+}
+
+.active {
+  @apply text-[#FF7A00];
+}
+
+.active-btn {
+  @apply bg-[#FF7A00] text-white;
+}
