@@ -22,10 +22,10 @@
   </div>
 
   <!-- GRILLE DE CARTES SERVICES -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
     <article *ngFor="let s of filtered"
-             class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition">
+             class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col h-full">
 
       <!-- Image CLiquable -->
 <div class="relative h-40 rounded-t-2xl overflow-hidden cursor-pointer select-none"
@@ -73,7 +73,7 @@
 
 
       <!-- Contenu -->
-      <div class="p-4">
+      <div class="p-4 flex flex-col flex-1 justify-between">
 
         <div class="flex items-center justify-between">
           <h3 class="font-bold text-lg text-[#1A1A1A] line-clamp-1">{{ s.title }}</h3>
