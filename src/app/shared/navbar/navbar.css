@@ -1,5 +1,5 @@
 .menu-item {
-  @apply text-lg font-semibold text-gray-700 hover:text-[#FF7A00] transition;
+  @apply inline-flex items-center gap-2 text-lg font-semibold text-gray-700 hover:text-[#FF7A00] transition;
 }
 
 .active {

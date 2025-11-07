@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -47,7 +47,7 @@ export default class UserInfo implements OnInit, OnDestroy {
   private sub?: Subscription;
   user: any = null;
 
-  constructor(private auth: AuthStore, private router: Router) {}
+  constructor(private auth: AuthStore, private router: Router, private location: Location) {}
 
   ngOnInit() {
     this.sub = this.auth.user$.subscribe(user => {
@@ -132,6 +132,15 @@ export default class UserInfo implements OnInit, OnDestroy {
 
   goToLogin() {
     this.router.navigate(['/login']);
+  }
+
+  goBack() {
+    const canGoBack = typeof window !== 'undefined' ? window.history.length > 1 : false;
+    if (canGoBack) {
+      this.location.back();
+    } else {
+      this.router.navigate(['/services']);
+    }
   }
 
   onSelectPhoto(event: Event) {

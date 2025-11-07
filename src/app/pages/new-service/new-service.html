@@ -1,6 +1,8 @@
 <div class="max-w-xl mx-auto px-6 py-8 bg-white rounded-2xl shadow-sm mt-6">
-     <button routerLink="/services" class="text-sm text-gray-500 hover:text-black mb-4 flex items-center gap-1">
-    ← Retour aux services
+  <button type="button"
+          (click)="goBack()"
+          class="text-sm text-gray-500 hover:text-black mb-4 flex items-center gap-1">
+    Retour
   </button>
   <h2 class="text-2xl font-bold mb-6 text-[#FF7A00]">
     {{ editing ? 'Mettre à jour un service' : 'Publier un service' }}
@@ -10,10 +12,6 @@
 
     <input [(ngModel)]="form.title" placeholder="Titre du service"
            class="border rounded-xl px-4 py-3 outline-none" />
-
-    <textarea [(ngModel)]="form.description" rows="4"
-              placeholder="Décris ton service"
-              class="border rounded-xl px-4 py-3 outline-none"></textarea>
 
     <select [(ngModel)]="form.category"
             class="border rounded-xl px-4 py-3 outline-none">
@@ -28,6 +26,10 @@
 
     <input [(ngModel)]="form.contact" placeholder="Numéro WhatsApp / Téléphone"
            class="border rounded-xl px-4 py-3 outline-none" />
+
+           <textarea [(ngModel)]="form.description" rows="4"
+              placeholder="Décris ton service"
+              class="border rounded-xl px-4 py-3 outline-none"></textarea>
   </div>
 
   <h2 class="text-2xl mt-4 font-bold mb-6 text-[#FF7A00]">Photos du service</h2>

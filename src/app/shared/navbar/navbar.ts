@@ -15,6 +15,7 @@ export class Navbar implements OnInit, OnDestroy {
   isMenuOpen = false;
   unreadCount = 0;
   userMenuOpen = false;
+  logoutConfirmOpen = false;
 
   private currentUid: string | null = null;
   private authSub?: Subscription;
@@ -53,13 +54,33 @@ export class Navbar implements OnInit, OnDestroy {
     this.isMenuOpen = !this.isMenuOpen;
     if (this.isMenuOpen) {
       this.userMenuOpen = false;
+      this.logoutConfirmOpen = false;
+    }
+    if (!this.isMenuOpen) {
+      this.logoutConfirmOpen = false;
     }
   }
 
-  logout() {
+  requestLogout() {
+    this.logoutConfirmOpen = true;
+    this.userMenuOpen = false;
+    this.isMenuOpen = false;
+  }
+
+  confirmLogout() {
+    this.performLogout();
+  }
+
+  cancelLogout() {
+    this.logoutConfirmOpen = false;
+  }
+
+  private performLogout() {
+    if (!this.logoutConfirmOpen) return;
     this.auth.logout();
     this.closeUserMenu();
     this.isMenuOpen = false;
+    this.logoutConfirmOpen = false;
     this.router.navigate(['/']);
   }
 
@@ -92,6 +113,7 @@ export class Navbar implements OnInit, OnDestroy {
 
   closeUserMenu() {
     this.userMenuOpen = false;
+    this.logoutConfirmOpen = false;
   }
 
   @HostListener('document:click', ['$event'])

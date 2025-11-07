@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 // ✅ Firebase
@@ -48,7 +48,8 @@ export default class NewService implements OnInit {
     private api: Services,
     private router: Router,
     private auth: AuthStore,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private location: Location
   ) {}
 
   async ngOnInit() {
@@ -63,6 +64,15 @@ export default class NewService implements OnInit {
       this.editing = true;
       this.serviceId = serviceId;
       await this.loadExistingService(serviceId, currentUser.uid);
+    }
+  }
+
+  goBack() {
+    const canGoBack = typeof window !== 'undefined' ? window.history.length > 1 : false;
+    if (canGoBack) {
+      this.location.back();
+    } else {
+      this.router.navigate(['/services']);
     }
   }
 

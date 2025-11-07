@@ -7,23 +7,25 @@ import Login from './pages/auth/login/login';
 import UserInfo from './pages/user-info/user-info';
 import MyServices from './pages/my-services/my-services';
 import MessagesInbox from './pages/messages/messages';
+import { requireAuthGuard } from './core/store/auth.guard';
 
 export const routes: Routes = [
     { path: '', component: Landing },
     { path: 'services', component: ListServices },
-    { path: 'services/new', component: NewService },
-    { path: 'services/:id/edit', component: NewService },
+    { path: 'services/new', component: NewService, canActivate: [requireAuthGuard] },
+    { path: 'services/:id/edit', component: NewService, canActivate: [requireAuthGuard] },
     {
   path: 'login', component : Login
 },
 {
   path: 'register',component :Register
 },
-    { path: 'mes-services', component: MyServices },
-    { path: 'mon-compte', component: UserInfo },
-    { path: 'messagerie', component: MessagesInbox },
+    { path: 'mes-services', component: MyServices, canActivate: [requireAuthGuard] },
+    { path: 'mon-compte', component: UserInfo, canActivate: [requireAuthGuard] },
+    { path: 'messagerie', component: MessagesInbox, canActivate: [requireAuthGuard] },
     {
         path: 'messagerie/:id',
+        canActivate: [requireAuthGuard],
             loadComponent: () =>
                 import('./pages/messages/conversation').then(c => c.default)
     },

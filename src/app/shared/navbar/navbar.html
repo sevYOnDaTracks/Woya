@@ -10,14 +10,23 @@
     <a routerLink="/"
        routerLinkActive="active"
        [routerLinkActiveOptions]="{ exact: true }"
-       class="menu-item">
-      Accueil
+       aria-label="Accueil"
+       title="Accueil"
+       class="menu-item p-2 rounded-xl">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v8.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5Z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 20.5V12h6v8.5" />
+      </svg>
     </a>
 
     <a routerLink="/services"
        routerLinkActive="active"
-       class="menu-item">
-      Services
+       aria-label="Services"
+       title="Services"
+       class="menu-item p-2 rounded-xl">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h6v6H4zM14 5h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z" />
+      </svg>
     </a>
 
     <!-- Si NON connecté -->
@@ -35,25 +44,23 @@
 
     <!-- Si connecté -->
     <ng-container *ngIf="auth.user$ | async as user">
-      <!--
       <a routerLink="/mes-services"
          routerLinkActive="active"
-         class="menu-item">
-        Mes services
-      </a>
-      -->
-
-      <a routerLink="/mes-services"
-         routerLinkActive="active"
-         class="menu-item">
-        Mes services
+         aria-label="Mes services"
+         title="Mes services"
+         class="menu-item p-2 rounded-xl">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 9h16a1 1 0 0 1 1 1v8.5A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5V10a1 1 0 0 1 1-1Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h18" />
+        </svg>
       </a>
 
       <a routerLink="/messagerie"
          aria-label="Messagerie"
          routerLinkActive="active"
          class="menu-item inline-flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="m3 8 8.4 6.3a1 1 0 0 0 1.2 0L21 8" />
         </svg>
@@ -65,7 +72,7 @@
 
       <a routerLink="/services/new"
          class="px-4 py-2 bg-[#FF7A00] text-white rounded-xl text-sm hover:bg-[#e66d00] transition">
-        Publier un service
+        + Publier un service
       </a>
 
       <div class="relative user-menu" (click)="$event.stopPropagation()">
@@ -82,22 +89,34 @@
         </button>
 
         <div *ngIf="userMenuOpen"
-             class="absolute right-0 mt-3 w-52 bg-white rounded-2xl border border-[#FFE0BF] shadow-lg py-2">
+             class="absolute right-0 mt-3 w-56 bg-white rounded-2xl border border-[#FFE0BF] shadow-lg py-2">
           <a routerLink="/mon-compte"
              routerLinkActive="active"
              (click)="closeUserMenu()"
-             class="block px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
-            Mon compte
+             class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 0c-4 0-7 2.5-7 5v1h14v-1c0-2.5-3-5-7-5Z" />
+            </svg>
+            <span>Mon compte</span>
           </a>
           <a routerLink="/mes-services"
              routerLinkActive="active"
              (click)="closeUserMenu()"
-             class="block px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
-            Mes services
+             class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 9h16a1 1 0 0 1 1 1v8.5A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5V10a1 1 0 0 1 1-1Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h18" />
+            </svg>
+            <span>Mes services</span>
           </a>
-          <button (click)="logout()"
-                  class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl mx-2">
-            Déconnexion
+          <button (click)="requestLogout()"
+                  class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl mx-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h-4a4 4 0 0 1 0-8h4" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 12h10m0 0-3-3m3 3-3 3" />
+            </svg>
+            <span>Déconnexion</span>
           </button>
         </div>
       </div>
@@ -118,27 +137,53 @@
 
 
 <!-- MENU SLIDE MOBILE -->
-<div class="fixed top-0 right-0 h-full w-64 bg-white shadow-xl z-[9998] transform transition-transform duration-300 md:hidden"
+<div class="fixed top-0 right-0 h-full w-64 bg-white shadow-xl z-[9998] transform transition-transform duration-300 md:hidden flex flex-col"
      [class.translate-x-full]="!isMenuOpen">
 
   <div class="p-4 flex justify-end">
     <button (click)="toggleMenu()" class="text-gray-500">✖</button>
   </div>
 
-  <div class="flex pt-7 flex-col gap-4 px-6">
+  <div class="flex-1 pt-7 flex flex-col gap-4 px-6 overflow-y-auto">
 
      <!-- ✅ Si connecté -->
     <ng-container *ngIf="auth.user$ | async as user">
 
 <img [src]="user.photoURL || 'assets/icone.png'"
-     class="w-10 h-10 rounded-full border object-cover">
+     class="w-16 h-16 rounded-full border-2 border-[#FFE0BF] object-cover mx-auto">
 
+
+     <a routerLink="/" 
+       routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
+       (click)="toggleMenu()" 
+       class="text-lg font-semibold flex items-center gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v8.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5Z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 20.5V12h6v8.5" />
+      </svg>
+      <span>Accueil</span>
+    </a>
+
+    <a routerLink="/services" 
+       routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
+       (click)="toggleMenu()" 
+       class="text-lg font-semibold flex items-center gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h6v6H4zM14 5h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z" />
+      </svg>
+      <span>Services</span>
+    </a>
 
       <a routerLink="/mes-services"
          routerLinkActive="text-[#FF7A00]"
          (click)="toggleMenu()"
-         class="text-lg font-semibold">
-        Mes services
+         class="text-lg font-semibold flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 9h16a1 1 0 0 1 1 1v8.5A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5V10a1 1 0 0 1 1-1Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h18" />
+        </svg>
+        <span>Mes services</span>
       </a>
 
       <a routerLink="/messagerie"
@@ -146,44 +191,34 @@
          routerLinkActive="text-[#FF7A00]"
          (click)="toggleMenu()"
          class="text-lg font-semibold flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="m3 8 8.4 6.3a1 1 0 0 0 1.2 0L21 8" />
         </svg>
+        <span>Messagerie</span>
         <span *ngIf="unreadCount > 0"
               class="ml-1 inline-flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full min-w-[1.5rem] px-2 py-0.5 leading-none">
           {{ unreadCount > 10 ? '10+' : unreadCount }}
         </span>
       </a>
 
-      <a routerLink="/services/new" 
-         (click)="toggleMenu()"
-         class="text-lg font-semibold text-white bg-[#FF7A00] text-center rounded-2xl py-2">
-        Publier un service
-      </a>
+
 
       <a routerLink="/mon-compte" 
          routerLinkActive="text-[#FF7A00]"
          [routerLinkActiveOptions]="{ exact: true }"
          (click)="toggleMenu()" 
-         class="text-lg font-semibold">
-        Mon compte
+         class="text-lg font-semibold flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 0c-4 0-7 2.5-7 5v1h14v-1c0-2.5-3-5-7-5Z" />
+        </svg>
+        <span>Mon compte</span>
       </a>
 
     <!-- LIENS AVEC COULEUR ACTIVE -->
-    <a routerLink="/" 
-       routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
-       (click)="toggleMenu()" 
-       class="text-lg font-semibold">
-      Accueil
-    </a>
+    
 
-    <a routerLink="/services" 
-       routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
-       (click)="toggleMenu()" 
-       class="text-lg font-semibold">
-      Services
-    </a>
+    
 
     <!-- ✅ Si NON connecté -->
     <a *ngIf="!(auth.user$ | async)" 
@@ -202,17 +237,58 @@
       S'inscrire
     </a>
 
+          <a routerLink="/services/new" 
+         (click)="toggleMenu()"
+         class="text-lg font-semibold text-white bg-[#FF7A00] text-center rounded-2xl py-2 flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
+        </svg>
+        <span>Publier un service</span>
+      </a>
 
-          <button (click)="logout()" 
-              class="text-left text-red-500 font-semibold">
-        Déconnexion
-      </button>
-
-   
     </ng-container>
 
+  </div>
+
+  <div class="px-6 pb-8 pt-4 border-t border-[#FFE0BF]">
+    <button (click)="requestLogout()" 
+            class="w-full text-left text-red-500 font-semibold flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h-4a4 4 0 0 1 0-8h4" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12h10m0 0-3-3m3 3-3 3" />
+      </svg>
+      <span>Déconnexion</span>
+    </button>
   </div>
 </div>
 
 <!-- BACKDROP -->
 <div *ngIf="isMenuOpen" (click)="toggleMenu()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9997] md:hidden"></div>
+
+<!-- LOGOUT MODAL -->
+<div *ngIf="logoutConfirmOpen"
+     (click)="cancelLogout()"
+     class="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
+  <div class="bg-white rounded-3xl shadow-xl border border-[#FFE0BF] max-w-sm w-full p-6 text-center"
+       (click)="$event.stopPropagation()">
+    <div class="mx-auto mb-4 w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M12 5a7 7 0 1 1-7 7 7 7 0 0 1 7-7Z" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-semibold text-[#1A1A1A]">Se déconnecter ?</h3>
+    <p class="text-sm text-gray-500 mt-2">Tu seras redirigé vers l’écran d’accueil et devras te reconnecter pour poursuivre.</p>
+    <div class="mt-6 flex flex-col gap-3">
+      <button type="button"
+              (click)="confirmLogout()"
+              class="w-full px-4 py-3 rounded-2xl bg-red-500 text-white font-semibold hover:bg-red-600 transition">
+        Oui, me déconnecter
+      </button>
+      <button type="button"
+              (click)="cancelLogout()"
+              class="w-full px-4 py-3 rounded-2xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition">
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>
