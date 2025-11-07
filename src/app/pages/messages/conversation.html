@@ -1,0 +1,53 @@
+<section class="min-h-screen bg-[#FFF7EB] pt-24 pb-16 px-4 md:px-16">
+  <div class="max-w-4xl mx-auto bg-white/95 backdrop-blur border border-[#FFE0BF] rounded-3xl shadow-sm overflow-hidden">
+    <header class="px-6 py-5 border-b border-[#FFE0BF] flex items-center gap-4">
+      <a routerLink="/messagerie" class="text-[#FF7A00] text-sm font-semibold flex items-center gap-1 hover:underline">
+        ← Retour
+      </a>
+      <div class="flex items-center gap-4">
+        <img [src]="otherUser?.photoURL || 'assets/icone.png'" class="w-12 h-12 rounded-full object-cover border border-[#FFE0BF]" alt="Avatar" />
+        <div>
+          <p class="font-semibold text-lg text-[#1A1A1A]">
+            {{ otherUser?.firstname || 'Utilisateur' }} {{ otherUser?.lastname || '' }}
+          </p>
+          <p class="text-xs text-gray-500">
+            <span *ngIf="otherUser?.lastSeen">Dernière connexion {{ otherUser.lastSeen | timeAgo }}</span>
+            <span *ngIf="!otherUser?.lastSeen">Actif récemment</span>
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <div #messagesWrapper class="h-[60vh] overflow-y-auto px-6 py-6 space-y-4 bg-gradient-to-b from-[#FFF9F2] to-[#FFF7EB]">
+      <div *ngIf="loading" class="text-center text-sm text-gray-500 pt-20">Chargement de la conversation…</div>
+
+      <div *ngFor="let message of messages; trackBy: trackByMessageId" class="flex" [class.justify-end]="message.senderId === currentUid">
+        <div
+          class="max-w-[70%] rounded-2xl px-4 py-3 text-sm shadow-sm"
+          [class.bg-[#FF7A00]]="message.senderId === currentUid"
+          [class.bg-white]="message.senderId !== currentUid"
+          [class.text-white]="message.senderId === currentUid"
+          [class.text-[#1A1A1A]]="message.senderId !== currentUid"
+        >
+          <p class="whitespace-pre-line">{{ message.body }}</p>
+          <p class="mt-2 text-[10px] uppercase tracking-wide"
+             [class.text-white/70]="message.senderId === currentUid"
+             [class.text-gray-500]="message.senderId !== currentUid">
+            {{ message.createdAt ? (message.createdAt | timeAgo) : 'À l’instant' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <form (ngSubmit)="send()" class="px-6 py-5 border-t border-[#FFE0BF] bg-white">
+      <div class="flex items-end gap-3">
+        <textarea [(ngModel)]="messageBody" name="body" rows="1" placeholder="Écrire un message…"
+          class="flex-1 resize-none field-input" [disabled]="sending"></textarea>
+        <button type="submit" [disabled]="sending || !messageBody.trim()"
+          class="px-5 py-3 rounded-2xl bg-[#FF7A00] text-white text-sm font-semibold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          Envoyer
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

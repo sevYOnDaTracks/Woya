@@ -6,6 +6,7 @@ import  Register  from './pages/auth/register/register';
 import Login from './pages/auth/login/login';
 import UserInfo from './pages/user-info/user-info';
 import MyServices from './pages/my-services/my-services';
+import MessagesInbox from './pages/messages/messages';
 
 export const routes: Routes = [
     { path: '', component: Landing },
@@ -20,6 +21,12 @@ export const routes: Routes = [
 },
     { path: 'mes-services', component: MyServices },
     { path: 'mon-compte', component: UserInfo },
+    { path: 'messagerie', component: MessagesInbox },
+    {
+        path: 'messagerie/:id',
+            loadComponent: () =>
+                import('./pages/messages/conversation').then(c => c.default)
+    },
 
     {
         path: 'services/:id',

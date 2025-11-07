@@ -64,6 +64,13 @@
         <p class="text-sm text-gray-600 flex items-center gap-2">
           <span>🏠</span> {{ owner.address || 'Adresse non renseignée' }}
         </p>
+        <p class="text-xs text-gray-500 mt-2 flex items-center gap-2">
+          <span>🕒</span>
+          <span *ngIf="owner.lastSeen; else lastSeenFallback">
+            Dernière connexion {{ owner.lastSeen | timeAgo }}
+          </span>
+          <ng-template #lastSeenFallback>Activité récente</ng-template>
+        </p>
       </div>
       <ng-template #ownerFallback>
         <div class="mt-6 text-sm text-gray-500">
@@ -73,6 +80,12 @@
 
       <!-- Boutons -->
       <div class="mt-6 space-y-3">
+        <button (click)="contactOwner()"
+                [disabled]="contacting"
+                class="w-full px-4 py-3 bg-[#FF7A00] hover:bg-[#e66d00] text-white rounded-xl font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed">
+          Contacter par messagerie
+        </button>
+
         <a [href]="whatsapp()" target="_blank"
            class="block w-full text-center px-4 py-3 bg-[#3BAF4A] hover:bg-[#2f8f3c] text-white rounded-xl font-semibold transition">
           Contacter sur WhatsApp

@@ -1,0 +1,57 @@
+<section class="min-h-screen bg-[#FFF7EB] pt-28 pb-16 px-4 md:px-16">
+  <div class="max-w-5xl mx-auto">
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+      <div>
+        <p class="text-sm uppercase tracking-[0.35em] text-[#FFB066]">Messagerie</p>
+        <h1 class="text-3xl font-bold text-[#1A1A1A] mt-1">Boîte de réception</h1>
+        <p class="text-sm text-gray-600 mt-2">
+          Retrouvez ici toutes vos conversations avec les prestataires et clients.
+        </p>
+      </div>
+      <button (click)="startNew()" class="self-start md:self-center px-5 py-3 rounded-2xl bg-[#FF7A00] text-white text-sm font-semibold shadow-sm hover:bg-[#e66900] transition">
+        Explorer des services
+      </button>
+    </header>
+
+    <div class="bg-white/90 backdrop-blur rounded-3xl border border-[#FFE0BF] shadow-sm">
+      <div *ngIf="loading" class="py-14 flex items-center justify-center text-gray-500">
+        Chargement de vos conversations…
+      </div>
+
+      <ng-container *ngIf="!loading">
+        <div *ngIf="!conversations.length" class="py-16 flex flex-col items-center justify-center text-center gap-3">
+          <img src="assets/icone.png" alt="Messagerie vide" class="w-20 h-20 opacity-80 rounded-full border border-[#FFE0BF] object-cover" />
+          <p class="text-lg font-semibold text-[#1A1A1A]">Aucune conversation pour le moment</p>
+          <p class="text-sm text-gray-500 max-w-md">
+            Consultez un service et cliquez sur « Contacter par messagerie » pour démarrer un échange sécurisé.
+          </p>
+        </div>
+
+        <ul *ngIf="conversations.length" class="divide-y divide-[#FFE0BF]">
+          <li *ngFor="let item of conversations" (click)="open(item.conversation)" class="cursor-pointer px-6 py-5 hover:bg-[#FFF4E6] transition">
+            <div class="flex gap-4 items-start">
+              <img [src]="item.otherUser?.photoURL || 'assets/icone.png'" alt="Avatar" class="w-12 h-12 rounded-full object-cover border border-[#FFE0BF]" />
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <p class="font-semibold text-[#1A1A1A] text-base truncate">
+                    {{ item.otherUser?.firstname || 'Utilisateur' }} {{ item.otherUser?.lastname || '' }}
+                  </p>
+                  <span *ngIf="item.unread" class="px-2 py-0.5 text-xs rounded-full bg-[#FF7A00] text-white uppercase tracking-wide">Nouveau</span>
+                </div>
+
+                <p class="text-sm text-gray-600 truncate mt-1">
+                  {{ item.conversation.lastMessage?.body || 'Aucun message pour le moment' }}
+                </p>
+
+                <div class="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+                  <span *ngIf="item.conversation.updatedAt">Mis à jour {{ item.conversation.updatedAt | timeAgo }}</span>
+                  <span *ngIf="item.otherUser?.lastSeen">Dernière connexion {{ item.otherUser.lastSeen | timeAgo }}</span>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </ng-container>
+    </div>
+  </div>
+</section>

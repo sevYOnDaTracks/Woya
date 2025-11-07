@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SharedImports } from '../../shared/shared-imports';
 import { firebaseServices } from '../../app.config';
 import { doc, getDoc } from 'firebase/firestore';
 import { WoyaService } from '../../core/models/service.model';
 import { TimeAgoPipe } from '../../shared/time-ago.pipe';
+import { MessagingService } from '../../core/services/messaging';
 
 
 @Component({
@@ -19,8 +20,13 @@ export class ServiceDetails {
   gallery: string[] = [];
   currentIndex = 0;
   owner: any = null;
+  contacting = false;
 
-  constructor(private route: ActivatedRoute) {
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private messaging: MessagingService,
+  ) {
     this.load();
   }
 
@@ -79,12 +85,43 @@ export class ServiceDetails {
     window.location.href = `tel:${this.service.contact}`;
   }
 
+  async contactOwner() {
+    if (!this.service?.ownerId || this.contacting) return;
+
+    const current = firebaseServices.auth.currentUser;
+    if (!current) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (current.uid === this.service.ownerId) {
+      this.router.navigate(['/messagerie']);
+      return;
+    }
+
+    try {
+      this.contacting = true;
+      const conversationId = await this.messaging.ensureConversation(this.service.ownerId);
+      if (conversationId) {
+        this.router.navigate(['/messagerie', conversationId]);
+      }
+    } catch (error) {
+      console.error('Unable to initiate conversation', error);
+    } finally {
+      this.contacting = false;
+    }
+  }
+
   private async loadOwner(ownerId: string) {
     try {
       const ref = doc(firebaseServices.db, 'users', ownerId);
       const snap = await getDoc(ref);
       if (snap.exists()) {
-        this.owner = { id: snap.id, ...snap.data() };
+        const data: any = snap.data() ?? {};
+        if (data.lastSeen && (data.lastSeen as any).seconds) {
+          data.lastSeen = (data.lastSeen as any).seconds * 1000;
+        }
+        this.owner = { id: snap.id, ...data };
       }
     } catch (error) {
       console.error('Unable to load owner information', error);

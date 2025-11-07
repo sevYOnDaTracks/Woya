@@ -49,6 +49,12 @@
         Mes services
       </a>
 
+      <a routerLink="/messagerie"
+         routerLinkActive="active"
+         class="menu-item">
+        Messagerie
+      </a>
+
       <a routerLink="/services/new"
          class="px-4 py-2 bg-[#FF7A00] text-white rounded-xl text-sm hover:bg-[#e66d00] transition">
         Publier un service
@@ -102,20 +108,18 @@
      class="w-10 h-10 rounded-full border object-cover">
 
 
-      <!--
-      <a routerLink="/mes-services" 
+      <a routerLink="/mes-services"
          routerLinkActive="text-[#FF7A00]"
-         (click)="toggleMenu()" 
+         (click)="toggleMenu()"
          class="text-lg font-semibold">
         Mes services
       </a>
-      -->
 
-      <a routerLink="/mes-services" 
+      <a routerLink="/messagerie"
          routerLinkActive="text-[#FF7A00]"
-         (click)="toggleMenu()" 
+         (click)="toggleMenu()"
          class="text-lg font-semibold">
-        Mes services
+        Messagerie
       </a>
 
       <a routerLink="/services/new" 
