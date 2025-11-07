@@ -556,6 +556,7 @@ handleFiles(files: File[]) {
       this.titleSearch = '';
     }
     this.titleDropdownOpen = false;
+    this.titleTouched = false;
     this.updateFilteredTitle('');
   }
 

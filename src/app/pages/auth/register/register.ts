@@ -92,6 +92,12 @@ export default class Register implements OnInit, OnDestroy {
         phone: `${this.form.countryCode}${this.form.phone}`,
         city: this.form.city,
         address: this.form.address,
+        coverURL: '',
+        searchKeywords: this.buildSearchKeywords({
+          firstname: this.form.firstname,
+          lastname: this.form.lastname,
+          pseudo: this.form.pseudo,
+        }),
         photoURL,
         createdAt: Date.now()
       });
@@ -121,6 +127,24 @@ export default class Register implements OnInit, OnDestroy {
     if (!snap.empty) {
       throw new Error('phone-exists');
     }
+  }
+
+  private buildSearchKeywords(values: { firstname?: string; lastname?: string; pseudo?: string }) {
+    const tokens = new Set<string>();
+    const addValue = (value?: string) => {
+      if (!value) return;
+      const normalized = value.trim().toLowerCase();
+      if (!normalized) return;
+      tokens.add(normalized);
+      normalized.split(/[\s-]+/).forEach(part => {
+        if (part) tokens.add(part);
+      });
+    };
+    addValue(values.pseudo);
+    addValue(values.firstname);
+    addValue(values.lastname);
+    addValue(`${values.firstname ?? ''} ${values.lastname ?? ''}`);
+    return Array.from(tokens);
   }
 
   loginWithGoogle() {

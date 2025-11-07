@@ -1,0 +1,268 @@
+import { Injectable } from '@angular/core';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { firebaseServices } from '../../app.config';
+import { Services } from './services';
+import { WoyaService } from '../models/service.model';
+
+export interface GalleryItem {
+  id: string;
+  ownerId: string;
+  url: string;
+  caption?: string;
+  storagePath?: string;
+  createdAt?: number;
+}
+
+export interface ReviewReply {
+  id: string;
+  reviewId: string;
+  authorId: string;
+  message: string;
+  createdAt?: number;
+  author?: {
+    pseudo?: string;
+    firstname?: string;
+    lastname?: string;
+    photoURL?: string;
+  };
+}
+
+export interface UserReview {
+  id: string;
+  targetId: string;
+  reviewerId: string;
+  rating: number;
+  comment: string;
+  createdAt?: number;
+  updatedAt?: number;
+  reviewer?: {
+    pseudo?: string;
+    firstname?: string;
+    lastname?: string;
+    photoURL?: string;
+  };
+  replies?: ReviewReply[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class ProfilesService {
+  private db = firebaseServices.db;
+  private galleryCol = collection(this.db, 'userGallery');
+  private reviewsCol = collection(this.db, 'reviews');
+
+  constructor(private servicesApi: Services) {}
+
+  async getPublicProfile(uid: string) {
+    const ref = doc(this.db, 'users', uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    const data: any = snap.data() ?? {};
+    if (data.lastSeen?.seconds) {
+      data.lastSeen = data.lastSeen.seconds * 1000;
+    }
+    if (data.createdAt?.seconds) {
+      data.createdAt = data.createdAt.seconds * 1000;
+    }
+    return { id: uid, uid, ...data };
+  }
+
+  getUserServices(uid: string): Promise<WoyaService[]> {
+    return this.servicesApi.listByOwner(uid);
+  }
+
+  async getGallery(uid: string): Promise<GalleryItem[]> {
+    const q = query(this.galleryCol, where('ownerId', '==', uid), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(docSnap => {
+      const data = docSnap.data() as any;
+      return {
+        id: docSnap.id,
+        ownerId: data.ownerId,
+        url: data.url,
+        caption: data.caption,
+        storagePath: data.storagePath,
+        createdAt: this.toMillis(data.createdAt),
+      };
+    });
+  }
+
+  async addGalleryItem(uid: string, file: File, caption: string) {
+    if (!file) return null;
+    const storage = getStorage();
+    const path = `users/${uid}/gallery/${Date.now()}-${file.name}`;
+    const storageReference = ref(storage, path);
+    await uploadBytes(storageReference, file);
+    const url = await getDownloadURL(storageReference);
+    const docRef = await addDoc(this.galleryCol, {
+      ownerId: uid,
+      url,
+      caption,
+      storagePath: path,
+      createdAt: serverTimestamp(),
+    });
+    return docRef.id;
+  }
+
+  async removeGalleryItem(ownerId: string, item: GalleryItem & { storagePath?: string }) {
+    if (!item?.id) return;
+    const docRef = doc(this.db, 'userGallery', item.id);
+    await deleteDoc(docRef);
+    const storagePath = (item as any).storagePath;
+    if (storagePath) {
+      try {
+        const storage = getStorage();
+        await deleteObject(ref(storage, storagePath));
+      } catch {
+        // ignore errors on delete
+      }
+    }
+  }
+
+  async saveCover(uid: string, file: File) {
+    const storage = getStorage();
+    const coverRef = ref(storage, `users/${uid}/cover.jpg`);
+    await uploadBytes(coverRef, file);
+    const coverURL = await getDownloadURL(coverRef);
+    const userRef = doc(this.db, 'users', uid);
+    await setDoc(userRef, { coverURL, updatedAt: Date.now() }, { merge: true });
+    return coverURL;
+  }
+
+  async getReviews(targetId: string): Promise<UserReview[]> {
+    const q = query(this.reviewsCol, where('targetId', '==', targetId));
+    const snap = await getDocs(q);
+    const reviews = snap.docs.map(docSnap => this.mapReview(docSnap.id, docSnap.data()));
+    reviews.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    return Promise.all(
+      reviews.map(async review => ({
+        ...review,
+        replies: await this.getReviewReplies(review.id),
+      })),
+    );
+  }
+
+  async getUserReview(targetId: string, reviewerId: string): Promise<UserReview | null> {
+    const docId = `${targetId}_${reviewerId}`;
+    const ref = doc(this.db, 'reviews', docId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    return this.mapReview(snap.id, snap.data());
+  }
+
+  async saveReview(targetId: string, rating: number, comment: string) {
+    const reviewer = firebaseServices.auth.currentUser;
+    if (!reviewer) throw new Error('Utilisateur non connecté');
+    if (!rating || rating < 1 || rating > 5) throw new Error('Note invalide');
+
+    const reviewerProfile = await this.getPublicProfile(reviewer.uid);
+    const docId = `${targetId}_${reviewer.uid}`;
+    const payload = {
+      targetId,
+      reviewerId: reviewer.uid,
+      rating,
+      comment: comment.trim(),
+      reviewer: {
+        pseudo: reviewerProfile?.pseudo ?? reviewerProfile?.firstname,
+        firstname: reviewerProfile?.firstname,
+        lastname: reviewerProfile?.lastname,
+        photoURL: reviewerProfile?.photoURL,
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    const reviewRef = doc(this.db, 'reviews', docId);
+    await setDoc(reviewRef, payload, { merge: true });
+
+  }
+
+  async addReviewReply(reviewId: string, message: string) {
+    const current = firebaseServices.auth.currentUser;
+    if (!current) throw new Error('Utilisateur non connecté');
+    const profile = await this.getPublicProfile(current.uid);
+    const repliesCol = collection(this.db, 'reviews', reviewId, 'replies');
+    await addDoc(repliesCol, {
+      reviewId,
+      authorId: current.uid,
+      message: message.trim(),
+      author: {
+        pseudo: profile?.pseudo ?? profile?.firstname,
+        firstname: profile?.firstname,
+        lastname: profile?.lastname,
+        photoURL: profile?.photoURL,
+      },
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  private async getReviewReplies(reviewId: string): Promise<ReviewReply[]> {
+    const repliesCol = collection(this.db, 'reviews', reviewId, 'replies');
+    const q = query(repliesCol, orderBy('createdAt', 'asc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(docSnap => {
+      const data = docSnap.data() as any;
+      return {
+        id: docSnap.id,
+        reviewId,
+        authorId: data.authorId,
+        message: data.message,
+        author: data.author,
+        createdAt: this.toMillis(data.createdAt),
+      } as ReviewReply;
+    });
+  }
+
+  async searchProfiles(term: string) {
+    const queryValue = term.trim().toLowerCase();
+    if (!queryValue || queryValue.length < 2) {
+      return [];
+    }
+    const q = query(
+      collection(this.db, 'users'),
+      where('searchKeywords', 'array-contains', queryValue),
+      limit(20),
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(docSnap => {
+      const data = docSnap.data() as any;
+      if (data.lastSeen?.seconds) {
+        data.lastSeen = data.lastSeen.seconds * 1000;
+      }
+      return { id: docSnap.id, ...data };
+    });
+  }
+
+  private mapReview(id: string, data: any): UserReview {
+    return {
+      id,
+      targetId: data.targetId,
+      reviewerId: data.reviewerId,
+      rating: data.rating,
+      comment: data.comment,
+      createdAt: this.toMillis(data.createdAt),
+      updatedAt: this.toMillis(data.updatedAt),
+      reviewer: data.reviewer,
+    };
+  }
+
+  private toMillis(value: any): number | undefined {
+    if (!value) return undefined;
+    if (typeof value === 'number') return value;
+    if (value.seconds) return value.seconds * 1000;
+    return undefined;
+  }
+}

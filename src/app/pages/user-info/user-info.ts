@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { doc, setDoc } from 'firebase/firestore';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
+import { ProfilesService, GalleryItem } from '../../core/services/profiles';
 
 interface UserInfoForm {
   firstname: string;
@@ -47,17 +48,31 @@ export default class UserInfo implements OnInit, OnDestroy {
   error = '';
   photoPreview: string | null = null;
   photoFile: File | null = null;
+  coverPreview: string | null = null;
+  coverFile: File | null = null;
+  gallery: GalleryItem[] = [];
+  galleryLoading = false;
+  galleryError = '';
+  uploadingGallery = false;
+  newGalleryCaption = '';
+  newGalleryFile: File | null = null;
 
   private sub?: Subscription;
   user: any = null;
 
-  constructor(private auth: AuthStore, private router: Router, private location: Location) {}
+  constructor(
+    private auth: AuthStore,
+    private router: Router,
+    private location: Location,
+    private profiles: ProfilesService,
+  ) {}
 
   ngOnInit() {
     this.sub = this.auth.user$.subscribe(user => {
       this.user = user;
       if (user) {
         this.populateForm(user);
+        this.loadGallery();
       }
     });
   }
@@ -83,6 +98,9 @@ export default class UserInfo implements OnInit, OnDestroy {
       bio: user.bio || ''
     };
     this.photoPreview = user.photoURL || null;
+    this.coverPreview = user.coverURL || null;
+    this.newGalleryCaption = '';
+    this.newGalleryFile = null;
   }
 
   resetForm() {
@@ -91,6 +109,7 @@ export default class UserInfo implements OnInit, OnDestroy {
     this.success = '';
     this.error = '';
     this.photoFile = null;
+    this.coverFile = null;
   }
 
   async save() {
@@ -113,6 +132,11 @@ export default class UserInfo implements OnInit, OnDestroy {
       city: this.form.city.trim(),
       address: this.form.address.trim(),
       bio: this.form.bio.trim(),
+      searchKeywords: this.buildSearchKeywords({
+        firstname: this.form.firstname,
+        lastname: this.form.lastname,
+        pseudo: this.form.pseudo,
+      }),
       updatedAt: Date.now()
     };
 
@@ -124,6 +148,12 @@ export default class UserInfo implements OnInit, OnDestroy {
         payload['photoURL'] = await getDownloadURL(avatarRef);
         this.photoPreview = payload['photoURL'];
         this.photoFile = null;
+      }
+
+      if (this.coverFile) {
+        payload['coverURL'] = await this.profiles.saveCover(this.user.uid, this.coverFile);
+        this.coverPreview = payload['coverURL'];
+        this.coverFile = null;
       }
 
       const ref = doc(firebaseServices.db, 'users', this.user.uid);
@@ -165,6 +195,130 @@ export default class UserInfo implements OnInit, OnDestroy {
   clearPhotoSelection() {
     this.photoFile = null;
     this.photoPreview = this.user?.photoURL || null;
+  }
+
+  async removeProfilePhoto() {
+    if (!this.user) return;
+    this.loading = true;
+    this.error = '';
+    try {
+      const storage = getStorage();
+      const avatarRef = storageRef(storage, `users/${this.user.uid}/profile.jpg`);
+      await deleteObject(avatarRef).catch(() => null);
+
+      const ref = doc(firebaseServices.db, 'users', this.user.uid);
+      await setDoc(ref, { photoURL: '', updatedAt: Date.now() }, { merge: true });
+
+      this.photoFile = null;
+      this.photoPreview = null;
+      this.auth.user$.next({ ...this.user, photoURL: '' });
+      this.success = 'Photo de profil supprimée.';
+    } catch {
+      this.error = 'Impossible de supprimer la photo de profil.';
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  onSelectCover(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.coverFile = file;
+    const reader = new FileReader();
+    reader.onload = () => (this.coverPreview = reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  clearCoverSelection() {
+    this.coverFile = null;
+    this.coverPreview = this.user?.coverURL || null;
+  }
+
+  async removeCoverPhoto() {
+    if (!this.user) return;
+    this.loading = true;
+    this.error = '';
+    try {
+      const storage = getStorage();
+      const coverRef = storageRef(storage, `users/${this.user.uid}/cover.jpg`);
+      await deleteObject(coverRef).catch(() => null);
+
+      const ref = doc(firebaseServices.db, 'users', this.user.uid);
+      await setDoc(ref, { coverURL: '', updatedAt: Date.now() }, { merge: true });
+
+      this.coverFile = null;
+      this.coverPreview = null;
+      this.auth.user$.next({ ...this.user, coverURL: '' });
+      this.success = 'Photo de couverture supprimée.';
+    } catch {
+      this.error = 'Impossible de supprimer la photo de couverture.';
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async loadGallery() {
+    if (!this.user) return;
+    this.galleryLoading = true;
+    this.galleryError = '';
+    try {
+      this.gallery = await this.profiles.getGallery(this.user.uid);
+    } catch (error) {
+      this.galleryError = 'Impossible de charger la galerie.';
+    } finally {
+      this.galleryLoading = false;
+    }
+  }
+
+  onSelectGalleryFile(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.newGalleryFile = file;
+  }
+
+  async uploadGalleryItem() {
+    if (!this.user || !this.newGalleryFile) return;
+    this.uploadingGallery = true;
+    this.galleryError = '';
+    try {
+      await this.profiles.addGalleryItem(this.user.uid, this.newGalleryFile, this.newGalleryCaption.trim());
+      this.newGalleryCaption = '';
+      this.newGalleryFile = null;
+      await this.loadGallery();
+    } catch (error) {
+      this.galleryError = 'Impossible d\'ajouter cette image.';
+    } finally {
+      this.uploadingGallery = false;
+    }
+  }
+
+  async deleteGalleryItem(item: GalleryItem) {
+    if (!this.user) return;
+    try {
+      await this.profiles.removeGalleryItem(this.user.uid, item);
+      this.gallery = this.gallery.filter(g => g.id !== item.id);
+    } catch (error) {
+      this.galleryError = 'Suppression impossible pour le moment.';
+    }
+  }
+
+  private buildSearchKeywords(values: { firstname?: string; lastname?: string; pseudo?: string }) {
+    const tokens = new Set<string>();
+    const addValue = (value?: string) => {
+      if (!value) return;
+      const normalized = value.trim().toLowerCase();
+      if (!normalized) return;
+      tokens.add(normalized);
+      normalized.split(/[\s-]+/).forEach(part => {
+        if (part) tokens.add(part);
+      });
+    };
+    addValue(values.pseudo);
+    addValue(values.firstname);
+    addValue(values.lastname);
+    addValue(`${values.firstname ?? ''} ${values.lastname ?? ''}`);
+    return Array.from(tokens);
   }
 
 }

@@ -77,6 +77,12 @@
           </span>
           <ng-template #lastSeenFallback>Activité récente</ng-template>
         </p>
+        <div class="mt-4">
+          <button [routerLink]="['/prestataires', owner.id]"
+                  class="px-4 py-2 rounded-2xl text-sm font-semibold border border-[#FF7A00] text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white">
+            Voir le profil public
+          </button>
+        </div>
       </div>
       <ng-template #ownerFallback>
         <div class="mt-6 text-sm text-gray-500">

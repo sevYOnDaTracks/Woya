@@ -1,0 +1,306 @@
+<section class="min-h-screen bg-[#FFF7EB] pb-16">
+  <div class="relative h-64 w-full">
+    <div class="absolute inset-0">
+      <img *ngIf="profile?.coverURL; else defaultCover"
+           [src]="profile?.coverURL"
+           class="w-full h-full object-cover"
+           alt="Couverture prestataire" />
+      <ng-template #defaultCover>
+        <div class="w-full h-full bg-gradient-to-r from-[#FF7A00] via-[#FFB066] to-[#1A936F] opacity-80"></div>
+      </ng-template>
+    </div>
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="relative z-10 max-w-5xl mx-auto px-6 md:px-0 flex flex-col md:flex-row items-center md:items-center gap-4 h-full justify-start md:justify-end pt-3 md:pt-4 pb-4">
+      <img [src]="profile?.photoURL || 'assets/icone.png'"
+           class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white object-cover shadow-lg"
+           alt="Avatar prestataire" />
+      <div class="text-white flex-1 text-center md:text-left">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold">{{ profile?.pseudo || profile?.firstname }}</h1>
+            <p class="text-sm text-white/80">
+              {{ profile?.profession || 'Prestataire local' }} • {{ profile?.city || 'Ville non renseignée' }}
+            </p>
+            <p class="text-xs text-white/70 mt-1">
+              Dernière connexion :
+              <span *ngIf="profile?.lastSeen; else recent">
+                {{ profile?.lastSeen | timeAgo }}
+              </span>
+              <ng-template #recent>Activité récente</ng-template>
+            </p>
+          </div>
+          <div class="w-full grid grid-cols-3 gap-2 md:w-auto md:flex md:flex-nowrap md:gap-3">
+            <div class="profile-stat-card">
+              <p class="profile-stat-value">{{ averageRatingLabel }}</p>
+              <p class="profile-stat-label">Note moyenne</p>
+            </div>
+            <div class="profile-stat-card">
+              <p class="profile-stat-value">{{ reviews.length }}</p>
+              <p class="profile-stat-label">Avis</p>
+            </div>
+            <div class="profile-stat-card">
+              <p class="profile-stat-value">{{ services.length }}</p>
+              <p class="profile-stat-label">Services</p>
+            </div>
+          </div>
+          <button *ngIf="!isOwnProfile"
+                  type="button"
+                  (click)="contactUser()"
+                  class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-[#FF7A00] font-semibold shadow-lg self-center md:self-auto">
+            Contacter
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-4 mt-6 md:-mt-4 relative z-20">
+    <div class="rounded-3xl bg-white border border-[#FFE0BF] shadow-sm p-4 md:p-6">
+      <div class="flex flex-wrap gap-3 border-b border-[#FFE0BF] pb-4 mb-6">
+        <button type="button"
+                class="profile-tab"
+                [class.active]="activeTab === 'services'"
+                (click)="switchTab('services')">
+          Services
+        </button>
+        <button type="button"
+                class="profile-tab"
+                [class.active]="activeTab === 'gallery'"
+                (click)="switchTab('gallery')">
+          Galerie
+        </button>
+        <button type="button"
+                class="profile-tab"
+                [class.active]="activeTab === 'reviews'"
+                (click)="switchTab('reviews')">
+          Avis ({{ reviews.length }})
+        </button>
+        <button type="button"
+                class="profile-tab"
+                [class.active]="activeTab === 'about'"
+                (click)="switchTab('about')">
+          À propos
+        </button>
+      </div>
+
+      <!-- Services -->
+      <div *ngIf="activeTab === 'services'" class="space-y-4">
+        <p *ngIf="!services.length" class="text-sm text-gray-500">
+          Ce prestataire n'a pas encore publié de services publics.
+        </p>
+        <div *ngFor="let service of services" class="rounded-2xl border border-[#FFE0BF] p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-[#FFB066]">{{ service.category }}</p>
+            <h3 class="text-lg font-semibold text-[#1A1A1A]">{{ service.title }}</h3>
+            <p class="text-sm text-gray-500">📍 {{ service.city || 'Ville non renseignée' }}</p>
+            <p class="text-sm text-[#FF7A00] font-semibold mt-1">
+              {{ service.price ? (service.price | number:'1.0-0') + ' FCFA' : 'Tarif à définir' }}
+            </p>
+          </div>
+          <div class="flex gap-3">
+            <button type="button"
+                    (click)="viewService(service)"
+                    class="px-4 py-2 rounded-2xl text-sm font-semibold border border-[#FF7A00] text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white">
+              Voir le service
+            </button>
+            <button type="button"
+                    (click)="contactUser()"
+                    class="px-4 py-2 rounded-2xl text-sm font-semibold bg-[#FF7A00] text-white hover:bg-[#e66900]"
+                    *ngIf="!isOwnProfile">
+              Contacter
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Galerie -->
+      <div *ngIf="activeTab === 'gallery'" class="space-y-4">
+        <p *ngIf="!gallery.length" class="text-sm text-gray-500">
+          Aucune image dans la galerie pour le moment.
+        </p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div *ngFor="let item of gallery" class="rounded-2xl overflow-hidden border border-[#FFE0BF] bg-white shadow-sm">
+            <img [src]="item.url" class="w-full h-40 object-cover" alt="Galerie prestataire" />
+            <div class="p-3 text-xs text-gray-600">{{ item.caption || 'Sans description' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avis -->
+      <div *ngIf="activeTab === 'reviews'" class="space-y-6">
+        <div class="rounded-2xl border border-[#FFE0BF] bg-[#FFF9F2] p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-[#FFB066]">Avis clients</p>
+            <p class="text-3xl font-bold text-[#FF7A00]">{{ averageRatingLabel }}</p>
+            <p class="text-sm text-gray-500">{{ reviews.length }} avis publiés</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <ng-container *ngFor="let star of stars">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   class="w-6 h-6"
+                   [class.text-[#FF7A00]]="star <= reviewForm.rating"
+                   [class.text-gray-300]="star > reviewForm.rating"
+                   viewBox="0 0 24 24"
+                   fill="currentColor"
+                   (click)="canReview ? reviewForm.rating = star : null">
+                <path d="m12 2 2.9 6.26 6.9.54-5.2 4.62 1.56 6.82L12 17.77 5.84 20.24 7.4 13.42 2.2 8.8l6.9-.54L12 2z"/>
+              </svg>
+            </ng-container>
+          </div>
+        </div>
+
+        <div *ngIf="canReview" class="rounded-2xl border border-[#FFE0BF] p-4 space-y-3">
+          <textarea [(ngModel)]="reviewForm.comment"
+                    name="reviewComment"
+                    rows="3"
+                    class="w-full border rounded-2xl px-4 py-3 outline-none"
+                    placeholder="Partage ton expérience avec ce prestataire"></textarea>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <p class="text-xs text-gray-500">Une note et un commentaire pour rassurer la communauté.</p>
+            <button type="button"
+                    (click)="submitReview()"
+                    [disabled]="submittingReview"
+                    class="px-5 py-2 rounded-2xl bg-[#FF7A00] text-white text-sm font-semibold hover:bg-[#e66900] disabled:opacity-50">
+              {{ submittingReview ? 'Envoi...' : 'Publier mon avis' }}
+            </button>
+          </div>
+          <p *ngIf="reviewError" class="text-xs text-red-500">{{ reviewError }}</p>
+        </div>
+
+        <div *ngIf="!reviews.length" class="text-sm text-gray-500">
+          Aucun avis pour le moment.
+        </div>
+        <div *ngFor="let review of reviews; trackBy: trackByReview" class="rounded-2xl border border-[#FFE0BF] p-4 space-y-2">
+          <div class="flex items-center gap-3">
+            <img [src]="review.reviewer?.photoURL || 'assets/icone.png'" class="w-10 h-10 rounded-full object-cover" />
+            <div>
+              <p class="font-semibold text-[#1A1A1A]">{{ review.reviewer?.pseudo || review.reviewer?.firstname || 'Utilisateur' }}</p>
+              <p class="text-xs text-gray-500">
+                {{ review.createdAt ? (review.createdAt | timeAgo) : 'À l\'instant' }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <ng-container *ngFor="let star of stars">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   class="w-4 h-4"
+                   [class.text-[#FF7A00]]="star <= review.rating"
+                   [class.text-gray-300]="star > review.rating"
+                   viewBox="0 0 24 24"
+                   fill="currentColor">
+                <path d="m12 2 2.9 6.26 6.9.54-5.2 4.62 1.56 6.82L12 17.77 5.84 20.24 7.4 13.42 2.2 8.8l6.9-.54L12 2z"/>
+              </svg>
+            </ng-container>
+          </div>
+          <p class="text-sm text-gray-600 whitespace-pre-line">{{ review.comment }}</p>
+
+          <div *ngIf="review.replies?.length" class="mt-3 space-y-2 pl-4 border-l-2 border-[#FFE0BF]">
+            <div *ngFor="let reply of review.replies" class="rounded-2xl bg-[#FFF9F2] p-3 text-sm text-gray-600">
+              <div class="flex items-center gap-2 mb-2">
+                <img [src]="reply.author?.photoURL || 'assets/icone.png'" class="w-8 h-8 rounded-full object-cover" />
+                <div>
+                  <p class="font-semibold text-[#1A1A1A] text-xs">{{ reply.author?.pseudo || reply.author?.firstname || 'Utilisateur' }}</p>
+                  <p class="text-[11px] text-gray-400">{{ reply.createdAt ? (reply.createdAt | timeAgo) : 'À l\'instant' }}</p>
+                </div>
+              </div>
+              <p class="whitespace-pre-line">{{ reply.message }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="isLoggedIn" class="mt-3 rounded-2xl border border-[#FFE0BF] p-3 space-y-2">
+            <textarea [(ngModel)]="replyForms[review.id]"
+                      name="reply-{{ review.id }}"
+                      rows="2"
+                      class="w-full border rounded-xl px-3 py-2 text-sm outline-none"
+                      placeholder="Répondre à cet avis..."></textarea>
+            <div class="flex justify-end">
+              <button type="button"
+                      (click)="submitReply(review)"
+                      [disabled]="replySubmitting[review.id]"
+                      class="px-4 py-1.5 rounded-xl text-sm font-semibold bg-[#FF7A00] text-white hover:bg-[#e66900] disabled:opacity-50">
+                {{ replySubmitting[review.id] ? 'Envoi...' : 'Publier ma réponse' }}
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- À propos -->
+      <div *ngIf="activeTab === 'about'" class="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
+        <div class="rounded-2xl border border-[#FFE0BF] p-4 space-y-3">
+          <p class="text-xs uppercase tracking-widest text-[#FFB066]">Informations</p>
+
+          <div class="flex items-center gap-3">
+            <div class="info-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118A7.5 7.5 0 0 1 12 15a7.5 7.5 0 0 1 7.5 5.118" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs uppercase text-gray-400">Nom</p>
+              <p class="font-semibold text-[#1A1A1A]">{{ profile?.firstname }} {{ profile?.lastname }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="info-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21c-4.5-3.6-6-6.4-6-9a6 6 0 1 1 12 0c0 2.6-1.5 5.4-6 9Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs uppercase text-gray-400">Ville</p>
+              <p class="font-semibold text-[#1A1A1A]">{{ profile?.city || 'Non renseignée' }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="info-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4.5h18m-18 6h18m-18 6h18" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs uppercase text-gray-400">Adresse</p>
+              <p class="font-semibold text-[#1A1A1A]">{{ profile?.address || 'Non renseignée' }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="info-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 7.5 9 11.25l6.75-3.75m-13.5 0L9 3.75l6.75 3.75m-13.5 0v9l6.75 3.75m6.75-12.75L21.75 7.5m-6.75 12.75L21.75 16.5v-9" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs uppercase text-gray-400">Téléphone</p>
+              <p class="font-semibold text-[#1A1A1A]">{{ profile?.phone || '—' }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="info-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 6.75 12 12l9-5.25M3 6.75v10.5L12 22m-9-15.25 9 5.25m0 10.5 9-4.75m0-10.25v10.5" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs uppercase text-gray-400">Email</p>
+              <p class="font-semibold text-[#1A1A1A]">{{ profile?.email || '—' }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-[#FFE0BF] p-4">
+          <p class="text-xs uppercase tracking-widest text-[#FFB066] mb-2">Biographie</p>
+          <p class="text-gray-600 whitespace-pre-line">{{ profile?.bio || 'Pas encore de description.' }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="text-center py-10 text-sm text-gray-500">
+        Chargement du profil…
+      </div>
+    </div>
+  </div>
+</section>

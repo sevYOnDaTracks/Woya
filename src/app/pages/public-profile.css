@@ -1,0 +1,56 @@
+.profile-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.profile-tab:hover {
+  color: #ff7a00;
+}
+
+.profile-tab.active {
+  background-color: #fff7eb;
+  color: #ff7a00;
+  border: 1px solid #ffe0bf;
+}
+
+.profile-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(255, 255, 255, 0.15);
+  text-align: center;
+  min-width: 5rem;
+}
+
+.profile-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.profile-stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.info-pill {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  background-color: #fff7eb;
+  color: #ff7a00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

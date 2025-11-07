@@ -29,6 +29,17 @@
       </svg>
     </a>
 
+    <a routerLink="/prestataires"
+       routerLinkActive="active"
+       aria-label="Prestataires"
+       title="Prestataires"
+       class="menu-item p-2 rounded-xl">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-5 0-7 3-7 5v1h14v-1c0-2-2-5-7-5Z" />
+      </svg>
+    </a>
+
     <!-- Si NON connecté -->
     <a *ngIf="!(auth.user$ | async)"
        routerLink="/register"
@@ -114,6 +125,16 @@
             </svg>
             <span>Mes services</span>
           </a>
+          <a [routerLink]="['/prestataires', user.uid]"
+             routerLinkActive="active"
+             (click)="closeUserMenu()"
+             class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-5 0-7 3-7 5v1h14v-1c0-2-2-5-7-5Z" />
+            </svg>
+            <span>Mon profil public</span>
+          </a>
           <button (click)="requestLogout()"
                   class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl mx-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -185,6 +206,17 @@
       <span>Services</span>
     </a>
 
+    <a routerLink="/prestataires" 
+       routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
+       (click)="toggleMenu()" 
+       class="text-lg font-semibold flex items-center gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-5 0-7 3-7 5v1h14v-1c0-2-2-5-7-5Z" />
+      </svg>
+      <span>Prestataires</span>
+    </a>
+
       <a routerLink="/mes-services"
          routerLinkActive="text-[#FF7A00]"
          (click)="toggleMenu()"
@@ -195,6 +227,17 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h18" />
         </svg>
         <span>Mes services</span>
+      </a>
+
+      <a [routerLink]="['/prestataires', user.uid]"
+         routerLinkActive="text-[#FF7A00]"
+         (click)="toggleMenu()"
+         class="text-lg font-semibold flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-5 0-7 3-7 5v1h14v-1c0-2-2-5-7-5Z" />
+        </svg>
+        <span>Mon profil public</span>
       </a>
 
       <a routerLink="/messagerie"

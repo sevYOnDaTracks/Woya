@@ -7,6 +7,8 @@ import Login from './pages/auth/login/login';
 import UserInfo from './pages/user-info/user-info';
 import MyServices from './pages/my-services/my-services';
 import MessagesInbox from './pages/messages/messages';
+import SearchUsers from './pages/search-users';
+import PublicProfile from './pages/public-profile';
 import { requireAuthGuard } from './core/store/auth.guard';
 
 export const routes: Routes = [
@@ -30,6 +32,8 @@ export const routes: Routes = [
                 import('./pages/messages/conversation').then(c => c.default)
     },
 
+    { path: 'prestataires', component: SearchUsers },
+    { path: 'prestataires/:id', component: PublicProfile },
     {
         path: 'services/:id',
             loadComponent: () =>
