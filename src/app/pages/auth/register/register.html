@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4 py-8 -mt-10 md:-mt-10">
+<div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4 pt-12 py-8 -mt-10 md:-mt-10">
   <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-lg border">
 
     <h1 class="text-2xl font-bold text-center text-[#FF7A00] mb-6">
@@ -41,8 +41,8 @@
       class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
 
     <!-- Téléphone -->
-    <div class="flex gap-3 mb-3">
-      <select [(ngModel)]="form.countryCode" class="border rounded-xl px-3 py-3 outline-none bg-white">
+    <div class="flex gap-3 flex-wrap mb-3">
+      <select [(ngModel)]="form.countryCode" class="border rounded-xl px-3 py-3 outline-none bg-white flex-none">
         <option value="+225">🇨🇮 +225</option>
         <option value="+33">🇫🇷 +33</option>
         <option value="+1">🇺🇸 +1</option>
@@ -52,7 +52,25 @@
     </div>
 
     <!-- Date de naissance -->
-    <input [(ngModel)]="form.birthdate" type="date"
+    <div class="relative mb-4">
+      <div class="w-full border rounded-xl px-4 py-3 outline-none bg-white cursor-pointer"
+           (click)="toggleBirthdatePicker()">
+        <p class="text-sm text-gray-500" *ngIf="!form.birthdate">Date de naissance</p>
+        <p class="text-base text-[#1A1A1A]" *ngIf="form.birthdate">{{ form.birthdate | date:'dd MMMM yyyy' }}</p>
+      </div>
+      <div *ngIf="showBirthdatePicker"
+           class="absolute z-10 mt-2 w-full rounded-2xl border border-[#FFE0BF] bg-white shadow-lg p-4">
+        <input type="date"
+               [(ngModel)]="form.birthdate"
+               class="w-full border rounded-xl px-4 py-3 outline-none"
+               (change)="toggleBirthdatePicker()" />
+      </div>
+    </div>
+
+    <input [(ngModel)]="form.city" placeholder="Ville"
+      class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
+
+    <input [(ngModel)]="form.address" placeholder="Adresse complète"
       class="w-full border rounded-xl px-4 py-3 mb-4 outline-none" />
 
     <!-- Photo profil -->

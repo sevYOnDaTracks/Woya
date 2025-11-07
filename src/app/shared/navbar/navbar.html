@@ -30,17 +30,21 @@
     </a>
 
     <!-- Si NON connecté -->
-    <button *ngIf="!(auth.user$ | async)"
-     routerLink="/login"
-      class="px-4 py-2 border border-[#FF7A00] text-[#FF7A00] rounded-xl text-sm hover:bg-[#FF7A00] hover:text-white transition">
-      Se connecter
-    </button>
-
-        <button *ngIf="!(auth.user$ | async)"
-      routerLink="/register"
-      class="px-4 py-2 border border-[#FF7A00] text-[#FF7A00] rounded-xl text-sm hover:bg-[#FF7A00] hover:text-white transition">
+    <a *ngIf="!(auth.user$ | async)"
+       routerLink="/register"
+       class="text-sm font-semibold text-[#1A1A1A] hover:text-[#FF7A00] transition">
       S'inscrire
-    </button>
+    </a>
+
+    <a *ngIf="!(auth.user$ | async)"
+       routerLink="/login"
+       class="inline-flex items-center gap-2 rounded-full border border-[#1A1A1A] text-[#1A1A1A] px-5 py-2 text-sm font-semibold hover:bg-[#1A1A1A] hover:text-white transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11.25a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM5.25 19.5a6.75 6.75 0 0 1 13.5 0" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 10.5h2.25m0 0V12m0-1.5v-1.5" />
+      </svg>
+      Se connecter
+    </a>
 
     <!-- Si connecté -->
     <ng-container *ngIf="auth.user$ | async as user">
@@ -144,14 +148,16 @@
     <button (click)="toggleMenu()" class="text-gray-500">✖</button>
   </div>
 
-  <div class="flex-1 pt-7 flex flex-col gap-4 px-6 overflow-y-auto">
+  <div class="flex-1 pt-6 flex flex-col gap-4 px-6 overflow-y-auto">
 
      <!-- ✅ Si connecté -->
     <ng-container *ngIf="auth.user$ | async as user">
 
-<img [src]="user.photoURL || 'assets/icone.png'"
-     class="w-16 h-16 rounded-full border-2 border-[#FFE0BF] object-cover mx-auto">
-
+    <div class="flex flex-col items-center gap-3">
+      <img [src]="user.photoURL || 'assets/icone.png'"
+           class="w-16 h-16 rounded-full border-2 border-[#FFE0BF] object-cover">
+      <p class="text-center text-base font-semibold text-[#1A1A1A]">{{ user.firstname }} {{ user.lastname }}</p>
+    </div>
 
      <a routerLink="/" 
        routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
@@ -222,19 +228,23 @@
 
     <!-- ✅ Si NON connecté -->
     <a *ngIf="!(auth.user$ | async)" 
-       routerLink="/login" 
-       routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
-       (click)="toggleMenu()" 
-       class="text-lg font-semibold">
-      Se connecter
-    </a>
-
-    <a *ngIf="!(auth.user$ | async)" 
        routerLink="/register" 
        routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
        (click)="toggleMenu()" 
-       class="text-lg font-semibold">
+       class="text-lg font-semibold text-[#1A1A1A]">
       S'inscrire
+    </a>
+
+    <a *ngIf="!(auth.user$ | async)" 
+       routerLink="/login" 
+       routerLinkActive="text-[#FF7A00]" [routerLinkActiveOptions]="{ exact: true }"
+       (click)="toggleMenu()" 
+       class="text-lg font-semibold flex items-center gap-2 border border-[#1A1A1A] rounded-full px-4 py-2 text-[#1A1A1A]">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11.25a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.25 18.75a6.75 6.75 0 0 1 13.5 0" />
+      </svg>
+      Se connecter
     </a>
 
           <a routerLink="/services/new" 

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';  // ✅ ICI
 import { firebaseServices } from '../../../app.config';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 @Component({
@@ -23,12 +23,15 @@ export default class Register {
     countryCode: '+225',
     phone: '',
     birthdate: '',
+    city: '',
+    address: '',
   };
 
   preview: string | null = null;
   file: File | null = null;
   loading = false;
   error = '';
+  showBirthdatePicker = false;
 
   constructor(private router: Router) {}
 
@@ -51,6 +54,9 @@ export default class Register {
       const db = firebaseServices.db;
       const storage = getStorage();
 
+      await this.ensureUniqueEmail(db, this.form.email);
+      await this.ensureUniquePhone(db, this.form.countryCode + this.form.phone);
+
       const cred = await createUserWithEmailAndPassword(auth, this.form.email, this.form.password);
 
       let photoURL = '';
@@ -63,6 +69,8 @@ export default class Register {
       await setDoc(doc(db, 'users', cred.user.uid), {
         ...this.form,
         phone: `${this.form.countryCode}${this.form.phone}`,
+        city: this.form.city,
+        address: this.form.address,
         photoURL,
         createdAt: Date.now()
       });
@@ -76,11 +84,33 @@ export default class Register {
     this.loading = false;
   }
 
+  private async ensureUniqueEmail(db: any, email: string) {
+    const usersCol = collection(db, 'users');
+    const q = query(usersCol, where('email', '==', email));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      throw new Error('email-exists');
+    }
+  }
+
+  private async ensureUniquePhone(db: any, phone: string) {
+    const usersCol = collection(db, 'users');
+    const q = query(usersCol, where('phone', '==', phone));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      throw new Error('phone-exists');
+    }
+  }
+
   loginWithGoogle() {
     signInWithPopup(firebaseServices.auth, new GoogleAuthProvider());
   }
 
   loginWithFacebook() {
     signInWithPopup(firebaseServices.auth, new FacebookAuthProvider());
+  }
+
+  toggleBirthdatePicker() {
+    this.showBirthdatePicker = !this.showBirthdatePicker;
   }
 }
