@@ -44,7 +44,7 @@ export default class SearchUsers implements OnInit, OnDestroy {
   }
 
   private async runSearch(value: string) {
-    const query = (value ?? '').trim().toLowerCase();
+    const query = (value ?? '').trim();
     if (!query) {
       this.results = [];
       this.error = '';

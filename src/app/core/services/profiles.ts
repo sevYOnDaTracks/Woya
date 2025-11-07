@@ -85,19 +85,21 @@ export class ProfilesService {
   }
 
   async getGallery(uid: string): Promise<GalleryItem[]> {
-    const q = query(this.galleryCol, where('ownerId', '==', uid), orderBy('createdAt', 'desc'));
+    const q = query(this.galleryCol, where('ownerId', '==', uid));
     const snap = await getDocs(q);
-    return snap.docs.map(docSnap => {
-      const data = docSnap.data() as any;
-      return {
-        id: docSnap.id,
-        ownerId: data.ownerId,
-        url: data.url,
-        caption: data.caption,
-        storagePath: data.storagePath,
-        createdAt: this.toMillis(data.createdAt),
-      };
-    });
+    return snap.docs
+      .map(docSnap => {
+        const data = docSnap.data() as any;
+        return {
+          id: docSnap.id,
+          ownerId: data.ownerId,
+          url: data.url,
+          caption: data.caption,
+          storagePath: data.storagePath,
+          createdAt: this.toMillis(data.createdAt),
+        };
+      })
+      .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
   }
 
   async addGalleryItem(uid: string, file: File, caption: string) {
@@ -164,31 +166,31 @@ export class ProfilesService {
   }
 
   async saveReview(targetId: string, rating: number, comment: string) {
-    const reviewer = firebaseServices.auth.currentUser;
-    if (!reviewer) throw new Error('Utilisateur non connecté');
-    if (!rating || rating < 1 || rating > 5) throw new Error('Note invalide');
+  const reviewer = firebaseServices.auth.currentUser;
+  if (!reviewer) throw new Error('Utilisateur non connecté');
+  if (!rating || rating < 1 || rating > 5) throw new Error('Note invalide');
 
-    const reviewerProfile = await this.getPublicProfile(reviewer.uid);
-    const docId = `${targetId}_${reviewer.uid}`;
-    const payload = {
-      targetId,
-      reviewerId: reviewer.uid,
-      rating,
-      comment: comment.trim(),
-      reviewer: {
-        pseudo: reviewerProfile?.pseudo ?? reviewerProfile?.firstname,
-        firstname: reviewerProfile?.firstname,
-        lastname: reviewerProfile?.lastname,
-        photoURL: reviewerProfile?.photoURL,
-      },
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+  const reviewerProfile = await this.getPublicProfile(reviewer.uid);
 
-    const reviewRef = doc(this.db, 'reviews', docId);
-    await setDoc(reviewRef, payload, { merge: true });
+  const payload = {
+    targetId,
+    reviewerId: reviewer.uid,
+    rating,
+    comment: comment.trim(),
+    reviewer: {
+      pseudo: reviewerProfile?.pseudo ?? reviewerProfile?.firstname,
+      firstname: reviewerProfile?.firstname,
+      lastname: reviewerProfile?.lastname,
+      photoURL: reviewerProfile?.photoURL,
+    },
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
 
-  }
+  // ✅ CHANGEMENT ICI : nouvel avis = nouveau document
+  await addDoc(this.reviewsCol, payload);
+}
+
 
   async addReviewReply(reviewId: string, message: string) {
     const current = firebaseServices.auth.currentUser;
@@ -227,13 +229,13 @@ export class ProfilesService {
   }
 
   async searchProfiles(term: string) {
-    const queryValue = term.trim().toLowerCase();
+    const queryValue = term.trim();
     if (!queryValue || queryValue.length < 2) {
       return [];
     }
     const q = query(
       collection(this.db, 'users'),
-      where('searchKeywords', 'array-contains', queryValue),
+      where('searchKeywords', 'array-contains', queryValue.toLowerCase()),
       limit(20),
     );
     const snap = await getDocs(q);
