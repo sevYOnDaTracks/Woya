@@ -5,11 +5,17 @@
   </h1>
 
   <!-- ✅ Desktop -->
-  <div class="hidden md:flex items-center gap-4">
+  <div class="hidden md:flex items-center gap-6">
+
+    <a routerLink="/services"
+       routerLinkActive="active"
+       class="menu-item">
+      Services
+    </a>
 
     <!-- Si NON connecté -->
     <button *ngIf="!(auth.user$ | async)"
-      routerLink="/login"
+     routerLink="/login"
       class="px-4 py-2 border border-[#FF7A00] text-[#FF7A00] rounded-xl text-sm hover:bg-[#FF7A00] hover:text-white transition">
       Se connecter
     </button>
@@ -22,6 +28,12 @@
 
     <!-- Si connecté -->
     <ng-container *ngIf="auth.user$ | async as user">
+      <a routerLink="/mes-services"
+         routerLinkActive="active"
+         class="menu-item">
+        Mes services
+      </a>
+
       <div class="flex items-center gap-2">
         <img [src]="user.photoURL || 'assets/icone.png'" class="w-8 h-8 rounded-full object-cover border">
         <span class="font-semibold text-sm text-[#1A1A1A]">{{ user.firstname }}</span>
@@ -34,6 +46,7 @@
     </ng-container>
 
   </div>
+
 
   <!-- BOUTON BURGER (Mobile) -->
   <button (click)="toggleMenu()" class="md:hidden text-[#FF7A00] focus:outline-none">
