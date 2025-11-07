@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { RouterLink, Router, RouterLinkActive } from '@angular/router';
 import { AuthStore } from '../../core/store/auth.store';
 import { CommonModule } from '@angular/common';
@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
 export class Navbar implements OnInit, OnDestroy {
   isMenuOpen = false;
   unreadCount = 0;
+  userMenuOpen = false;
 
   private currentUid: string | null = null;
   private authSub?: Subscription;
@@ -27,11 +28,18 @@ export class Navbar implements OnInit, OnDestroy {
       if (this.currentUid === uid) {
         if (!uid) {
           this.clearInbox();
+          this.closeUserMenu();
         }
         return;
       }
 
       this.currentUid = uid;
+      if (!this.currentUid) {
+        this.clearInbox();
+        this.closeUserMenu();
+        return;
+      }
+
       this.bindInbox();
     });
   }
@@ -43,11 +51,15 @@ export class Navbar implements OnInit, OnDestroy {
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
+    if (this.isMenuOpen) {
+      this.userMenuOpen = false;
+    }
   }
 
   logout() {
     this.auth.logout();
-    this.toggleMenu();
+    this.closeUserMenu();
+    this.isMenuOpen = false;
     this.router.navigate(['/']);
   }
 
@@ -72,5 +84,21 @@ export class Navbar implements OnInit, OnDestroy {
     this.inboxSub?.unsubscribe();
     this.inboxSub = undefined;
     this.unreadCount = 0;
+  }
+
+  toggleUserMenu() {
+    this.userMenuOpen = !this.userMenuOpen;
+  }
+
+  closeUserMenu() {
+    this.userMenuOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  handleDocumentClick(event: MouseEvent) {
+    if (!this.userMenuOpen) return;
+    const target = event.target as HTMLElement | null;
+    if (target && target.closest('.user-menu')) return;
+    this.userMenuOpen = false;
   }
 }

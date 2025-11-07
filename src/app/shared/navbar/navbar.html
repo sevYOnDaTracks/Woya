@@ -64,21 +64,39 @@
         Publier un service
       </a>
 
-      <a routerLink="/mon-compte"
-         routerLinkActive="active"
-         class="menu-item">
-        Mon compte
-      </a>
+      <div class="relative user-menu" (click)="$event.stopPropagation()">
+        <button type="button"
+                (click)="toggleUserMenu()"
+                class="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent hover:border-[#FFE0BF] transition">
+          <img [src]="user.photoURL || 'assets/icone.png'" class="w-8 h-8 rounded-full object-cover border">
+          <div class="flex items-center gap-1">
+            <span class="font-semibold text-sm text-[#1A1A1A]">{{ user.firstname }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </button>
 
-      <div class="flex items-center gap-2">
-        <img [src]="user.photoURL || 'assets/icone.png'" class="w-8 h-8 rounded-full object-cover border">
-        <span class="font-semibold text-sm text-[#1A1A1A]">{{ user.firstname }}</span>
+        <div *ngIf="userMenuOpen"
+             class="absolute right-0 mt-3 w-52 bg-white rounded-2xl border border-[#FFE0BF] shadow-lg py-2">
+          <a routerLink="/mon-compte"
+             routerLinkActive="active"
+             (click)="closeUserMenu()"
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            Mon compte
+          </a>
+          <a routerLink="/mes-services"
+             routerLinkActive="active"
+             (click)="closeUserMenu()"
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            Mes services
+          </a>
+          <button (click)="logout()"
+                  class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl mx-2">
+            Déconnexion
+          </button>
+        </div>
       </div>
-
-      <button (click)="logout()"
-        class="px-4 py-2 border border-red-500 text-red-500 rounded-xl text-sm hover:bg-red-500 hover:text-white transition">
-        Déconnexion
-      </button>
     </ng-container>
 
   </div>
