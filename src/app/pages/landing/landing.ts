@@ -57,6 +57,11 @@ export class Landing implements OnInit {
     this.router.navigate(['/login'], { queryParams: { redirect: '/services' } });
   }
 
+  openServiceDetails(serviceId?: string) {
+    if (!serviceId) return;
+    this.router.navigate(['/services', serviceId]);
+  }
+
   private async loadRecentRequests() {
     const all = await this.servicesApi.list();
     const normalized = all

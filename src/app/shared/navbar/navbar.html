@@ -85,7 +85,7 @@
                 class="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent hover:border-[#FFE0BF] transition">
           <img [src]="user.photoURL || 'assets/icone.png'" class="w-8 h-8 rounded-full object-cover border">
           <div class="flex items-center gap-1">
-            <span class="font-semibold text-sm text-[#1A1A1A]">{{ user.firstname }}</span>
+            <span class="font-semibold text-sm text-[#1A1A1A]">{{ displayName(user) }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -156,7 +156,12 @@
     <div class="flex flex-col items-center gap-3">
       <img [src]="user.photoURL || 'assets/icone.png'"
            class="w-16 h-16 rounded-full border-2 border-[#FFE0BF] object-cover">
-      <p class="text-center text-base font-semibold text-[#1A1A1A]">{{ user.firstname }} {{ user.lastname }}</p>
+      <div class="text-center">
+        <p class="text-base font-semibold text-[#1A1A1A]">{{ displayName(user) }}</p>
+        <p class="text-xs text-gray-500" *ngIf="user.pseudo && (user.firstname || user.lastname)">
+           {{ user.lastname }} {{ user.firstname }}
+        </p>
+      </div>
     </div>
 
      <a routerLink="/" 

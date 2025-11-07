@@ -130,6 +130,13 @@
           <p class="mt-2 text-sm text-gray-600 line-clamp-3">
             {{ (request.description || 'Description indisponible.') | slice:0:50 }}{{ ((request.description || '').length) > 50 ? '…' : '' }}
           </p>
+          <div class="mt-6 flex justify-end">
+            <button type="button"
+                    (click)="openServiceDetails(request.id)"
+                    class="inline-flex items-center gap-2 rounded-xl border border-[#FFE0BF] px-4 py-2 text-sm font-semibold text-[#FF7A00] hover:bg-[#FFF2E5]">
+              Voir +
+            </button>
+          </div>
           </div>
         </div>
         <div *ngIf="!recentRequests.length" class="md:col-span-3 rounded-3xl border border-dashed border-[#FFE0BF] bg-white/70 p-10 text-center text-gray-500">

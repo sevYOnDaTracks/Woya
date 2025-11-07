@@ -134,9 +134,11 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     const normalizedCover = coverUrl ?? this.defaultCoverIcon;
     const normalizedExtra = extraImages.filter((img): img is string => !!img);
     const contactPhone = this.resolveContactPhone(currentUser);
+    const sanitizedDescription = (this.form.description || '').slice(0, 250);
 
     const data = {
       ...this.form,
+      description: sanitizedDescription,
       contact: contactPhone,
       coverUrl: normalizedCover,
       extraImages: normalizedExtra,

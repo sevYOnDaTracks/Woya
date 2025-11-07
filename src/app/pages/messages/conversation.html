@@ -8,9 +8,12 @@
         <img [src]="otherUser?.photoURL || 'assets/icone.png'" class="w-12 h-12 rounded-full object-cover border border-[#FFE0BF]" alt="Avatar" />
         <div>
           <p class="font-semibold text-lg text-[#1A1A1A]">
-            {{ otherUser?.firstname || 'Utilisateur' }} {{ otherUser?.lastname || '' }}
+            {{ displayName(otherUser) }}
           </p>
-          <p class="text-xs text-gray-500">
+          <p class="text-xs text-gray-500" *ngIf="otherUser?.pseudo && (otherUser?.firstname || otherUser?.lastname)">
+            {{ otherUser?.firstname }} {{ otherUser?.lastname }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
             <span *ngIf="otherUser?.lastSeen">Dernière connexion {{ otherUser.lastSeen | timeAgo }}</span>
             <span *ngIf="!otherUser?.lastSeen">Actif récemment</span>
           </p>

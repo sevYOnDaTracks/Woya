@@ -20,6 +20,7 @@ export default class Register implements OnInit, OnDestroy {
   form = {
     firstname: '',
     lastname: '',
+    pseudo: '',
     email: '',
     password: '',
     countryCode: '+225',
@@ -85,6 +86,7 @@ export default class Register implements OnInit, OnDestroy {
 
       await setDoc(doc(db, 'users', cred.user.uid), {
         ...this.form,
+        pseudo: this.form.pseudo.trim(),
         phone: `${this.form.countryCode}${this.form.phone}`,
         city: this.form.city,
         address: this.form.address,

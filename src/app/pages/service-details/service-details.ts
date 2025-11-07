@@ -128,4 +128,14 @@ export class ServiceDetails {
       this.owner = null;
     }
   }
+
+  displayName(user: any | null | undefined) {
+    if (!user) return 'Prestataire';
+    if (user.pseudo && user.pseudo.trim().length > 0) {
+      return user.pseudo;
+    }
+    const firstname = user.firstname || 'Prestataire';
+    const lastname = user.lastname ? ` ${user.lastname}` : '';
+    return `${firstname}${lastname}`;
+  }
 }

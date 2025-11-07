@@ -12,6 +12,7 @@ import { firebaseServices } from '../../app.config';
 interface UserInfoForm {
   firstname: string;
   lastname: string;
+  pseudo: string;
   birthdate: string;
   phone: string;
   city: string;
@@ -31,6 +32,7 @@ export default class UserInfo implements OnInit, OnDestroy {
   form: UserInfoForm = {
     firstname: '',
     lastname: '',
+    pseudo: '',
     birthdate: '',
     phone: '',
     city: '',
@@ -70,6 +72,7 @@ export default class UserInfo implements OnInit, OnDestroy {
     this.form = {
       firstname: user.firstname || '',
       lastname: user.lastname || '',
+      pseudo: user.pseudo || '',
       birthdate: user.birthdate || '',
       phone: user.phone || '',
       city: user.city || '',
@@ -100,6 +103,7 @@ export default class UserInfo implements OnInit, OnDestroy {
     const payload: any = {
       firstname: this.form.firstname.trim(),
       lastname: this.form.lastname.trim(),
+      pseudo: this.form.pseudo.trim(),
       birthdate: this.form.birthdate || null,
       phone: this.form.phone.trim(),
       city: this.form.city.trim(),

@@ -123,4 +123,14 @@ export class Navbar implements OnInit, OnDestroy {
     if (target && target.closest('.user-menu')) return;
     this.userMenuOpen = false;
   }
+
+  displayName(user: any | null | undefined) {
+    if (!user) return 'Profil';
+    if (user.pseudo && user.pseudo.trim().length > 0) {
+      return user.pseudo;
+    }
+    const firstname = user.firstname || 'Profil';
+    const lastname = user.lastname ? ` ${user.lastname}` : '';
+    return `${firstname}${lastname}`;
+  }
 }

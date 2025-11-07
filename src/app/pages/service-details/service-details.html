@@ -56,7 +56,10 @@
            class="mt-6 border border-[#FFE0BF] rounded-2xl p-4 bg-[#FFF9F2]">
         <p class="text-xs uppercase tracking-widest text-[#FFB066]">Prestataire</p>
         <p class="text-lg font-semibold text-[#1A1A1A] mt-1">
-          {{ owner.firstname || 'Prénom inconnu' }} {{ owner.lastname || '' }}
+          {{ displayName(owner) }}
+        </p>
+        <p class="text-xs text-gray-500" *ngIf="owner?.pseudo && (owner?.firstname || owner?.lastname)">
+          {{ owner.firstname }} {{ owner.lastname }}
         </p>
         <p class="text-sm text-gray-600 mt-2 flex items-center gap-2">
           <span>📍</span> {{ owner.city || 'Ville non renseignée' }}

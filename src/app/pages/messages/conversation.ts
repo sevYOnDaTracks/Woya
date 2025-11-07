@@ -138,4 +138,14 @@ export default class ConversationPage implements OnInit, OnDestroy {
       }
     }, 50);
   }
+
+  displayName(user: any | null | undefined) {
+    if (!user) return 'Utilisateur';
+    if (user.pseudo && user.pseudo.trim().length > 0) {
+      return user.pseudo;
+    }
+    const firstname = user.firstname || 'Utilisateur';
+    const lastname = user.lastname ? ` ${user.lastname}` : '';
+    return `${firstname}${lastname}`;
+  }
 }

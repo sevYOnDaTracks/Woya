@@ -36,10 +36,12 @@ export class AuthService {
         // Première connexion → on crée un user "propre"
         const fullName = cred.user.displayName || "";
         const firstname = fullName.split(" ")[0] ?? "";
+        const pseudo = fullName || firstname || `woya-${cred.user.uid.slice(0, 6)}`;
 
         await setDoc(userRef, {
           uid: cred.user.uid,
           firstname,
+          pseudo,
           email: cred.user.email,
           photoURL: cred.user.photoURL,
           provider: "google",

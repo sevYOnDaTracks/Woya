@@ -120,4 +120,14 @@ export default class MessagesInbox implements OnInit, OnDestroy {
       return null;
     }
   }
+
+  displayName(user: any | null | undefined) {
+    if (!user) return 'Utilisateur';
+    if (user.pseudo && user.pseudo.trim().length > 0) {
+      return user.pseudo;
+    }
+    const firstname = user.firstname || 'Utilisateur';
+    const lastname = user.lastname ? ` ${user.lastname}` : '';
+    return `${firstname}${lastname}`;
+  }
 }
