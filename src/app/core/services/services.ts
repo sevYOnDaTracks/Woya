@@ -11,6 +11,9 @@ import {
   deleteDoc,
   serverTimestamp,
   where,
+  GeoPoint,
+  QueryDocumentSnapshot,
+  DocumentData,
 } from 'firebase/firestore';
 import { deleteObject, getStorage, ref as storageRef } from 'firebase/storage';
 import { firebaseServices } from '../../app.config';
@@ -26,21 +29,22 @@ export class Services {
   async list(): Promise<WoyaService[]> {
     const q = query(this.col, orderBy('createdAt', 'desc'));
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+    return snap.docs.map(docSnap => this.mapService(docSnap));
   }
 
   async listByOwner(ownerId: string): Promise<WoyaService[]> {
     const q = query(this.col, where('ownerId', '==', ownerId));
     const snap = await getDocs(q);
     return snap.docs
-      .map(d => ({ id: d.id, ...(d.data() as any) }))
+      .map(docSnap => this.mapService(docSnap))
       .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
   }
 
   create(data: any) {
     const col = collection(this.db, 'services');
+    const payload = this.toFirestorePayload(data);
     return addDoc(col, {
-      ...data,
+      ...payload,
       createdAt: serverTimestamp(),
     });
   }
@@ -52,7 +56,8 @@ export class Services {
 
   update(id: string, data: Partial<WoyaService>) {
     const ref = doc(this.db, 'services', id);
-    return updateDoc(ref, data as any);
+    const payload = this.toFirestorePayload(data);
+    return updateDoc(ref, payload as any);
   }
 
   async remove(id: string) {
@@ -79,5 +84,33 @@ export class Services {
         }
       }),
     );
+  }
+
+  private mapService(docSnap: QueryDocumentSnapshot<DocumentData>): WoyaService {
+    const data = docSnap.data() as any;
+    const location = data.location && data.location.latitude !== undefined
+      ? { lat: data.location.latitude, lng: data.location.longitude }
+      : data.location ?? null;
+
+    return {
+      id: docSnap.id,
+      ...data,
+      location,
+    } as WoyaService;
+  }
+
+  private toFirestorePayload(data: Partial<WoyaService>) {
+    const payload: any = { ...data };
+    if (payload.location && typeof payload.location.lat === 'number' && typeof payload.location.lng === 'number') {
+      payload.location = new GeoPoint(payload.location.lat, payload.location.lng);
+    } else if (payload.location === null || payload.location === undefined) {
+      delete payload.location;
+    }
+
+    if (payload.coverageKm === null || payload.coverageKm === undefined) {
+      delete payload.coverageKm;
+    }
+
+    return payload;
   }
 }

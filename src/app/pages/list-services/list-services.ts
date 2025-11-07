@@ -29,6 +29,10 @@ export default class ListServices implements OnInit, AfterViewInit {
   maxPrice: number | null = null;
   priceBoundsReady = false;
   pendingCount = 0;
+  userLocation: { lat: number; lng: number } | null = null;
+  locating = false;
+  locationError = '';
+  limitToCoverage = false;
 
   categories = [
     'Toutes',
@@ -104,6 +108,13 @@ export default class ListServices implements OnInit, AfterViewInit {
     this.previewFilters();
   }
 
+  onCoverageToggle() {
+    if (!this.userLocation) {
+      this.limitToCoverage = false;
+    }
+    this.previewFilters();
+  }
+
   onBudgetChange() {
     if (this.minPrice !== null && this.minPrice < 0) this.minPrice = 0;
     if (this.maxPrice !== null && this.maxPrice < 0) this.maxPrice = 0;
@@ -122,6 +133,44 @@ export default class ListServices implements OnInit, AfterViewInit {
       return false;
     }
     return true;
+  }
+
+  detectLocation() {
+    if (!navigator.geolocation) {
+      this.locationError = 'La géolocalisation n’est pas disponible.';
+      return;
+    }
+    this.locating = true;
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        this.locating = false;
+        this.locationError = '';
+        this.userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+        this.previewFilters();
+      },
+      () => {
+        this.locating = false;
+        this.locationError = 'Impossible de récupérer ta position.';
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+
+  clearLocation() {
+    this.userLocation = null;
+    this.limitToCoverage = false;
+    this.previewFilters();
+  }
+
+  private matchesCoverage(service: WoyaService): boolean {
+    if (!this.limitToCoverage || !this.userLocation) {
+      return true;
+    }
+    if (!service.location || !service.coverageKm) {
+      return false;
+    }
+    const distance = this.computeDistanceKm(this.userLocation, service.location);
+    return distance <= service.coverageKm;
   }
 
   private setupBudgetBounds() {
@@ -144,8 +193,9 @@ export default class ListServices implements OnInit, AfterViewInit {
 
       const matchesCategory = this.category === 'Toutes' || s.category === this.category;
       const matchesBudget = this.withinBudget(s);
+      const matchesCoverage = this.matchesCoverage(s);
 
-      return matchesText && matchesCategory && matchesBudget;
+      return matchesText && matchesCategory && matchesBudget && matchesCoverage;
     });
   }
 
@@ -157,7 +207,7 @@ export default class ListServices implements OnInit, AfterViewInit {
 
   getCurrentImage(s: WoyaService) {
     const images = [s.coverUrl, ...(s.extraImages ?? [])].filter(i => !!i);
-    if (images.length === 0) return '/assets/placeholder.jpg';
+    if (images.length === 0) return 'assets/icone.png';
     if (!(s.id! in this.imageIndex)) this.imageIndex[s.id!] = 0;
     return images[this.imageIndex[s.id!]];
   }
@@ -194,5 +244,20 @@ export default class ListServices implements OnInit, AfterViewInit {
 
   getImages(s: WoyaService) {
     return [s.coverUrl, ...(s.extraImages ?? [])].filter(i => !!i);
+  }
+
+  private computeDistanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+
+    const hav =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
+    return R * c;
   }
 }

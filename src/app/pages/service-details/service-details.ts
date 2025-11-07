@@ -56,7 +56,7 @@ export class ServiceDetails {
       ].filter((url): url is string => !!url);
 
       if (!this.gallery.length) {
-        this.gallery = ['assets/placeholder.jpg'];
+        this.gallery = ['assets/icone.png'];
       }
 
       if (this.service.ownerId) {

@@ -11,4 +11,6 @@ export interface WoyaService {
   coverUrl?: string | null;
   extraImages?: (string | null)[];
   ownerId?: string;
+  location?: { lat: number; lng: number } | null;
+  coverageKm?: number | null;
 }
