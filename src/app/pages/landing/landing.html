@@ -1,35 +1,251 @@
 
 
   <!-- HERO -->
-  <section class="flex-1 flex flex-col md:flex-row items-center justify-center gap-10 px-6 md:px-20 pt-6 md:pt-14">
-
-    <!-- Texte -->
-    <div class="text-center md:text-left max-w-lg">
-      <h2 class="text-4xl md:text-5xl font-extrabold leading-tight text-[#1A1A1A]">
-        Trouve de l’aide <br class="hidden md:block"> près de chez toi 
-      </h2>
-
-      <p class="text-[#4b4b4b] mt-4 md:mt-6 text-lg md:text-xl">
-        Des services rendus par des gens proches de ton quartier. <br>
-        Simple. Rapide. Humain.
-      </p>
-
-      <button type="button"
-        (click)="exploreServices()"
-        class="mt-6 px-6 py-3 bg-[#FF7A00] text-white font-semibold rounded-xl text-lg shadow-md hover:bg-[#e66d00] active:scale-95 transition">
-        Explorer les services
-      </button>
+  <section class="relative isolate overflow-hidden text-white bg-[#0B1120]">
+    <div class="absolute inset-0 -z-10 pointer-events-none">
+      <div class="absolute inset-0 bg-gradient-to-r from-[#FF7A00]/70 via-[#ffffff]/20 to-[#15803D]/60 opacity-90"></div>
+      <div class="absolute -bottom-10 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-white/30 blur-3xl"></div>
+      <div class="absolute top-10 right-10 h-48 w-48 rounded-full bg-[#FF7A00]/30 blur-3xl"></div>
     </div>
 
-    <!-- Illustration -->
-   <div class="hidden md:block w-96">
-     <img src="assets/cote-ivoire.png" 
-        
-           class="w-full opacity-90"> 
-    </div> 
+    <div class="mx-auto max-w-6xl px-6 pt-24 pb-20 lg:px-12 lg:pt-32">
+      <div class="space-y-8 text-center lg:text-left">
+        <div class="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-white/70">
+          <span class="size-2 rounded-full bg-[#FF7A00]"></span>
+          Communauté locale
+        </div>
 
+        <div class="grid gap-10 lg:grid-cols-[3fr,2fr] lg:items-center">
+          <div>
+            <h1 class="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+              Trouve un voisin fiable pour chaque service du quotidien.
+            </h1>
+            <p class="mt-6 text-lg text-white/80">
+              Woya! connecte habitants, artisans et freelances d’un même quartier pour des demandes rapides,
+              sécurisées et humaines. Publie ton besoin, discute dans l’app et choisis en toute confiance.
+            </p>
+            <div class="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
+              <button type="button"
+                      (click)="exploreServices()"
+                      class="inline-flex items-center justify-center rounded-2xl bg-[#FF7A00] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-[#FF7A00]/40 transition hover:bg-[#e66900]">
+                Explorer les services
+              </button>
+              <button type="button"
+                      (click)="publishService()"
+                      class="inline-flex items-center justify-center rounded-2xl border border-white/30 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10">
+                Publier un service
+              </button>
+            </div>
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm font-semibold text-white/60 lg:justify-start">
+              <div>
+                <p class="text-2xl font-bold text-white">+3 000</p>
+                <p>Services actifs</p>
+              </div>
+              <span class="h-10 w-px bg-white/20"></span>
+              <div>
+                <p class="text-2xl font-bold text-white">100%</p>
+                <p>Messagerie sécurisée</p>
+              </div>
+              <span class="h-10 w-px bg-white/20"></span>
+              <div>
+                <p class="text-2xl font-bold text-white">24/7</p>
+                <p>Confiance locale</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+            <p class="text-sm font-semibold uppercase tracking-[0.3em] text-[#FFB066]">Demandes en cours</p>
+            <div class="mt-4 space-y-4 text-left text-sm text-white/80">
+              <div class="flex items-start gap-4 rounded-2xl bg-white/5 p-4">
+                <div class="flex size-10 items-center justify-center rounded-full bg-[#FF7A00]/20 text-[#FF7A00]">
+                  🧹
+                </div>
+                <div>
+                  <p class="font-semibold text-white">Ménage express - Cocody</p>
+                  <p>Besoin demain matin • 12 000 FCFA</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-4 rounded-2xl bg-white/5 p-4">
+                <div class="flex size-10 items-center justify-center rounded-full bg-[#FF7A00]/20 text-[#FF7A00]">
+                  💻
+                </div>
+                <div>
+                  <p class="font-semibold text-white">Installation wifi - Yopougon</p>
+                  <p>RDV aujourd’hui • 18 500 FCFA</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-4 rounded-2xl bg-white/5 p-4">
+                <div class="flex size-10 items-center justify-center rounded-full bg-[#FF7A00]/20 text-[#FF7A00]">
+                  🌿
+                </div>
+                <div>
+                  <p class="font-semibold text-white">Entretien jardin - Bingerville</p>
+                  <p>Week-end prochain • 25 000 FCFA</p>
+                </div>
+              </div>
+              <p class="pt-2 text-xs text-white/60">Des centaines de nouvelles demandes chaque jour dans Abidjan et ses environs.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
-  
+  <!-- LATEST REQUESTS -->
+  <section class="bg-[#FFF2E5] py-20">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div class="text-center">
+        <p class="text-sm uppercase tracking-[0.4em] text-[#FFB066] font-semibold">Demandes récentes</p>
+        <h2 class="mt-2 text-3xl font-bold text-[#1A1A1A] sm:text-4xl">Ils cherchent un coup de main près de chez toi</h2>
+        <p class="mt-4 text-gray-600">Découvre les missions publiées ces dernières heures par la communauté Woya!</p>
+      </div>
+
+      <div class="mt-12 grid gap-6 md:grid-cols-3">
+        <div *ngFor="let request of recentRequests" class="rounded-3xl border border-[#FFE0BF] bg-white/90 shadow-sm overflow-hidden">
+          <div class="h-40 w-full overflow-hidden bg-[#FFF2E5]">
+            <img
+              [src]="request.coverUrl || 'assets/icone.png'"
+              alt="{{ request.title }}"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div class="p-6">
+          <div class="flex items-center justify-between text-sm text-gray-500">
+            <span class="inline-flex items-center gap-2 font-semibold text-[#FF7A00]">
+              <span class="size-2 rounded-full bg-[#FF7A00]"></span>
+              {{ request.category || 'Service' }}
+            </span>
+            <span>{{ request.createdAt ? (request.createdAt | date:'dd MMM, HH:mm') : 'Récemment' }}</span>
+          </div>
+          <h3 class="mt-4 text-xl font-semibold text-[#1A1A1A]">{{ request.title }}</h3>
+          <p class="mt-2 text-sm text-gray-500">📍 {{ request.city || 'Ville non renseignée' }}</p>
+          <p class="mt-4 text-lg font-bold text-[#FF7A00]">
+            {{ request.price ? (request.price | number:'1.0-0') + ' FCFA' : 'Tarif à définir' }}
+          </p>
+          <p class="mt-2 text-sm text-gray-600 line-clamp-3">
+            {{ (request.description || 'Description indisponible.') | slice:0:50 }}{{ (request.description?.length ?? 0) > 50 ? '…' : '' }}
+          </p>
+          </div>
+        </div>
+        <div *ngIf="!recentRequests.length" class="md:col-span-3 rounded-3xl border border-dashed border-[#FFE0BF] bg-white/70 p-10 text-center text-gray-500">
+          Aucune demande publique n’est disponible pour le moment. Reviens plus tard ou explore tous les services !
+        </div>
+      </div>
+
+      <div class="mt-10 flex justify-center">
+        <button type="button"
+                (click)="viewRequests()"
+                class="inline-flex items-center justify-center rounded-2xl bg-[#FF7A00] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-[#FF7A00]/40 transition hover:bg-[#e66900]">
+          Voir les demandes
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTH MODAL -->
+  <div *ngIf="authModalOpen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl">
+      <div class="mx-auto flex size-14 items-center justify-center rounded-full bg-[#FFF2E5] text-[#FF7A00]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-3A2.25 2.25 0 0 0 8.25 5.25V9m-3 0h13.5m-12 0v9.75A2.25 2.25 0 0 0 9 21h6a2.25 2.25 0 0 0 2.25-2.25V9m-7.5 4.5h3" />
+        </svg>
+      </div>
+      <h3 class="mt-6 text-xl font-semibold text-[#1A1A1A]">Connecte-toi pour voir toutes les demandes</h3>
+      <p class="mt-3 text-sm text-gray-600">
+        L’accès aux demandes est réservé aux membres Woya!. Identifie-toi pour continuer et recevoir les missions qui te correspondent.
+      </p>
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <button type="button"
+                (click)="goToLoginForRequests()"
+                class="inline-flex items-center justify-center rounded-2xl bg-[#FF7A00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#e66900]">
+          Se connecter
+        </button>
+        <button type="button"
+                (click)="closeAuthModal()"
+                class="inline-flex items-center justify-center rounded-2xl border border-gray-200 px-5 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+          Plus tard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURE BLOCK -->
+  <section class="bg-white py-24 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl lg:text-center">
+        <p class="text-sm uppercase tracking-[0.4em] text-[#FFB066] font-semibold">Pourquoi Woya!</p>
+        <h2 class="mt-2 text-4xl font-extrabold tracking-tight text-[#1A1A1A] sm:text-5xl">
+          Tout ce qu’il faut pour trouver ou proposer un service local
+        </h2>
+        <p class="mt-6 text-lg text-gray-600">
+          Woya! connecte voisins, artisans et freelances d’un même quartier. Nous simplifions les
+          échanges, sécurisons les conversations et mettons en avant la confiance locale.
+        </p>
+      </div>
+
+      <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
+        <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-2">
+          <div class="relative pl-16">
+            <dt class="text-base font-semibold text-[#1A1A1A]">
+              <div class="absolute top-0 left-0 flex size-12 items-center justify-center rounded-2xl bg-[#FF7A00] text-white shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10.5 12 4l9 6.5M5 10.5v9.5h5V15h4v5h5V10.5" />
+                </svg>
+              </div>
+              Services de proximité vérifiés
+            </dt>
+            <dd class="mt-2 text-base text-gray-600">
+              Parcours uniquement des annonces déposées par des profils identifiés. Tu sais qui se trouve derrière chaque service et dans quel quartier il intervient.
+            </dd>
+          </div>
+
+          <div class="relative pl-16">
+            <dt class="text-base font-semibold text-[#1A1A1A]">
+              <div class="absolute top-0 left-0 flex size-12 items-center justify-center rounded-2xl bg-[#FF7A00] text-white shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 8h10M7 12h6m7 4v3.5a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 19.5V5.5A1.5 1.5 0 0 1 5.5 4H12" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 4h5v5" />
+                </svg>
+              </div>
+              Messagerie sécurisée intégrée
+            </dt>
+            <dd class="mt-2 text-base text-gray-600">
+              Discute depuis l’application grâce à la messagerie Woya! et garde toutes tes conversations client/prestataire au même endroit.
+            </dd>
+          </div>
+
+          <div class="relative pl-16">
+            <dt class="text-base font-semibold text-[#1A1A1A]">
+              <div class="absolute top-0 left-0 flex size-12 items-center justify-center rounded-2xl bg-[#FF7A00] text-white shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6l3 1.5M4.5 10A7.5 7.5 0 0 1 12 3.5 7.5 7.5 0 0 1 19.5 10c0 6-7.5 10.5-7.5 10.5S4.5 16 4.5 10Z" />
+                </svg>
+              </div>
+              Confiance et avis de la communauté
+            </dt>
+            <dd class="mt-2 text-base text-gray-600">
+              Repère les prestataires recommandés par les habitants, vérifie leur dernière connexion et donne ton avis après chaque mission.
+            </dd>
+          </div>
+
+          <div class="relative pl-16">
+            <dt class="text-base font-semibold text-[#1A1A1A]">
+              <div class="absolute top-0 left-0 flex size-12 items-center justify-center rounded-2xl bg-[#FF7A00] text-white shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-3-3v6m-7 6h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z" />
+                </svg>
+              </div>
+              Publication ultra rapide
+            </dt>
+            <dd class="mt-2 text-base text-gray-600">
+              Publie ton service, ajoute tes photos et commence à recevoir des demandes en quelques minutes depuis ton téléphone.
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
 
  

@@ -25,6 +25,10 @@ export default class ListServices implements OnInit, AfterViewInit {
 
   q: string = '';
   category: string = 'Toutes';
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+  priceBoundsReady = false;
+  pendingCount = 0;
 
   categories = [
     'Toutes',
@@ -38,7 +42,7 @@ export default class ListServices implements OnInit, AfterViewInit {
     'Garde d’enfants',
   ];
 
-  constructor(private api: Services, private router:Router) {}
+  constructor(private api: Services, private router: Router) {}
 
   async ngOnInit() {
     this.services = await this.api.list();
@@ -49,7 +53,8 @@ export default class ListServices implements OnInit, AfterViewInit {
       return s;
     });
 
-    this.applyFilter();
+    this.setupBudgetBounds();
+    this.applyCurrentFilters();
     this.loading = false;
   }
 
@@ -62,15 +67,17 @@ export default class ListServices implements OnInit, AfterViewInit {
     });
   }
 
-  applyFilter() {
-    const q = this.q.toLowerCase();
+  applyCurrentFilters() {
+    const results = this.computeFilteredServices();
+    const initialChunk = results.length === 0 ? 0 : Math.min(4, results.length);
+    this.visibleCount = initialChunk;
+    this.filteredAll = results;
+    this.filtered = results.slice(0, this.visibleCount);
+    this.pendingCount = results.length;
+  }
 
-    this.filteredAll = this.services.filter(s =>
-      ([s.title, s.description, s.city, s.category].join(' ').toLowerCase().includes(q)
-      && (this.category === 'Toutes' || s.category === this.category))
-    );
-
-    this.filtered = this.filteredAll.slice(0, this.visibleCount);
+  previewFilters() {
+    this.pendingCount = this.computeFilteredServices().length;
   }
 
   async loadMore() {
@@ -91,6 +98,55 @@ export default class ListServices implements OnInit, AfterViewInit {
 
   goToDetails(id: string) {
     this.router.navigate(['/services', id]);
+  }
+
+  onFilterInputChange() {
+    this.previewFilters();
+  }
+
+  onBudgetChange() {
+    if (this.minPrice !== null && this.minPrice < 0) this.minPrice = 0;
+    if (this.maxPrice !== null && this.maxPrice < 0) this.maxPrice = 0;
+    if (this.minPrice !== null && this.maxPrice !== null && this.minPrice > this.maxPrice) {
+      this.maxPrice = this.minPrice;
+    }
+    this.previewFilters();
+  }
+
+  private withinBudget(service: WoyaService): boolean {
+    const price = typeof service.price === 'number' ? service.price : null;
+    if (this.minPrice !== null && (price === null || price < this.minPrice)) {
+      return false;
+    }
+    if (this.maxPrice !== null && (price === null || price > this.maxPrice)) {
+      return false;
+    }
+    return true;
+  }
+
+  private setupBudgetBounds() {
+    this.priceBoundsReady = this.services.some(s => typeof s.price === 'number');
+    if (!this.priceBoundsReady) {
+      this.minPrice = null;
+      this.maxPrice = null;
+    }
+    this.previewFilters();
+  }
+
+  private computeFilteredServices(): WoyaService[] {
+    const q = this.q.toLowerCase();
+
+    return this.services.filter(s => {
+      const matchesText = [s.title, s.description, s.city, s.category]
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
+
+      const matchesCategory = this.category === 'Toutes' || s.category === this.category;
+      const matchesBudget = this.withinBudget(s);
+
+      return matchesText && matchesCategory && matchesBudget;
+    });
   }
 
   imageIndex: { [id: string]: number } = {};
@@ -139,5 +195,4 @@ export default class ListServices implements OnInit, AfterViewInit {
   getImages(s: WoyaService) {
     return [s.coverUrl, ...(s.extraImages ?? [])].filter(i => !!i);
   }
-
 }
