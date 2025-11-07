@@ -12,7 +12,7 @@ import { firebaseServices } from '../../app.config';
 import { WoyaService } from '../../core/models/service.model';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
-type CitySuggestion = { displayName: string; lat: number; lng: number };
+type CitySuggestion = { label: string; city: string; lat: number; lng: number };
 
 @Component({
   selector: 'app-new-service',
@@ -24,6 +24,81 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapContainer') mapContainer?: ElementRef<HTMLDivElement>;
 
   private readonly defaultCoverIcon = 'assets/icone.png';
+  private readonly serviceSuggestions: Record<string, string[]> = {
+    'Jardinage': [
+      'Entretien jardin',
+      'Tonte de pelouse',
+      'Taille de haies',
+      'Élagage d\'arbres',
+      'Création potager urbain',
+      'Arrosage automatique',
+      'Plantation de fleurs'
+    ],
+    'Ménage & Aide à domicile': [
+      'Ménage complet',
+      'Nettoyage ponctuel',
+      'Repassage à domicile',
+      'Aide senior',
+      'Cuisine à domicile',
+      'Organisation dressing'
+    ],
+    'Cours particuliers': [
+      'Cours de maths lycée',
+      'Cours d\'anglais',
+      'Soutien scolaire primaire',
+      'Préparation BAC',
+      'Initiation informatique',
+      'Coaching examen'
+    ],
+    'Transport & Déménagement': [
+      'Déménagement complet',
+      'Aide au déménagement',
+      'Livraison express',
+      'Chauffeur privé',
+      'Navette aéroport',
+      'Course moto'
+    ],
+    'Informatique': [
+      'Dépannage ordinateur',
+      'Installation wifi',
+      'Maintenance réseau',
+      'Récupération de données',
+      'Création site vitrine',
+      'Formation bureautique'
+    ],
+    'Bricolage / Réparation': [
+      'Plomberie urgente',
+      'Électricité domestique',
+      'Montage de meubles',
+      'Peinture intérieure',
+      'Réparation climatisation',
+      'Menuiserie légère'
+    ],
+    'Beauté & Bien-être': [
+      'Coiffeur à domicile',
+      'Coiffure tresses',
+      'Barber mobile',
+      'Massage relaxant',
+      'Massage thérapeutique',
+      'Maquillage événementiel',
+      'Pose d\'ongles',
+      'Soins du visage'
+    ],
+    'Garde d\'enfants': [
+      'Baby-sitting soirée',
+      'Garde périscolaire',
+      'Accompagnement sortie d\'école',
+      'Animations anniversaire',
+      'Aide aux devoirs primaire',
+      'Garde week-end'
+    ],
+    'default': [
+      'Service à la personne',
+      'Assistance administrative',
+      'Coaching personnel',
+      'Maintenance générale'
+    ],
+  };
   loading = false;
   editing = false;
   serviceId: string | null = null;
@@ -43,11 +118,16 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   private coverageCircle?: L.Circle;
   citySuggestions: CitySuggestion[] = [];
   private cityLookupAbort?: AbortController;
+  titleSearch = '';
+  filteredTitleSuggestions: string[] = [];
+  titleDropdownOpen = false;
+  titleTouched = false;
+  private titleDropdownCloseTimeout?: any;
 
   categories = [
     'Jardinage', 'Ménage & Aide à domicile', 'Cours particuliers',
     'Transport & Déménagement', 'Informatique', 'Bricolage / Réparation',
-    'Beauté & Bien-être', 'Garde d’enfants',
+    'Beauté & Bien-être', 'Garde d\'enfants',
   ];
 
   form = {
@@ -80,6 +160,8 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       this.editing = true;
       this.serviceId = serviceId;
       await this.loadExistingService(serviceId, currentUser.uid);
+    } else {
+      this.syncTitleControls();
     }
   }
 
@@ -90,6 +172,9 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.map?.remove();
+    if (this.titleDropdownCloseTimeout) {
+      clearTimeout(this.titleDropdownCloseTimeout);
+    }
   }
 
   goBack() {
@@ -107,7 +192,12 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
-    if (!this.form.title || !this.form.city) return;
+    if (!this.form.title || !this.getCurrentSuggestions().includes(this.form.title)) {
+      this.titleTouched = true;
+      this.openTitleDropdown();
+      return;
+    }
+    if (!this.form.city) return;
     this.loading = true;
 
     let imageUrls: string[] = [];
@@ -196,7 +286,7 @@ handleFiles(files: File[]) {
 
   useDeviceLocation() {
     if (!navigator.geolocation) {
-      this.locationError = 'La géolocalisation n’est pas disponible sur ce navigateur.';
+      this.locationError = 'La géolocalisation n\'est pas disponible sur ce navigateur.';
       return;
     }
     this.locating = true;
@@ -272,6 +362,8 @@ handleFiles(files: File[]) {
     if (service.city) {
       this.form.city = service.city;
     }
+    this.ensureTitleInSuggestions(service.title, service.category);
+    this.syncTitleControls();
   }
 
   private initMap() {
@@ -333,8 +425,11 @@ handleFiles(files: File[]) {
       })
       .subscribe({
         next: result => {
-          if (result?.display_name) {
-            this.form.city = result.display_name;
+          const city = this.extractCity(result);
+          if (city) {
+            this.form.city = city;
+          } else if (result?.display_name) {
+            this.form.city = result.display_name.split(',')[0]?.trim() ?? result.display_name;
           }
         },
       });
@@ -342,7 +437,7 @@ handleFiles(files: File[]) {
 
   fillCityFromLocation() {
     if (!this.currentLocation) {
-      this.locationError = 'Aucune position disponible. Clique sur “Utiliser ma position” d’abord.';
+      this.locationError = 'Aucune position disponible. Clique sur \"Utiliser ma position\" d\'abord.';
       return;
     }
     this.reverseGeocode(this.currentLocation.lat, this.currentLocation.lng);
@@ -373,11 +468,15 @@ handleFiles(files: File[]) {
       .then(response => response.json() as Promise<any[]>)
       .then(results => {
         if (this.cityLookupAbort !== controller) return;
-        this.citySuggestions = results.map(item => ({
-          displayName: item.display_name,
-          lat: parseFloat(item.lat),
-          lng: parseFloat(item.lon),
-        }));
+        this.citySuggestions = results.map(item => {
+          const city = this.extractCity(item) || item.display_name?.split(',')[0]?.trim() || '';
+          return {
+            label: item.display_name,
+            city,
+            lat: parseFloat(item.lat),
+            lng: parseFloat(item.lon),
+          };
+        }).filter(item => item.city);
       })
       .catch(error => {
         if (error.name === 'AbortError') return;
@@ -386,7 +485,7 @@ handleFiles(files: File[]) {
   }
 
   selectCitySuggestion(suggestion: CitySuggestion) {
-    this.form.city = suggestion.displayName;
+    this.form.city = suggestion.city;
     this.setLocation({ lat: suggestion.lat, lng: suggestion.lng });
     this.citySuggestions = [];
   }
@@ -398,4 +497,111 @@ handleFiles(files: File[]) {
     return storePhone || firebasePhone || this.form.contact || '';
   }
 
+  private extractCity(result: any): string {
+    const address = result?.address;
+    if (!address) return '';
+    return (
+      address.city ||
+      address.town ||
+      address.village ||
+      address.municipality ||
+      address.state ||
+      address.county ||
+      ''
+    ).toString().trim();
+  }
+
+  get titleSuggestions(): string[] {
+    return this.serviceSuggestions[this.form.category] ?? this.serviceSuggestions['default'];
+  }
+
+  onTitleFocus() {
+    this.clearTitleCloseTimeout();
+    this.updateFilteredTitle(this.titleSearch);
+    this.titleDropdownOpen = this.filteredTitleSuggestions.length > 0;
+  }
+
+  onTitleBlur() {
+    this.clearTitleCloseTimeout();
+    this.titleDropdownCloseTimeout = setTimeout(() => {
+      this.titleDropdownOpen = false;
+    }, 120);
+  }
+
+  onTitleInput(value: string) {
+    this.titleTouched = true;
+    this.titleSearch = value;
+    this.updateFilteredTitle(value);
+    const suggestions = this.getCurrentSuggestions();
+    if (suggestions.includes(value)) {
+      this.form.title = value;
+      this.titleDropdownOpen = false;
+    } else {
+      this.form.title = '';
+      this.titleDropdownOpen = this.filteredTitleSuggestions.length > 0;
+    }
+  }
+
+  selectTitleSuggestion(option: string) {
+    this.form.title = option;
+    this.titleSearch = option;
+    this.titleDropdownOpen = false;
+    this.titleTouched = false;
+  }
+
+  onCategoryChange() {
+    const suggestions = this.getCurrentSuggestions();
+    if (!suggestions.includes(this.form.title)) {
+      this.form.title = '';
+      this.titleSearch = '';
+    }
+    this.titleDropdownOpen = false;
+    this.updateFilteredTitle('');
+  }
+
+  get isTitleInvalid() {
+    return this.titleTouched && !this.form.title;
+  }
+
+  private updateFilteredTitle(query: string) {
+    const normalized = (query || '').toLowerCase();
+    const options = this.getCurrentSuggestions();
+    this.filteredTitleSuggestions = options.filter(option =>
+      option.toLowerCase().includes(normalized),
+    );
+  }
+
+  private openTitleDropdown() {
+    this.updateFilteredTitle(this.titleSearch);
+    this.titleDropdownOpen = this.filteredTitleSuggestions.length > 0;
+  }
+
+  private syncTitleControls() {
+    this.titleSearch = this.form.title;
+    this.updateFilteredTitle(this.titleSearch);
+    this.titleTouched = false;
+  }
+
+  private ensureTitleInSuggestions(title: string, category: string) {
+    if (!title) return;
+    const suggestions = this.serviceSuggestions[category];
+    if (!suggestions) {
+      this.serviceSuggestions[category] = [title];
+      return;
+    }
+    if (!suggestions.includes(title)) {
+      this.serviceSuggestions[category] = [...suggestions, title];
+    }
+  }
+
+  private getCurrentSuggestions(): string[] {
+    return this.serviceSuggestions[this.form.category] ?? this.serviceSuggestions['default'];
+  }
+
+  private clearTitleCloseTimeout() {
+    if (this.titleDropdownCloseTimeout) {
+      clearTimeout(this.titleDropdownCloseTimeout);
+      this.titleDropdownCloseTimeout = undefined;
+    }
+  }
 }

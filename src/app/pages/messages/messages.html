@@ -43,6 +43,9 @@
                 <p class="text-xs text-gray-500" *ngIf="item.otherUser?.pseudo && (item.otherUser?.firstname || item.otherUser?.lastname)">
                   {{ item.otherUser?.firstname }} {{ item.otherUser?.lastname }}
                 </p>
+                <p class="text-xs text-gray-500" *ngIf="item.otherUser?.profession">
+                  {{ item.otherUser.profession }}
+                </p>
 
                 <p class="text-sm text-gray-600 truncate mt-1">
                   {{ item.conversation.lastMessage?.body || 'Aucun message pour le moment' }}

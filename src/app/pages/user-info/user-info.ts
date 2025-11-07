@@ -13,6 +13,7 @@ interface UserInfoForm {
   firstname: string;
   lastname: string;
   pseudo: string;
+  profession: string;
   birthdate: string;
   phone: string;
   city: string;
@@ -33,6 +34,7 @@ export default class UserInfo implements OnInit, OnDestroy {
     firstname: '',
     lastname: '',
     pseudo: '',
+    profession: '',
     birthdate: '',
     phone: '',
     city: '',
@@ -73,6 +75,7 @@ export default class UserInfo implements OnInit, OnDestroy {
       firstname: user.firstname || '',
       lastname: user.lastname || '',
       pseudo: user.pseudo || '',
+      profession: user.profession || '',
       birthdate: user.birthdate || '',
       phone: user.phone || '',
       city: user.city || '',
@@ -104,6 +107,7 @@ export default class UserInfo implements OnInit, OnDestroy {
       firstname: this.form.firstname.trim(),
       lastname: this.form.lastname.trim(),
       pseudo: this.form.pseudo.trim(),
+      profession: this.form.profession.trim(),
       birthdate: this.form.birthdate || null,
       phone: this.form.phone.trim(),
       city: this.form.city.trim(),

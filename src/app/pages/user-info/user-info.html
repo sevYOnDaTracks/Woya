@@ -49,6 +49,12 @@
                  class="field-input" placeholder="Ton identifiant visible (ex: SuperVoisin)" />
         </div>
 
+        <div>
+          <label class="field-label" for="profession">Profession</label>
+          <input id="profession" name="profession" [(ngModel)]="form.profession" maxlength="60"
+                 class="field-input" placeholder="Ex: Plombier, Designer UX…" />
+        </div>
+
         <div class="grid md:grid-cols-2 gap-5">
           <div>
             <label class="field-label" for="firstname">Prénom</label>

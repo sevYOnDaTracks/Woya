@@ -10,34 +10,66 @@
 
   <div class="flex flex-col gap-4">
 
-    <input [(ngModel)]="form.title" placeholder="Titre du service"
-           class="border rounded-xl px-4 py-3 outline-none" />
+    <div>
+      <div class="relative">
+        <input [(ngModel)]="titleSearch"
+               name="titleSearch"
+               placeholder="Titre du service (sélectionne une proposition)"
+               class="border rounded-xl px-4 py-3 outline-none w-full"
+               autocomplete="off"
+               (focus)="onTitleFocus()"
+               (blur)="onTitleBlur()"
+               (input)="onTitleInput($event.target.value)" />
+        <ul *ngIf="titleDropdownOpen && filteredTitleSuggestions.length"
+            class="absolute left-0 right-0 z-10 mt-2 rounded-2xl border border-[#FFE0BF] bg-white shadow-lg max-h-48 overflow-auto text-sm">
+          <li *ngFor="let suggestion of filteredTitleSuggestions"
+              (mousedown)="selectTitleSuggestion(suggestion)"
+              class="px-4 py-2 cursor-pointer hover:bg-[#FFF2E5]">
+            {{ suggestion }}
+          </li>
+        </ul>
+      </div>
+      <p class="text-xs text-gray-500 mt-1">
+        Choisis un intitulé dans la liste pour uniformiser les annonces.
+      </p>
+      <p *ngIf="isTitleInvalid" class="text-xs text-red-500 mt-1">
+        Sélectionne un titre dans les suggestions proposées.
+      </p>
+    </div>
 
     <select [(ngModel)]="form.category"
+            (change)="onCategoryChange()"
             class="border rounded-xl px-4 py-3 outline-none">
       <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
     </select>
 
-    <div class="relative">
-      <input [(ngModel)]="form.city"
-             (input)="onCityInput($event.target.value)"
-             placeholder="Ville / Quartier"
-             class="border rounded-xl px-4 py-3 outline-none w-full pr-12" />
+    <div>
+      <div class="relative">
+        <input [(ngModel)]="form.city"
+               (input)="onCityInput($event.target.value)"
+               placeholder="Ville / Quartier"
+               class="border rounded-xl px-4 py-3 outline-none w-full" />
+        <ul *ngIf="citySuggestions.length"
+            class="absolute z-10 mt-2 w-full rounded-2xl border border-[#FFE0BF] bg-white shadow-lg max-h-48 overflow-auto text-sm">
+          <li *ngFor="let suggestion of citySuggestions"
+              (click)="selectCitySuggestion(suggestion)"
+              class="px-4 py-2 cursor-pointer hover:bg-[#FFF2E5]">
+            <p class="font-semibold text-sm text-[#1A1A1A]">{{ suggestion.city }}</p>
+            <p class="text-xs text-gray-500 truncate">{{ suggestion.label }}</p>
+          </li>
+        </ul>
+      </div>
       <button type="button"
               (click)="fillCityFromLocation()"
-              class="absolute inset-y-0 right-3 flex items-center text-[#FF7A00] hover:text-[#e66900]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8.25v0m0 7.5v0m-3.75-3.75h7.5m-3.75-9.75v0m0 19.5v0m-9.75-9.75v0m19.5 0v0" />
+              class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[#FF7A00] hover:text-[#e66900]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2a7 7 0 0 0-7 7c0 4.32 5.25 9.5 6.44 10.62a1 1 0 0 0 1.12 0C13.75 18.5 19 13.32 19 9a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 14.5 9 2.5 2.5 0 0 1 12 11.5Z"/>
         </svg>
+        Utiliser ma position
       </button>
-      <ul *ngIf="citySuggestions.length"
-          class="absolute z-10 mt-2 w-full rounded-2xl border border-[#FFE0BF] bg-white shadow-lg max-h-48 overflow-auto text-sm">
-        <li *ngFor="let suggestion of citySuggestions"
-            (click)="selectCitySuggestion(suggestion)"
-            class="px-4 py-2 cursor-pointer hover:bg-[#FFF2E5]">
-          {{ suggestion.displayName }}
-        </li>
-      </ul>
+      <p class="text-xs text-gray-500 mt-1">
+        Clique pour remplir automatiquement depuis ta localisation.
+      </p>
     </div>
 
     <input [(ngModel)]="form.price" type="number" placeholder="Prix (FCFA)"

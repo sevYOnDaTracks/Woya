@@ -61,6 +61,9 @@
         <p class="text-xs text-gray-500" *ngIf="owner?.pseudo && (owner?.firstname || owner?.lastname)">
           {{ owner.firstname }} {{ owner.lastname }}
         </p>
+        <p class="text-sm text-gray-600 mt-1" *ngIf="owner?.profession">
+          {{ owner.profession }}
+        </p>
         <p class="text-sm text-gray-600 mt-2 flex items-center gap-2">
           <span>📍</span> {{ owner.city || 'Ville non renseignée' }}
         </p>
