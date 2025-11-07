@@ -1,4 +1,5 @@
-<div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4 py-52 pt-16 md:pt-16">
+<ng-container *ngIf="!isLoggedIn; else alreadyLoggedLogin">
+<div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4 py-24 pt-12 md:pt-16">
 
   <div class="bg-white w-full max-w-md p-12 rounded-2xl shadow-lg border ">
 
@@ -45,3 +46,16 @@
 
   </div>
 </div>
+</ng-container>
+
+<ng-template #alreadyLoggedLogin>
+  <div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4">
+    <div class="bg-white w-full max-w-md p-10 rounded-2xl shadow-lg border text-center space-y-4">
+      <p class="text-lg font-semibold text-[#1A1A1A]">Tu es déjà connecté.</p>
+      <a routerLink="/services"
+         class="inline-flex items-center justify-center rounded-full border border-[#FF7A00] px-5 py-2 text-sm font-semibold text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white transition">
+        Retour aux services
+      </a>
+    </div>
+  </div>
+</ng-template>

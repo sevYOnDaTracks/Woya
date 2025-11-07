@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';  // ✅ ICI
@@ -6,6 +6,8 @@ import { firebaseServices } from '../../../app.config';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { AuthStore } from '../../../core/store/auth.store';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -13,7 +15,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
   imports: [FormsModule, RouterLink, CommonModule], // ✅ AJOUTE CommonModule ICI
   templateUrl: './register.html'
 })
-export default class Register {
+export default class Register implements OnInit, OnDestroy {
 
   form = {
     firstname: '',
@@ -32,8 +34,23 @@ export default class Register {
   loading = false;
   error = '';
   showBirthdatePicker = false;
+  isLoggedIn = false;
+  private authSub?: Subscription;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authStore: AuthStore) {}
+
+  ngOnInit() {
+    this.authSub = this.authStore.user$.subscribe(user => {
+      this.isLoggedIn = !!user;
+      if (this.isLoggedIn) {
+        this.router.navigate(['/services']);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.authSub?.unsubscribe();
+  }
 
   selectProfileImage(e: any) {
     const f = e.target.files?.[0];

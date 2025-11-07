@@ -23,6 +23,7 @@ type CitySuggestion = { displayName: string; lat: number; lng: number };
 export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapContainer') mapContainer?: ElementRef<HTMLDivElement>;
 
+  private readonly defaultCoverIcon = 'assets/icone.png';
   loading = false;
   editing = false;
   serviceId: string | null = null;
@@ -106,7 +107,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
-    if (!this.form.title || !this.form.city || !this.form.contact) return;
+    if (!this.form.title || !this.form.city) return;
     this.loading = true;
 
     let imageUrls: string[] = [];
@@ -130,11 +131,13 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       extraImages = imageUrls.slice(1);
     }
 
-    const normalizedCover = coverUrl ?? undefined;
+    const normalizedCover = coverUrl ?? this.defaultCoverIcon;
     const normalizedExtra = extraImages.filter((img): img is string => !!img);
+    const contactPhone = this.resolveContactPhone(currentUser);
 
     const data = {
       ...this.form,
+      contact: contactPhone,
       coverUrl: normalizedCover,
       extraImages: normalizedExtra,
       ownerId: currentUser.uid,
@@ -384,6 +387,13 @@ handleFiles(files: File[]) {
     this.form.city = suggestion.displayName;
     this.setLocation({ lat: suggestion.lat, lng: suggestion.lng });
     this.citySuggestions = [];
+  }
+
+  private resolveContactPhone(currentUser: { phoneNumber?: string } | null) {
+    const storeUser = this.auth.user$.value;
+    const storePhone = typeof storeUser?.phone === 'string' ? storeUser.phone : '';
+    const firebasePhone = typeof currentUser?.phoneNumber === 'string' ? currentUser.phoneNumber : '';
+    return storePhone || firebasePhone || this.form.contact || '';
   }
 
 }

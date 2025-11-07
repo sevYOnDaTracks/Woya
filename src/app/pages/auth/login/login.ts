@@ -1,23 +1,35 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth';
 import { FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
 import { firebaseServices } from '../../../app.config';
+import { AuthStore } from '../../../core/store/auth.store';
+import { CommonModule } from '@angular/common';
 
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.html'
 })
-export default class Login {
+export default class Login implements OnInit {
 
   email = '';
   password = '';
   loading = false;
+  isLoggedIn = false;
 
-  constructor(private auth: AuthService , private router : Router) {}
+  constructor(private auth: AuthService , private router : Router, private authStore: AuthStore) {}
+
+  ngOnInit() {
+    this.authStore.user$.subscribe(user => {
+      this.isLoggedIn = !!user;
+      if (this.isLoggedIn) {
+        this.router.navigate(['/services']);
+      }
+    });
+  }
 
   async login() {
     this.loading = true;
