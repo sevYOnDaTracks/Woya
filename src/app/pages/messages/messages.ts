@@ -24,6 +24,7 @@ export default class MessagesInbox implements OnInit, OnDestroy {
   loading = true;
   conversations: ConversationItem[] = [];
   currentUid: string | null = null;
+  searchTerm = '';
 
   private subs: Subscription[] = [];
   private inboxSub?: Subscription;
@@ -129,5 +130,23 @@ export default class MessagesInbox implements OnInit, OnDestroy {
     const firstname = user.firstname || 'Utilisateur';
     const lastname = user.lastname ? ` ${user.lastname}` : '';
     return `${firstname}${lastname}`;
+  }
+
+  get filteredConversations() {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) return this.conversations;
+    return this.conversations.filter(item => {
+      const haystack = [
+        this.displayName(item.otherUser),
+        item.otherUser?.firstname || '',
+        item.otherUser?.lastname || '',
+        item.otherUser?.pseudo || '',
+        item.otherUser?.profession || '',
+        item.conversation.lastMessage?.body || '',
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(term);
+    });
   }
 }

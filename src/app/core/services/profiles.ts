@@ -202,10 +202,10 @@ export class ProfilesService {
       authorId: current.uid,
       message: message.trim(),
       author: {
-        pseudo: profile?.pseudo ?? profile?.firstname,
-        firstname: profile?.firstname,
-        lastname: profile?.lastname,
-        photoURL: profile?.photoURL,
+        pseudo: (profile?.pseudo ?? profile?.firstname ?? '').toString(),
+        firstname: (profile?.firstname ?? '').toString(),
+        lastname: (profile?.lastname ?? '').toString(),
+        photoURL: profile?.photoURL ?? '',
       },
       createdAt: serverTimestamp(),
     });

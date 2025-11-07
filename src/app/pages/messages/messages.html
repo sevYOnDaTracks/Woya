@@ -1,5 +1,5 @@
 <section class="min-h-screen bg-[#FFF7EB] pt-28 pb-16 px-4 md:px-16">
-  <div class="max-w-5xl mx-auto">
+  <div class="max-w-5xl -mt20 mx-auto">
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
       <div>
         <p class="text-sm uppercase tracking-[0.35em] text-[#FFB066]">Messagerie</p>
@@ -8,9 +8,6 @@
           Retrouvez ici toutes vos conversations avec les prestataires et clients.
         </p>
       </div>
-      <button (click)="startNew()" class="self-start md:self-center px-5 py-3 rounded-2xl bg-[#FF7A00] text-white text-sm font-semibold shadow-sm hover:bg-[#e66900] transition">
-        Explorer des services
-      </button>
     </header>
 
     
@@ -21,6 +18,22 @@
       </div>
 
       <ng-container *ngIf="!loading">
+        <div class="px-6 py-4 border-b border-[#FFE0BF] flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+             *ngIf="conversations.length">
+          <div class="relative flex-1">
+            <input type="text"
+                   [(ngModel)]="searchTerm"
+                   placeholder="Rechercher par prénom, pseudo ou message..."
+                   class="w-full rounded-2xl border border-[#FFE0BF] px-4 py-2 outline-none text-sm text-gray-700 focus:ring-2 focus:ring-[#FF7A00]/40" />
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#FF7A00] text-xs font-semibold">
+              {{ filteredConversations.length }}/{{ conversations.length }}
+            </span>
+          </div>
+          <p class="text-xs text-gray-500 text-center md:text-right" *ngIf="conversations.length && conversations[0].conversation.updatedAt">
+            Dernière maj {{ conversations[0].conversation.updatedAt | timeAgo }}
+          </p>
+        </div>
+
         <div *ngIf="!conversations.length" class="py-16 flex flex-col items-center justify-center text-center gap-3">
           <img src="assets/icone.png" alt="Messagerie vide" class="w-20 h-20 opacity-80 rounded-full border border-[#FFE0BF] object-cover" />
           <p class="text-lg font-semibold text-[#1A1A1A]">Aucune conversation pour le moment</p>
@@ -29,8 +42,13 @@
           </p>
         </div>
 
-        <ul *ngIf="conversations.length" class="divide-y divide-[#FFE0BF]">
-          <li *ngFor="let item of conversations" (click)="open(item.conversation)" class="cursor-pointer px-6 py-5 hover:bg-[#FFF4E6] transition">
+        <div *ngIf="conversations.length && !filteredConversations.length" class="py-10 text-center text-sm text-gray-500">
+          Aucun résultat pour « {{ searchTerm }} ».
+        </div>
+
+        <div *ngIf="filteredConversations.length" class="max-h-[32rem] overflow-y-auto">
+        <ul class="divide-y divide-[#FFE0BF]">
+          <li *ngFor="let item of filteredConversations" (click)="open(item.conversation)" class="cursor-pointer px-6 py-5 hover:bg-[#FFF4E6] transition">
             <div class="flex gap-4 items-start">
               <img [src]="item.otherUser?.photoURL || 'assets/icone.png'" alt="Avatar" class="w-12 h-12 rounded-full object-cover border border-[#FFE0BF]" />
               <div class="flex-1 min-w-0">
@@ -59,6 +77,7 @@
             </div>
           </li>
         </ul>
+        </div>
       </ng-container>
     </div>
   </div>
