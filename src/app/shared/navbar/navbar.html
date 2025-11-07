@@ -51,8 +51,12 @@
 
       <a routerLink="/messagerie"
          routerLinkActive="active"
-         class="menu-item">
+         class="menu-item inline-flex items-center gap-2">
         Messagerie
+        <span *ngIf="unreadCount > 0"
+              class="ml-1 inline-flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full min-w-[1.5rem] px-2 py-0.5 leading-none">
+          {{ unreadCount > 10 ? '10+' : unreadCount }}
+        </span>
       </a>
 
       <a routerLink="/services/new"
@@ -118,8 +122,12 @@
       <a routerLink="/messagerie"
          routerLinkActive="text-[#FF7A00]"
          (click)="toggleMenu()"
-         class="text-lg font-semibold">
+         class="text-lg font-semibold flex items-center gap-2">
         Messagerie
+        <span *ngIf="unreadCount > 0"
+              class="ml-1 inline-flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full min-w-[1.5rem] px-2 py-0.5 leading-none">
+          {{ unreadCount > 10 ? '10+' : unreadCount }}
+        </span>
       </a>
 
       <a routerLink="/services/new" 
