@@ -4,6 +4,7 @@ import ListServices from './pages/list-services/list-services';
 import  NewService  from './pages/new-service/new-service';
 import  Register  from './pages/auth/register/register';
 import Login from './pages/auth/login/login';
+import UserInfo from './pages/user-info/user-info';
 
 export const routes: Routes = [
     { path: '', component: Landing },
@@ -15,6 +16,7 @@ export const routes: Routes = [
 {
   path: 'register',component :Register
 },
+    { path: 'mon-compte', component: UserInfo },
 
     {
         path: 'services/:id',

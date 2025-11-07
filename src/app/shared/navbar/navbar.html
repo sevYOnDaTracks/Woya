@@ -35,10 +35,18 @@
 
     <!-- Si connecté -->
     <ng-container *ngIf="auth.user$ | async as user">
+      <!--
       <a routerLink="/mes-services"
          routerLinkActive="active"
          class="menu-item">
         Mes services
+      </a>
+      -->
+
+      <a routerLink="/mon-compte"
+         routerLinkActive="active"
+         class="menu-item">
+        Mon compte
       </a>
 
       <div class="flex items-center gap-2">
@@ -83,11 +91,21 @@
      class="w-10 h-10 rounded-full border object-cover">
 
 
+      <!--
       <a routerLink="/mes-services" 
          routerLinkActive="text-[#FF7A00]"
          (click)="toggleMenu()" 
          class="text-lg font-semibold">
         Mes services
+      </a>
+      -->
+
+      <a routerLink="/mon-compte" 
+         routerLinkActive="text-[#FF7A00]"
+         [routerLinkActiveOptions]="{ exact: true }"
+         (click)="toggleMenu()" 
+         class="text-lg font-semibold">
+        Mon compte
       </a>
 
     <!-- LIENS AVEC COULEUR ACTIVE -->

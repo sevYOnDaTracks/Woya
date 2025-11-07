@@ -1,0 +1,129 @@
+<div class="min-h-screen bg-[#FFF7EB] py-16 px-4">
+  <div class="mx-auto max-w-4xl bg-white rounded-3xl shadow-lg border border-[#FFE0BF] p-6 md:p-10">
+
+    <div class="flex items-center justify-between flex-wrap gap-4 mb-8">
+      <div>
+        <p class="text-sm uppercase tracking-[0.25em] text-[#FFB066]">Espace personnel</p>
+        <h1 class="text-3xl font-extrabold text-[#FF7A00] mt-1">Mon compte</h1>
+        <p class="text-sm text-gray-500">Consultez et mettez à jour vos informations personnelles.</p>
+      </div>
+
+      <button routerLink="/services"
+              class="px-4 py-2 text-sm font-semibold text-[#FF7A00] border border-[#FF7A00] rounded-2xl hover:bg-[#FF7A00] hover:text-white transition">
+        Retour aux services
+      </button>
+    </div>
+
+    <ng-container *ngIf="isLoggedIn; else offline">
+      <form (ngSubmit)="save()" #accountForm="ngForm" class="space-y-8">
+
+        <div class="flex flex-col md:flex-row items-center gap-6 rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2] p-6">
+          <div class="relative w-28 h-28">
+            <img [src]="photoPreview || 'assets/icone.png'"
+                 alt="Photo de profil"
+                 class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md bg-gray-100" />
+          </div>
+          <div class="text-center md:text-left flex-1">
+            <p class="text-lg font-semibold text-[#FF7A00]">Photo de profil</p>
+            <p class="text-sm text-gray-500 mb-4">Choisissez une image carrée (JPG ou PNG) pour rester identifiable sur la plateforme.</p>
+
+            <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+              <label for="avatarInput"
+                     class="cursor-pointer px-4 py-2 rounded-2xl text-sm font-semibold text-white bg-[#FF7A00] hover:bg-[#e66d00] transition">
+                Changer de photo
+              </label>
+              <button type="button"
+                      (click)="clearPhotoSelection()"
+                      class="px-4 py-2 rounded-2xl border text-sm font-semibold text-gray-600 hover:bg-white">
+                Réinitialiser
+              </button>
+            </div>
+            <input id="avatarInput" type="file" accept="image/*" class="hidden" (change)="onSelectPhoto($event)" />
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-5">
+          <div>
+            <label class="field-label" for="firstname">Prénom</label>
+            <input id="firstname" name="firstname" [(ngModel)]="form.firstname" required maxlength="60"
+                   class="field-input" placeholder="Votre prénom" />
+          </div>
+          <div>
+            <label class="field-label" for="lastname">Nom</label>
+            <input id="lastname" name="lastname" [(ngModel)]="form.lastname" required maxlength="60"
+                   class="field-input" placeholder="Votre nom" />
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-5">
+          <div>
+            <label class="field-label" for="phone">Téléphone</label>
+            <input id="phone" name="phone" [(ngModel)]="form.phone" maxlength="30"
+                   class="field-input" placeholder="+225 0700000000" />
+          </div>
+          <div>
+            <label class="field-label" for="birthdate">Date de naissance</label>
+            <input id="birthdate" name="birthdate" [(ngModel)]="form.birthdate" type="date"
+                   class="field-input" />
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-5">
+          <div>
+            <label class="field-label" for="city">Ville</label>
+            <input id="city" name="city" [(ngModel)]="form.city" maxlength="80"
+                   class="field-input" placeholder="Abidjan, Paris..." />
+          </div>
+          <div>
+            <label class="field-label" for="address">Adresse complète</label>
+            <input id="address" name="address" [(ngModel)]="form.address" maxlength="120"
+                   class="field-input" placeholder="Lot 123, Cocody Angré" />
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label" for="bio">Bio</label>
+          <textarea id="bio" name="bio" [(ngModel)]="form.bio" rows="4" maxlength="300"
+                    class="field-input resize-none" placeholder="Décrivez-vous en quelques lignes..."></textarea>
+        </div>
+
+        <div class="bg-[#FFF9F2] border border-[#FFE0BF] rounded-2xl p-4 text-sm text-gray-600">
+          <p><span class="font-semibold text-[#FF7A00]">Email :</span> {{ user?.email || 'Non renseigné' }}</p>
+          <p class="text-xs text-gray-400 mt-1">Pour modifier votre email, contactez l'assistance.</p>
+        </div>
+
+        <div *ngIf="success" class="text-sm text-green-600 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
+          {{ success }}
+        </div>
+        <div *ngIf="error" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
+          {{ error }}
+        </div>
+
+        <div class="flex flex-wrap gap-4 justify-end">
+          <button type="button"
+                  class="px-4 py-2 rounded-2xl border text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                  (click)="resetForm()">
+            Réinitialiser
+          </button>
+          <button type="submit"
+                  [disabled]="loading || accountForm.invalid"
+                  class="px-6 py-3 rounded-2xl text-sm font-semibold text-white bg-[#FF7A00] hover:bg-[#e66d00] disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ loading ? 'Enregistrement...' : 'Enregistrer mes informations' }}
+          </button>
+        </div>
+      </form>
+    </ng-container>
+
+    <ng-template #offline>
+      <div class="text-center py-16">
+        <p class="text-lg font-semibold text-gray-700 mb-2">Vous n'êtes pas connecté.</p>
+        <p class="text-sm text-gray-500 mb-6">Connectez-vous pour gérer vos informations personnelles.</p>
+        <button (click)="goToLogin()"
+                class="px-6 py-3 rounded-2xl text-white bg-[#FF7A00] font-semibold hover:bg-[#e66d00] transition">
+          Se connecter
+        </button>
+      </div>
+    </ng-template>
+
+  </div>
+</div>
