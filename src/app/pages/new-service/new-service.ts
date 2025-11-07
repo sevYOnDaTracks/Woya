@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -13,7 +13,7 @@ import { WoyaService } from '../../core/models/service.model';
 @Component({
   selector: 'app-new-service',
   standalone: true,
-  imports: [CommonModule, FormsModule , RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './new-service.html'
 })
 export default class NewService implements OnInit {

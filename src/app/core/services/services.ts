@@ -1,5 +1,18 @@
 import { Injectable } from '@angular/core';
-import { collection, addDoc, getDocs, query, orderBy, doc, getDoc, updateDoc, deleteDoc, serverTimestamp, where } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore';
+import { deleteObject, getStorage, ref as storageRef } from 'firebase/storage';
 import { firebaseServices } from '../../app.config';
 import { WoyaService } from '../models/service.model';
 
@@ -42,8 +55,29 @@ export class Services {
     return updateDoc(ref, data as any);
   }
 
-  remove(id: string) {
-    const ref = doc(this.db, 'services', id);
-    return deleteDoc(ref);
+  async remove(id: string) {
+    const docRef = doc(this.db, 'services', id);
+    const snap = await getDoc(docRef);
+    const data = snap.exists() ? (snap.data() as WoyaService) : null;
+
+    await deleteDoc(docRef);
+    if (!data) return;
+
+    const storage = getStorage();
+    const images = [
+      data.coverUrl,
+      ...(data.extraImages ?? []),
+    ].filter((url): url is string => !!url);
+
+    await Promise.allSettled(
+      images.map(url => {
+        try {
+          const fileRef = storageRef(storage, url);
+          return deleteObject(fileRef);
+        } catch {
+          return Promise.resolve();
+        }
+      }),
+    );
   }
 }

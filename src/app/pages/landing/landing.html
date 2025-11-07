@@ -93,7 +93,11 @@
   </section>
 
   <!-- LATEST REQUESTS -->
-  <section class="bg-[#FFF2E5] py-20">
+  <section class="relative isolate overflow-hidden py-20 text-[#1A1A1A]">
+    <div class="absolute inset-0 -z-10 pointer-events-none">
+      <div class="absolute inset-0 bg-gradient-to-r from-[#FF7A00]/20 via-white/60 to-[#15803D]/20 opacity-90"></div>
+      <div class="absolute -bottom-10 right-10 h-64 w-64 rounded-full bg-[#FF7A00]/10 blur-3xl"></div>
+    </div>
     <div class="mx-auto max-w-6xl px-6 lg:px-8">
       <div class="text-center">
         <p class="text-sm uppercase tracking-[0.4em] text-[#FFB066] font-semibold">Demandes récentes</p>
@@ -124,7 +128,7 @@
             {{ request.price ? (request.price | number:'1.0-0') + ' FCFA' : 'Tarif à définir' }}
           </p>
           <p class="mt-2 text-sm text-gray-600 line-clamp-3">
-            {{ (request.description || 'Description indisponible.') | slice:0:50 }}{{ (request.description?.length ?? 0) > 50 ? '…' : '' }}
+            {{ (request.description || 'Description indisponible.') | slice:0:50 }}{{ ((request.description || '').length) > 50 ? '…' : '' }}
           </p>
           </div>
         </div>
