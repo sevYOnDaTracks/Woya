@@ -82,18 +82,28 @@
       <div class="mt-6 space-y-3">
         <button (click)="contactOwner()"
                 [disabled]="contacting"
-                class="w-full px-4 py-3 bg-[#FF7A00] hover:bg-[#e66d00] text-white rounded-xl font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed">
-          Contacter par messagerie
+                aria-label="Contacter par messagerie"
+                class="w-full flex items-center justify-center px-4 py-3 bg-[#FF7A00] hover:bg-[#e66d00] text-white rounded-xl font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="m3 8 8.4 6.3a1 1 0 0 0 1.2 0L21 8" />
+          </svg>
         </button>
 
         <a [href]="whatsapp()" target="_blank"
-           class="block w-full text-center px-4 py-3 bg-[#3BAF4A] hover:bg-[#2f8f3c] text-white rounded-xl font-semibold transition">
-          Contacter sur WhatsApp
+           aria-label="Contacter sur WhatsApp"
+           class="block w-full px-4 py-3 bg-[#3BAF4A] hover:bg-[#2f8f3c] text-white rounded-xl font-semibold transition flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.02 2a9.78 9.78 0 0 0-9.8 9.77 9.63 9.63 0 0 0 1.36 4.94L2 22l5.46-1.7a9.93 9.93 0 0 0 4.56 1.1h.01A9.78 9.78 0 0 0 22 11.75 9.72 9.72 0 0 0 12.02 2Zm5.77 13.77c-.24.68-1.37 1.3-1.88 1.39s-.92.21-3.15-.67a11.22 11.22 0 0 1-3.67-2.28 12.94 12.94 0 0 1-2.4-3.01 5.31 5.31 0 0 1-1.1-2.87 3.09 3.09 0 0 1 1-2.34 1 1 0 0 1 .7-.33c.18 0 .35 0 .5.01s.38-.06.59.45.75 1.84.81 2a.48.48 0 0 1 0 .46 1 1 0 0 1-.15.33c-.07.13-.15.23-.22.3s-.15.15-.07.3a7.75 7.75 0 0 0 1.4 1.72 7 7 0 0 0 2.06 1.35c.25.12.4.1.55-.05s.64-.75.81-1 .34-.21.56-.12 1.45.68 1.7.8.42.18.48.28a2.82 2.82 0 0 1-.17 1.31Z"/>
+          </svg>
         </a>
 
         <button (click)="call()"
-           class="w-full px-4 py-3 bg-slate-400 hover:bg-blue-700 text-white rounded-xl font-semibold transition">
-          Appeler
+                aria-label="Appeler par téléphone"
+           class="w-full px-4 py-3 bg-slate-400 hover:bg-blue-700 text-white rounded-xl font-semibold transition flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.62 10.79a15.91 15.91 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1-.24 12.35 12.35 0 0 0 3.87.62 1 1 0 0 1 1 1v3.51a1 1 0 0 1-1 1A17.5 17.5 0 0 1 3 6a1 1 0 0 1 1-1h3.52a1 1 0 0 1 1 1 12.35 12.35 0 0 0 .62 3.87 1 1 0 0 1-.24 1Z" />
+          </svg>
         </button>
       </div>
 
@@ -107,8 +117,8 @@
   </div>
 
   <!-- DESCRIPTION -->
-  <div class="mt-10">
-    <h2 class="text-lg font-semibold text-[#1A1A1A] mb-2">Description</h2>
+  <div class="mt-10 bg-white rounded-2xl shadow-sm border border-[#FFE0BF] p-6">
+    <h2 class="text-lg font-semibold text-[#1A1A1A] mb-3">Description</h2>
     <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ service.description }}</p>
   </div>
 

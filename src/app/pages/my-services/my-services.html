@@ -44,14 +44,31 @@
               <button type="button" class="ghost-btn" (click)="viewService(service)">
                 Voir
               </button>
-              <button type="button" class="secondary-btn" (click)="editService(service)">
-                Modifier
+              <button type="button"
+                      class="secondary-btn flex items-center justify-center"
+                      aria-label="Modifier le service"
+                      (click)="editService(service)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487 19.5 7.125a1.5 1.5 0 0 1 0 2.121l-8.59 8.59a2 2 0 0 1-.894.512l-4.274 1.068a1 1 0 0 1-1.213-1.213l1.068-4.275a2 2 0 0 1 .512-.894l8.59-8.59a1.5 1.5 0 0 1 2.121 0Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 6l3 3" />
+                </svg>
               </button>
               <button type="button"
-                      class="danger-btn"
+                      class="danger-btn flex items-center justify-center"
                       [disabled]="deletingId === service.id"
+                      aria-label="Supprimer le service"
                       (click)="deleteService(service)">
-                {{ deletingId === service.id ? 'Suppression…' : 'Supprimer' }}
+                <ng-container *ngIf="deletingId === service.id; else trashIcon">
+                  <span class="text-xs font-semibold tracking-wide uppercase">Suppression…</span>
+                </ng-container>
+                <ng-template #trashIcon>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 11v6M14 11v6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2Z" />
+                  </svg>
+                </ng-template>
               </button>
             </div>
           </div>
