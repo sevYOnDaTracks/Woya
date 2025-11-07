@@ -43,6 +43,17 @@
       </a>
       -->
 
+      <a routerLink="/mes-services"
+         routerLinkActive="active"
+         class="menu-item">
+        Mes services
+      </a>
+
+      <a routerLink="/services/new"
+         class="px-4 py-2 bg-[#FF7A00] text-white rounded-xl text-sm hover:bg-[#e66d00] transition">
+        Publier un service
+      </a>
+
       <a routerLink="/mon-compte"
          routerLinkActive="active"
          class="menu-item">
@@ -99,6 +110,19 @@
         Mes services
       </a>
       -->
+
+      <a routerLink="/mes-services" 
+         routerLinkActive="text-[#FF7A00]"
+         (click)="toggleMenu()" 
+         class="text-lg font-semibold">
+        Mes services
+      </a>
+
+      <a routerLink="/services/new" 
+         (click)="toggleMenu()"
+         class="text-lg font-semibold text-white bg-[#FF7A00] text-center rounded-2xl py-2">
+        Publier un service
+      </a>
 
       <a routerLink="/mon-compte" 
          routerLinkActive="text-[#FF7A00]"

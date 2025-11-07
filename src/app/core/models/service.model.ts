@@ -7,6 +7,8 @@ export interface WoyaService {
   price?: number | null;
   contact: string;
   createdAt: number;
-  coverUrl?: string;
-  extraImages?: string[];
+  updatedAt?: number;
+  coverUrl?: string | null;
+  extraImages?: (string | null)[];
+  ownerId?: string;
 }

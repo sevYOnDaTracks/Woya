@@ -5,17 +5,20 @@ import  NewService  from './pages/new-service/new-service';
 import  Register  from './pages/auth/register/register';
 import Login from './pages/auth/login/login';
 import UserInfo from './pages/user-info/user-info';
+import MyServices from './pages/my-services/my-services';
 
 export const routes: Routes = [
     { path: '', component: Landing },
     { path: 'services', component: ListServices },
     { path: 'services/new', component: NewService },
+    { path: 'services/:id/edit', component: NewService },
     {
   path: 'login', component : Login
 },
 {
   path: 'register',component :Register
 },
+    { path: 'mes-services', component: MyServices },
     { path: 'mon-compte', component: UserInfo },
 
     {

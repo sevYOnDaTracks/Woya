@@ -1,0 +1,71 @@
+<div class="services-page min-h-screen bg-[#FFF7EB] py-10 px-4 md:px-10">
+  <div class="max-w-6xl mx-auto space-y-8">
+
+    <div class="glass-card flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <p class="hero-eyebrow">Mon espace</p>
+        <h1 class="hero-title text-2xl md:text-3xl">Mes services publiés</h1>
+        <p class="text-sm text-gray-500">Gère, mets à jour ou supprime tes annonces en toute simplicité.</p>
+      </div>
+      <button routerLink="/services/new"
+              class="primary-btn">
+        + Publier un service
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="glass-card flex flex-col items-center gap-3 text-center">
+      <div class="animate-spin h-12 w-12 border-4 border-[#FF7A00] border-t-transparent rounded-full"></div>
+      <p class="text-sm text-gray-500">Chargement de tes services…</p>
+    </div>
+
+    <section *ngIf="!loading">
+      <ng-container *ngIf="services.length > 0; else emptyState">
+        <div class="crud-list glass-card">
+          <div class="crud-header">
+            <span>Service</span>
+            <span>Tarif</span>
+            <span>Publication</span>
+            <span>Actions</span>
+          </div>
+
+          <div *ngFor="let service of services; trackBy: trackByService"
+               class="crud-row">
+            <div>
+              <p class="row-title">{{ service.title }}</p>
+              <p class="row-meta">{{ service.category }} • {{ service.city }}</p>
+            </div>
+            <span class="row-price">
+              {{ service.price ? (service.price | number:'1.0-0') + ' FCFA' : '—' }}
+            </span>
+            <span class="row-date">
+              {{ service.createdAt | timeAgo }}
+            </span>
+            <div class="row-actions">
+              <button type="button" class="ghost-btn" (click)="viewService(service)">
+                Voir
+              </button>
+              <button type="button" class="secondary-btn" (click)="editService(service)">
+                Modifier
+              </button>
+              <button type="button"
+                      class="danger-btn"
+                      [disabled]="deletingId === service.id"
+                      (click)="deleteService(service)">
+                {{ deletingId === service.id ? 'Suppression…' : 'Supprimer' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #emptyState>
+        <div class="glass-card text-center">
+          <p class="text-lg font-semibold text-[#1A1A1A] mb-2">Tu n’as pas encore publié de service.</p>
+          <p class="text-sm text-gray-500 mb-5">Crée ton premier service en quelques clics.</p>
+          <button routerLink="/services/new" class="primary-btn">Publier un service</button>
+        </div>
+      </ng-template>
+    </section>
+
+  </div>
+</div>

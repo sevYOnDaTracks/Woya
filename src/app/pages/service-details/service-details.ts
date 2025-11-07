@@ -18,37 +18,46 @@ export class ServiceDetails {
   service!: WoyaService;
   gallery: string[] = [];
   currentIndex = 0;
+  owner: any = null;
 
   constructor(private route: ActivatedRoute) {
     this.load();
   }
 
   async load() {
-  const id = this.route.snapshot.paramMap.get('id');
-  if (!id) return;
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) return;
 
-  const ref = doc(firebaseServices.db, 'services', id);
-  const snap = await getDoc(ref);
+    const ref = doc(firebaseServices.db, 'services', id);
+    const snap = await getDoc(ref);
 
-  if (snap.exists()) {
-    const data = snap.data() as WoyaService;
+    if (snap.exists()) {
+      const data = snap.data() as WoyaService;
 
-    this.service = {
-      id: snap.id,
-      ...data
-    };
+      this.service = {
+        id: snap.id,
+        ...data
+      };
 
-    // ✅ Convert Timestamp → millisecondes
-    if (this.service.createdAt && (this.service.createdAt as any).seconds) {
-      this.service.createdAt = (this.service.createdAt as any).seconds * 1000;
+      // ✅ Convert Timestamp → millisecondes
+      if (this.service.createdAt && (this.service.createdAt as any).seconds) {
+        this.service.createdAt = (this.service.createdAt as any).seconds * 1000;
+      }
+
+      this.gallery = [
+        this.service.coverUrl ?? '',
+        ...(this.service.extraImages ?? [])
+      ].filter((url): url is string => !!url);
+
+      if (!this.gallery.length) {
+        this.gallery = ['assets/placeholder.jpg'];
+      }
+
+      if (this.service.ownerId) {
+        await this.loadOwner(this.service.ownerId);
+      }
     }
-
-    this.gallery = [
-      this.service.coverUrl ?? '',
-      ...(this.service.extraImages ?? [])
-    ].filter(url => !!url);
   }
-}
 
 
   prev() {
@@ -68,5 +77,18 @@ export class ServiceDetails {
 
   call() {
     window.location.href = `tel:${this.service.contact}`;
+  }
+
+  private async loadOwner(ownerId: string) {
+    try {
+      const ref = doc(firebaseServices.db, 'users', ownerId);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        this.owner = { id: snap.id, ...snap.data() };
+      }
+    } catch (error) {
+      console.error('Unable to load owner information', error);
+      this.owner = null;
+    }
   }
 }

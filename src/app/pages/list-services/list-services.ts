@@ -3,13 +3,13 @@ import { Component } from '@angular/core';
 import { SharedImports } from '../../shared/shared-imports';
 import { Services } from '../../core/services/services';
 import { WoyaService } from '../../core/models/service.model';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { TimeAgoPipe } from '../../shared/time-ago.pipe';
 
 @Component({
   selector: 'app-list-services',
   standalone: true,
-  imports: [...SharedImports, RouterLink, TimeAgoPipe],
+  imports: [...SharedImports, TimeAgoPipe],
   templateUrl: './list-services.html',
 })
 export default class ListServices implements OnInit, AfterViewInit {

@@ -1,0 +1,70 @@
+.glass-card {
+  @apply bg-white rounded-3xl shadow-sm border border-[#FFE0BF] p-5 md:p-6;
+}
+
+.hero-eyebrow {
+  @apply text-xs uppercase tracking-[0.35em] text-[#FFB066];
+}
+
+.hero-title {
+  @apply font-extrabold text-[#1A1A1A];
+}
+
+.primary-btn {
+  @apply inline-flex justify-center items-center rounded-2xl px-5 py-3 text-white font-semibold bg-[#FF7A00] hover:bg-[#e66d00] transition shadow-sm text-sm;
+}
+
+.crud-list {
+  @apply w-full overflow-hidden rounded-3xl border border-[#FFE0BF];
+}
+
+.crud-header {
+  @apply hidden bg-[#FFF7EB] text-xs font-semibold uppercase tracking-widest text-gray-500 px-6 py-3;
+}
+
+.crud-row {
+  @apply flex flex-col gap-3 px-6 py-5 border-t border-[#FFE0BF];
+}
+
+@media (min-width: 768px) {
+  .crud-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  }
+
+  .crud-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.row-title {
+  @apply text-base font-semibold text-[#1A1A1A];
+}
+
+.row-meta {
+  @apply text-sm text-gray-500;
+}
+
+.row-price,
+.row-date {
+  @apply text-sm font-medium text-gray-600;
+}
+
+.row-actions {
+  @apply flex flex-wrap gap-2 justify-end;
+}
+
+.ghost-btn {
+  @apply border border-transparent text-sm font-semibold text-gray-600 px-3 py-2 rounded-2xl hover:bg-gray-100 transition;
+}
+
+.secondary-btn {
+  @apply border border-[#FF7A00] text-[#FF7A00] rounded-2xl px-4 py-2 font-semibold text-sm hover:bg-[#FF7A00] hover:text-white transition;
+}
+
+.danger-btn {
+  @apply border border-red-500 text-red-500 rounded-2xl px-4 py-2 font-semibold text-sm hover:bg-red-500 hover:text-white transition disabled:opacity-60 disabled:cursor-not-allowed;
+}

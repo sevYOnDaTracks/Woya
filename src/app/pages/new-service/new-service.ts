@@ -1,11 +1,14 @@
-import { Component } from '@angular/core';
-import { RouterLink ,Router} from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 // ✅ Firebase
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Services } from '../../core/services/services';
+import { AuthStore } from '../../core/store/auth.store';
+import { firebaseServices } from '../../app.config';
+import { WoyaService } from '../../core/models/service.model';
 
 @Component({
   selector: 'app-new-service',
@@ -13,9 +16,14 @@ import { Services } from '../../core/services/services';
   imports: [CommonModule, FormsModule , RouterLink],
   templateUrl: './new-service.html'
 })
-export default class NewService {
+export default class NewService implements OnInit {
 
   loading = false;
+  editing = false;
+  serviceId: string | null = null;
+  existingCoverUrl: string | null = null;
+  existingExtraImages: string[] = [];
+  existingImages: string[] = [];
 
   // ✅ MULTI IMAGE
   files: File[] = [];
@@ -36,35 +44,82 @@ export default class NewService {
     contact: '',
   };
 
-  constructor(private api: Services, private router: Router) {}
+  constructor(
+    private api: Services,
+    private router: Router,
+    private auth: AuthStore,
+    private route: ActivatedRoute
+  ) {}
+
+  async ngOnInit() {
+    const currentUser = this.auth.user$.value || firebaseServices.auth.currentUser;
+    if (!currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const serviceId = this.route.snapshot.paramMap.get('id');
+    if (serviceId) {
+      this.editing = true;
+      this.serviceId = serviceId;
+      await this.loadExistingService(serviceId, currentUser.uid);
+    }
+  }
 
   async save() {
+    const currentUser = this.auth.user$.value || firebaseServices.auth.currentUser;
+    if (!currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
     if (!this.form.title || !this.form.city || !this.form.contact) return;
     this.loading = true;
 
     let imageUrls: string[] = [];
     const storage = getStorage();
 
-    // ✅ Upload toutes les images
-    for (let file of this.files) {
-      const path = `services/${Date.now()}-${file.name}`;
-      const storageRef = ref(storage, path);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      imageUrls.push(url);
+    if (this.files.length > 0) {
+      for (let file of this.files) {
+        const path = `services/${Date.now()}-${file.name}`;
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        imageUrls.push(url);
+      }
     }
 
-    // ✅ Première image = cover, le reste = extraImages
+    let coverUrl = this.existingCoverUrl;
+    let extraImages = [...this.existingExtraImages];
+
+    if (imageUrls.length > 0) {
+      coverUrl = imageUrls[0] || null;
+      extraImages = imageUrls.slice(1);
+    }
+
+    const normalizedCover = coverUrl ?? undefined;
+    const normalizedExtra = extraImages.filter((img): img is string => !!img);
+
     const data = {
       ...this.form,
-      createdAt: Date.now(),
-      coverUrl: imageUrls[0] || null,
-      extraImages: imageUrls.slice(1) || [],
+      coverUrl: normalizedCover,
+      extraImages: normalizedExtra,
+      ownerId: currentUser.uid,
     };
 
-    await this.api.create(data);
-    this.loading = false;
-    this.router.navigate(['/services']);
+    try {
+      if (this.editing && this.serviceId) {
+        await this.api.update(this.serviceId, {
+          ...data,
+          updatedAt: Date.now(),
+        });
+        this.router.navigate(['/mes-services']);
+      } else {
+        await this.api.create(data);
+        this.router.navigate(['/services']);
+      }
+    } finally {
+      this.loading = false;
+    }
   }
 
   onDrop(event: DragEvent) {
@@ -97,5 +152,35 @@ removeImage(index: number) {
   this.files.splice(index, 1);
   this.previews.splice(index, 1);
 }
+
+  private async loadExistingService(serviceId: string, userId: string) {
+    const snap = await this.api.getById(serviceId);
+    if (!snap.exists()) {
+      this.router.navigate(['/services']);
+      return;
+    }
+    const service = snap.data() as WoyaService;
+
+    if (service.ownerId !== userId) {
+      this.router.navigate(['/services']);
+      return;
+    }
+
+    this.form = {
+      title: service.title,
+      description: service.description,
+      category: service.category,
+      city: service.city,
+      price: service.price ?? null,
+      contact: service.contact,
+    };
+
+    this.existingCoverUrl = service.coverUrl || null;
+    this.existingExtraImages = (service.extraImages || []).filter((img): img is string => !!img);
+    this.existingImages = [
+      this.existingCoverUrl,
+      ...this.existingExtraImages
+    ].filter((img): img is string => !!img);
+  }
 
 }
