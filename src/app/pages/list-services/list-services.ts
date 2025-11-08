@@ -4,6 +4,10 @@ import { SharedImports } from '../../shared/shared-imports';
 import { Services } from '../../core/services/services';
 import { WoyaService } from '../../core/models/service.model';
 import { Router } from '@angular/router';
+import { ProfilesService } from '../../core/services/profiles';
+import { MessagingService } from '../../core/services/messaging';
+import { AuthStore } from '../../core/store/auth.store';
+import { firebaseServices } from '../../app.config';
 import { TimeAgoPipe } from '../../shared/time-ago.pipe';
 
 @Component({
@@ -46,7 +50,15 @@ export default class ListServices implements OnInit, AfterViewInit {
     'Garde d’enfants',
   ];
 
-  constructor(private api: Services, private router: Router) {}
+  ownerProfiles = new Map<string, any>();
+
+  constructor(
+    private api: Services,
+    private router: Router,
+    private profiles: ProfilesService,
+    private messaging: MessagingService,
+    private auth: AuthStore,
+  ) {}
 
   async ngOnInit() {
     this.services = await this.api.list();
@@ -57,6 +69,7 @@ export default class ListServices implements OnInit, AfterViewInit {
       return s;
     });
 
+    await this.hydrateOwners(this.services);
     this.setupBudgetBounds();
     this.applyCurrentFilters();
     this.loading = false;
@@ -96,12 +109,55 @@ export default class ListServices implements OnInit, AfterViewInit {
     }, 800);
   }
 
+  private async hydrateOwners(services: WoyaService[]) {
+    const ids = Array.from(
+      new Set(
+        services
+          .map(s => s.ownerId)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0),
+      ),
+    );
+    await Promise.all(
+      ids.map(async id => {
+        if (this.ownerProfiles.has(id)) return;
+        const profile = await this.profiles.getPublicProfile(id);
+        this.ownerProfiles.set(id, profile);
+      }),
+    );
+  }
+
   phoneToWhatsApp(phone: string) {
     return 'https://wa.me/' + phone.replace(/[^0-9]/g, '');
   }
 
   goToDetails(id: string) {
     this.router.navigate(['/services', id]);
+  }
+
+  getOwnerName(service: WoyaService) {
+    const profile = service.ownerId ? this.ownerProfiles.get(service.ownerId) : null;
+    if (!profile) return 'Prestataire';
+    if (profile.pseudo) return profile.pseudo;
+    return [profile.firstname, profile.lastname].filter(Boolean).join(' ').trim() || 'Prestataire';
+  }
+
+  async contactOwner(event: Event, service: WoyaService) {
+    event.stopPropagation();
+    const ownerId = service.ownerId;
+    if (!ownerId) return;
+    const current = this.auth.user$.value || firebaseServices.auth.currentUser;
+    if (!current) {
+      this.router.navigate(['/login'], { queryParams: { redirect: this.router.url } });
+      return;
+    }
+    if (current.uid === ownerId) {
+      this.router.navigate(['/messagerie']);
+      return;
+    }
+    const conversationId = await this.messaging.ensureConversation(ownerId);
+    if (conversationId) {
+      this.router.navigate(['/messagerie', conversationId]);
+    }
   }
 
   onFilterInputChange() {

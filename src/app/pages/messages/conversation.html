@@ -1,4 +1,4 @@
-<section class="min-h-screen bg-[#FFF7EB] pt-24 pb-16 px-4 md:px-16">
+<section class="min-h-screen bg-[#FFF7EB] pt-12 md:pt-24 pb-16 px-4 md:px-16">
   <div class="max-w-4xl mx-auto bg-white/95 backdrop-blur border border-[#FFE0BF] rounded-3xl shadow-sm overflow-hidden">
     <header class="px-6 py-5 border-b border-[#FFE0BF] flex items-center gap-4">
       <a routerLink="/messagerie" class="text-[#FF7A00] text-sm font-semibold flex items-center gap-1 hover:underline">
@@ -13,9 +13,9 @@
           <p class="text-xs text-gray-500" *ngIf="otherUser?.pseudo && (otherUser?.firstname || otherUser?.lastname)">
             {{ otherUser?.firstname }} {{ otherUser?.lastname }}
           </p>
-          <p class="text-xs text-gray-500" *ngIf="otherUser?.profession">
+       <!--  <p class="text-xs text-gray-500" *ngIf="otherUser?.profession">
             {{ otherUser.profession }}
-          </p>
+          </p>--> 
           <p class="text-xs text-gray-500 mt-1">
             <span *ngIf="otherUser?.lastSeen">Dernière connexion {{ otherUser.lastSeen | timeAgo }}</span>
             <span *ngIf="!otherUser?.lastSeen">Actif récemment</span>

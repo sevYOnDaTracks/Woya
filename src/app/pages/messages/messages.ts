@@ -24,7 +24,20 @@ export default class MessagesInbox implements OnInit, OnDestroy {
   loading = true;
   conversations: ConversationItem[] = [];
   currentUid: string | null = null;
-  searchTerm = '';
+  filteredConversations: ConversationItem[] = [];
+  visibleConversations: ConversationItem[] = [];
+  visibleCount = 5;
+
+  private readonly pageSize = 5;
+  private _searchTerm = '';
+  get searchTerm() {
+    return this._searchTerm;
+  }
+  set searchTerm(value: string) {
+    if (this._searchTerm === value) return;
+    this._searchTerm = value;
+    this.updateFiltered();
+  }
 
   private subs: Subscription[] = [];
   private inboxSub?: Subscription;
@@ -34,7 +47,9 @@ export default class MessagesInbox implements OnInit, OnDestroy {
     private messaging: MessagingService,
     private auth: AuthStore,
     private router: Router,
-  ) {}
+  ) {
+    this.updateFiltered();
+  }
 
   ngOnInit(): void {
     this.subs.push(
@@ -43,6 +58,7 @@ export default class MessagesInbox implements OnInit, OnDestroy {
         if (!this.currentUid) {
           this.teardownInbox();
           this.conversations = [];
+          this.updateFiltered();
           this.loading = false;
           return;
         }
@@ -100,6 +116,7 @@ export default class MessagesInbox implements OnInit, OnDestroy {
     );
 
     this.conversations = items.sort((a, b) => (b.conversation.updatedAt ?? 0) - (a.conversation.updatedAt ?? 0));
+    this.updateFiltered();
     this.loading = false;
   }
 
@@ -132,9 +149,30 @@ export default class MessagesInbox implements OnInit, OnDestroy {
     return `${firstname}${lastname}`;
   }
 
-  get filteredConversations() {
-    const term = this.searchTerm.trim().toLowerCase();
-    if (!term) return this.conversations;
+  onScroll(event: Event) {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    const threshold = 24;
+    if (target.scrollTop + target.clientHeight >= target.scrollHeight - threshold) {
+      this.loadMore();
+    }
+  }
+
+  private loadMore() {
+    if (this.visibleCount >= this.filteredConversations.length) return;
+    this.visibleCount = Math.min(this.visibleCount + this.pageSize, this.filteredConversations.length);
+    this.visibleConversations = this.filteredConversations.slice(0, this.visibleCount);
+  }
+
+  private updateFiltered() {
+    this.filteredConversations = this.filterConversations();
+    this.visibleCount = Math.min(this.pageSize, this.filteredConversations.length);
+    this.visibleConversations = this.filteredConversations.slice(0, this.visibleCount);
+  }
+
+  private filterConversations() {
+    const term = this._searchTerm.trim().toLowerCase();
+    if (!term) return [...this.conversations];
     return this.conversations.filter(item => {
       const haystack = [
         this.displayName(item.otherUser),

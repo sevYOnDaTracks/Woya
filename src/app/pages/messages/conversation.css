@@ -1,8 +1,4 @@
-section {
-  background-image: radial-gradient(circle at 10% -10%, rgba(255, 122, 0, 0.22), transparent 55%),
-    radial-gradient(circle at 90% 0%, rgba(255, 176, 102, 0.28), transparent 52%),
-    linear-gradient(180deg, rgba(255, 247, 235, 0.9), rgba(255, 247, 235, 1));
-}
+
 
 textarea.field-input {
   min-height: 56px;

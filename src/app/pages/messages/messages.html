@@ -1,4 +1,4 @@
-<section class="min-h-screen bg-[#FFF7EB] pt-28 pb-16 px-4 md:px-16">
+<section class="min-h-screen bg-[#FFF7EB] pt-10 md:pt-28 pb-16 px-4 md:px-16">
   <div class="max-w-5xl -mt20 mx-auto">
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
       <div>
@@ -23,7 +23,7 @@
           <div class="relative flex-1">
             <input type="text"
                    [(ngModel)]="searchTerm"
-                   placeholder="Rechercher par prénom, pseudo ou message..."
+                   placeholder="Ex. Akissi Clémentine ..."
                    class="w-full rounded-2xl border border-[#FFE0BF] px-4 py-2 outline-none text-sm text-gray-700 focus:ring-2 focus:ring-[#FF7A00]/40" />
             <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#FF7A00] text-xs font-semibold">
               {{ filteredConversations.length }}/{{ conversations.length }}
@@ -46,9 +46,9 @@
           Aucun résultat pour « {{ searchTerm }} ».
         </div>
 
-        <div *ngIf="filteredConversations.length" class="max-h-[32rem] overflow-y-auto">
+        <div *ngIf="filteredConversations.length" class="max-h-[32rem] overflow-y-auto" (scroll)="onScroll($event)">
         <ul class="divide-y divide-[#FFE0BF]">
-          <li *ngFor="let item of filteredConversations" (click)="open(item.conversation)" class="cursor-pointer px-6 py-5 hover:bg-[#FFF4E6] transition">
+          <li *ngFor="let item of visibleConversations" (click)="open(item.conversation)" class="cursor-pointer px-6 py-5 hover:bg-[#FFF4E6] transition">
             <div class="flex gap-4 items-start">
               <img [src]="item.otherUser?.photoURL || 'assets/icone.png'" alt="Avatar" class="w-12 h-12 rounded-full object-cover border border-[#FFE0BF]" />
               <div class="flex-1 min-w-0">
