@@ -12,6 +12,7 @@ import PublicProfile from './pages/public-profile';
 import ProviderBookings from './pages/provider-bookings';
 import ClientBookings from './pages/client-bookings';
 import GlobalSearch from './pages/global-search';
+import ForgotPassword from './pages/auth/forgot-password';
 import { requireAuthGuard } from './core/store/auth.guard';
 
 export const routes: Routes = [
@@ -25,6 +26,7 @@ export const routes: Routes = [
 {
   path: 'register',component :Register
 },
+    { path: 'mot-de-passe-oublie', component: ForgotPassword },
     { path: 'mes-services', component: MyServices, canActivate: [requireAuthGuard] },
     { path: 'mon-compte', component: UserInfo, canActivate: [requireAuthGuard] },
     { path: 'messagerie', component: MessagesInbox, canActivate: [requireAuthGuard] },

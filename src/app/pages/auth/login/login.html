@@ -31,6 +31,10 @@
     <input [(ngModel)]="password" type="password" placeholder="Mot de passe"
            class="w-full border rounded-xl px-4 py-3 mb-6 outline-none" />
 
+    <p class="text-right text-sm mb-6">
+      <a routerLink="/mot-de-passe-oublie" class="text-[#FF7A00] font-semibold hover:underline">Mot de passe oublié ?</a>
+    </p>
+
     <button (click)="login()" [disabled]="loading"
       class="w-full py-3 bg-[#FF7A00] text-white rounded-xl font-semibold hover:bg-[#e66d00] transition">
       {{ loading ? 'Connexion...' : 'Se connecter' }}

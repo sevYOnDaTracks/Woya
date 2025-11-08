@@ -14,7 +14,7 @@
              (input)="onSearchInput($event.target.value)"
              (focus)="onSearchFocus()"
              (keydown.enter)="submitSearch()"
-             placeholder="Rechercher un service ou un prestataire…">
+             placeholder="Que cherchez vous ?">
       <button type="button" (click)="submitSearch()">OK</button>
       <div class="search-dropdown" *ngIf="searchOpen">
         <div *ngIf="searchLoading" class="search-state">Recherche…</div>
@@ -106,7 +106,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h18" />
         </svg>
       </a>
-
+<!--
       <a routerLink="/mes-rendez-vous"
          routerLinkActive="active"
          aria-label="Mes rendez-vous"
@@ -137,7 +137,7 @@
               class="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[1.25rem] px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full">
           {{ pendingReservations > 10 ? '10+' : pendingReservations }}
         </span>
-      </a>
+      </a> -->
 
       <a routerLink="/messagerie"
          aria-label="Messagerie"
