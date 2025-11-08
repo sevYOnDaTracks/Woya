@@ -12,11 +12,36 @@
 
     <div>
       <div class="relative">
+        <input [(ngModel)]="categoryInput"
+               (input)="onCategoryInput($event.target.value)"
+               (focus)="openCategoryDropdown()"
+               (blur)="closeCategoryDropdownSoon()"
+               placeholder="Choisis une catégorie"
+               autocomplete="off"
+               name="categorySearch"
+               class="border rounded-xl px-4 py-3 outline-none w-full" />
+        <ul *ngIf="categoryDropdownOpen && filteredCategories.length"
+            class="absolute z-10 mt-2 w-full rounded-2xl border border-[#FFE0BF] bg-white shadow-lg max-h-48 overflow-auto text-sm">
+          <li *ngFor="let category of filteredCategories"
+              (mousedown)="selectCategory(category)"
+              class="px-4 py-2 cursor-pointer hover:bg-[#FFF2E5]">
+            {{ category }}
+          </li>
+        </ul>
+      </div>
+      <p *ngIf="categoryTouched && !form.category" class="text-xs text-red-500 mt-1">
+        Choisis une catégorie.
+      </p>
+    </div>
+
+    <div>
+      <div class="relative">
         <input [(ngModel)]="titleSearch"
                name="titleSearch"
-               placeholder="Titre du service (sélectionne une proposition)"
-               class="border rounded-xl px-4 py-3 outline-none w-full"
+               placeholder="Titre du service (lié à la catégorie choisie)"
+               class="border rounded-xl px-4 py-3 outline-none w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
                autocomplete="off"
+               [disabled]="!form.category"
                (focus)="onTitleFocus()"
                (blur)="onTitleBlur()"
                (input)="onTitleInput($event.target.value)" />
@@ -30,18 +55,13 @@
         </ul>
       </div>
       <p class="text-xs text-gray-500 mt-1">
-        Choisis un intitulé dans la liste pour uniformiser les annonces.
+        Sélectionne un titre proposé pour garantir un référencement cohérent.
+        {{ form.category ? '' : 'Commence par choisir une catégorie.' }}
       </p>
       <p *ngIf="isTitleInvalid" class="text-xs text-red-500 mt-1">
         Sélectionne un titre dans les suggestions proposées.
       </p>
     </div>
-
-    <select [(ngModel)]="form.category"
-            (change)="onCategoryChange()"
-            class="border rounded-xl px-4 py-3 outline-none">
-      <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
-    </select>
 
     <div>
       <div class="relative">

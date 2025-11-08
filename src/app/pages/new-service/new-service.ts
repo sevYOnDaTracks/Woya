@@ -93,6 +93,37 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       'Aide aux devoirs primaire',
       'Garde week-end'
     ],
+    'Coaching et Formation': [
+      'Coaching personnel',
+      'Formation bureautique',
+      'Préparation concours',
+      'Atelier leadership',
+      'Orientation scolaire',
+      'Accompagnement entrepreneuriat'
+    ],
+    'Santé & Bien-être': [
+      'Massage thérapeutique',
+      'Coach sportif à domicile',
+      'Programme nutritionnel',
+      'Soins du visage premium',
+      'Séance de stretching',
+      'Yoga à domicile'
+    ],
+    'Événementiel': [
+      'Organisation anniversaire',
+      'Décoration mariage',
+      'DJ événementiel',
+      'Animateur pour enfants',
+      'Location matériel son',
+      'Photographe événementiel'
+    ],
+    'Services administratifs': [
+      'Saisie de documents',
+      'Gestion de dossiers',
+      'Assistance administrative',
+      'Rédaction de courrier',
+      'Classement d\'archives'
+    ],
     'default': [
       'Service à la personne',
       'Assistance administrative',
@@ -128,11 +159,24 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   titleTouched = false;
   private titleDropdownCloseTimeout?: any;
 
-  categories = [
-    'Jardinage', 'Ménage & Aide à domicile', 'Cours particuliers',
-    'Transport & Déménagement', 'Informatique', 'Bricolage / Réparation',
-    'Beauté & Bien-être', 'Garde d\'enfants',
+  categoryCatalog = [
+    'Jardinage',
+    'Ménage & Aide à domicile',
+    'Cours particuliers',
+    'Transport & Déménagement',
+    'Informatique',
+    'Bricolage / Réparation',
+    'Beauté & Bien-être',
+    'Garde d\'enfants',
+    'Coaching et Formation',
+    'Santé & Bien-être',
+    'Événementiel',
+    'Services administratifs',
   ];
+  filteredCategories = this.categoryCatalog.slice(0, 6);
+  categoryDropdownOpen = false;
+  categoryTouched = false;
+  private categoryDropdownCloseTimeout?: any;
   readonly weekDays = [
     { value: 1, label: 'Lundi' },
     { value: 2, label: 'Mardi' },
@@ -146,12 +190,13 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   form = {
     title: '',
     description: '',
-    category: 'Jardinage',
+    category: '',
     city: '',
     price: null as number | null,
     contact: '',
     isActive: true,
   };
+  categoryInput = '';
   availability = {
     durationMinutes: 30,
     days: [] as AvailabilityFormDay[],
@@ -205,6 +250,9 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     if (this.titleDropdownCloseTimeout) {
       clearTimeout(this.titleDropdownCloseTimeout);
     }
+    if (this.categoryDropdownCloseTimeout) {
+      clearTimeout(this.categoryDropdownCloseTimeout);
+    }
   }
 
   goBack() {
@@ -225,6 +273,16 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     if (!this.form.title || !this.getCurrentSuggestions().includes(this.form.title)) {
       this.titleTouched = true;
       this.openTitleDropdown();
+      return;
+    }
+    if (!this.validateCategory()) {
+      this.categoryTouched = true;
+      this.openCategoryDropdown();
+      return;
+    }
+    if (!this.validateCategory()) {
+      this.categoryTouched = true;
+      this.openCategoryDropdown();
       return;
     }
     const matchedCity = this.findCityOption(this.form.city);
@@ -400,6 +458,11 @@ handleFiles(files: File[]) {
     if (service.city) {
       this.form.city = service.city;
     }
+    if (service.category && !this.categoryCatalog.includes(service.category)) {
+      this.categoryCatalog = [...this.categoryCatalog, service.category];
+    }
+    this.categoryInput = service.category;
+    this.filteredCategories = this.categoryCatalog.slice(0, 6);
     this.patchAvailability(service.availability ?? null);
     this.ensureTitleInSuggestions(service.title, service.category);
     this.syncTitleControls();
@@ -533,6 +596,75 @@ handleFiles(files: File[]) {
     this.setLocation({ lat: suggestion.lat, lng: suggestion.lng });
   }
 
+  onCategoryInput(value: string) {
+    this.categoryInput = value;
+    if (!value) {
+      this.filteredCategories = this.categoryCatalog.slice(0, 6);
+      this.categoryDropdownOpen = false;
+      this.form.category = '';
+      this.categoryTouched = false;
+      this.form.title = '';
+      this.titleSearch = '';
+      this.filteredTitleSuggestions = [];
+      return;
+    }
+    const normalized = value.trim().toLowerCase();
+    this.filteredCategories = this.categoryCatalog
+      .filter(category => category.toLowerCase().includes(normalized))
+      .slice(0, 6);
+    this.categoryDropdownOpen = this.filteredCategories.length > 0;
+    const match = this.findCategoryOption(value);
+    if (match) {
+      this.categoryInput = match;
+      this.form.category = match;
+      this.categoryTouched = false;
+      this.syncTitleControls();
+    } else {
+      this.form.category = '';
+      this.form.title = '';
+      this.titleSearch = '';
+      this.filteredTitleSuggestions = [];
+      this.categoryTouched = !!value;
+    }
+  }
+
+  selectCategory(category: string) {
+    this.categoryInput = category;
+    this.form.category = category;
+    this.categoryDropdownOpen = false;
+    this.categoryTouched = false;
+    if (this.categoryDropdownCloseTimeout) {
+      clearTimeout(this.categoryDropdownCloseTimeout);
+    }
+    this.syncTitleControls();
+  }
+
+  openCategoryDropdown() {
+    if (this.categoryDropdownCloseTimeout) {
+      clearTimeout(this.categoryDropdownCloseTimeout);
+    }
+    if (!this.categoryInput) {
+      this.filteredCategories = this.categoryCatalog.slice(0, 6);
+    }
+    this.categoryDropdownOpen = this.filteredCategories.length > 0;
+  }
+
+  closeCategoryDropdownSoon() {
+    if (this.categoryDropdownCloseTimeout) {
+      clearTimeout(this.categoryDropdownCloseTimeout);
+    }
+    this.categoryDropdownCloseTimeout = setTimeout(() => {
+      this.categoryDropdownOpen = false;
+      if (this.categoryInput && !this.validateCategory()) {
+        this.categoryTouched = true;
+      }
+    }, 150);
+  }
+
+  private validateCategory() {
+    return !!this.findCategoryOption(this.form.category);
+  }
+
   private resolveContactPhone(currentUser: { phoneNumber?: string } | null) {
     const storeUser = this.auth.user$.value;
     const storePhone = typeof storeUser?.phone === 'string' ? storeUser.phone : '';
@@ -559,6 +691,14 @@ handleFiles(files: File[]) {
       if (option.name.toLowerCase() === lower) return true;
       return (option.aliases ?? []).some(alias => alias.toLowerCase() === lower);
     });
+  }
+
+  private findCategoryOption(value: string | undefined | null): string | undefined {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return undefined;
+    const lower = trimmed.toLowerCase();
+    const match = this.categoryCatalog.find(category => category.toLowerCase() === lower);
+    return match;
   }
 
   private extractCity(result: any): string {
@@ -640,10 +780,16 @@ handleFiles(files: File[]) {
   }
 
   get titleSuggestions(): string[] {
-    return this.serviceSuggestions[this.form.category] ?? this.serviceSuggestions['default'];
+    return this.getCurrentSuggestions();
   }
 
   onTitleFocus() {
+    if (!this.validateCategory()) {
+      this.categoryTouched = true;
+      this.openCategoryDropdown();
+      this.titleDropdownOpen = false;
+      return;
+    }
     this.clearTitleCloseTimeout();
     this.updateFilteredTitle(this.titleSearch);
     this.titleDropdownOpen = this.filteredTitleSuggestions.length > 0;
@@ -657,6 +803,12 @@ handleFiles(files: File[]) {
   }
 
   onTitleInput(value: string) {
+    if (!this.validateCategory()) {
+      this.categoryTouched = true;
+      this.openCategoryDropdown();
+      this.titleDropdownOpen = false;
+      return;
+    }
     this.titleTouched = true;
     this.titleSearch = value;
     this.updateFilteredTitle(value);
@@ -677,17 +829,6 @@ handleFiles(files: File[]) {
     this.titleTouched = false;
   }
 
-  onCategoryChange() {
-    const suggestions = this.getCurrentSuggestions();
-    if (!suggestions.includes(this.form.title)) {
-      this.form.title = '';
-      this.titleSearch = '';
-    }
-    this.titleDropdownOpen = false;
-    this.titleTouched = false;
-    this.updateFilteredTitle('');
-  }
-
   get isTitleInvalid() {
     return this.titleTouched && !this.form.title;
   }
@@ -701,18 +842,37 @@ handleFiles(files: File[]) {
   }
 
   private openTitleDropdown() {
+    if (!this.validateCategory()) {
+      this.categoryTouched = true;
+      this.openCategoryDropdown();
+      return;
+    }
     this.updateFilteredTitle(this.titleSearch);
     this.titleDropdownOpen = this.filteredTitleSuggestions.length > 0;
   }
 
   private syncTitleControls() {
-    this.titleSearch = this.form.title;
+    if (!this.validateCategory()) {
+      this.form.title = '';
+      this.titleSearch = '';
+      this.filteredTitleSuggestions = [];
+      this.titleDropdownOpen = false;
+      this.titleTouched = false;
+      return;
+    }
+    const suggestions = this.getCurrentSuggestions();
+    if (this.form.title && !suggestions.includes(this.form.title)) {
+      this.form.title = '';
+      this.titleSearch = '';
+    } else {
+      this.titleSearch = this.form.title;
+    }
     this.updateFilteredTitle(this.titleSearch);
     this.titleTouched = false;
   }
 
   private ensureTitleInSuggestions(title: string, category: string) {
-    if (!title) return;
+    if (!title || !category) return;
     const suggestions = this.serviceSuggestions[category];
     if (!suggestions) {
       this.serviceSuggestions[category] = [title];
@@ -724,6 +884,7 @@ handleFiles(files: File[]) {
   }
 
   private getCurrentSuggestions(): string[] {
+    if (!this.validateCategory()) return [];
     return this.serviceSuggestions[this.form.category] ?? this.serviceSuggestions['default'];
   }
 
