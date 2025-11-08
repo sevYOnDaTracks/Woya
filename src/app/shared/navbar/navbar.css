@@ -61,3 +61,24 @@
 .search-item__tag--user {
   @apply text-[#3A7AFE];
 }
+
+.global-search--mobile {
+  display: flex;
+  align-items: center; /* aligne verticalement */
+  gap: 8px; /* espace entre input et bouton */
+}
+
+.global-search--mobile input {
+  flex: 1; /* prend toute la largeur */
+  height: 40px;
+  padding: 0 12px;
+  font-size: 16px; /* évite zoom iOS */
+  box-sizing: border-box;
+}
+
+.global-search--mobile button {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 16px;
+  line-height: 40px;
+}
