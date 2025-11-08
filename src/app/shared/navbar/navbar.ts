@@ -225,6 +225,10 @@ export class Navbar implements OnInit, OnDestroy {
     this.router.navigate(['/mon-compte']);
   }
 
+  goToWebsite() {
+    this.router.navigate(['/']);
+  }
+
   goToDashboard() {
     this.router.navigate(['/mon-espace']);
   }
