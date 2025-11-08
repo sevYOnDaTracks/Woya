@@ -119,11 +119,16 @@
       <!-- CONTENT -->
       <div class="p-4 flex flex-col flex-1 justify-between">
         <div class="flex items-center justify-between gap-3">
-          <h3 class="font-bold text-sm md:text-base text-[#1A1A1A] line-clamp-1 leading-tight">{{ s.title }}</h3>
+          <h3 class="font-bold text-[0.9rem] md:text-[1rem] text-[#1A1A1A] line-clamp-1 leading-snug">{{ s.title }}</h3>
           <span class="text-xs px-2 py-1 rounded-lg bg-[#FFF7EB] text-[#FF7A00] whitespace-nowrap"> {{ s.category }} </span>
         </div>
         <p class="text-[11px] text-gray-500 mt-1 tracking-tight" *ngIf="s.ownerId">
-          Posté par <span class="font-semibold text-[#FF7A00]">{{ getOwnerName(s) }}</span>
+          Posté par
+          <button type="button"
+                  class="font-semibold text-[#FF7A00] underline-offset-2 hover:underline"
+                  (click)="viewOwnerProfile($event, s)">
+            {{ getOwnerName(s) }}
+          </button>
         </p>
 
        <!--  <p class="text-gray-600 mt-2 line-clamp-2">{{ s.description }}</p> -->

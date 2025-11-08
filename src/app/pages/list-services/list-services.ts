@@ -134,6 +134,14 @@ export default class ListServices implements OnInit, AfterViewInit {
     this.router.navigate(['/services', id]);
   }
 
+  viewOwnerProfile(event: Event, service: WoyaService) {
+    event.stopPropagation();
+    if (!service.ownerId) {
+      return;
+    }
+    this.router.navigate(['/prestataires', service.ownerId]);
+  }
+
   getOwnerName(service: WoyaService) {
     const profile = service.ownerId ? this.ownerProfiles.get(service.ownerId) : null;
     if (!profile) return 'Prestataire';

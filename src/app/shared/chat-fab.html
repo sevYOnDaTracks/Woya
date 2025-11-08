@@ -1,0 +1,29 @@
+<div class="chat-fab" *ngIf="isAuthenticated">
+  <div class="chat-toast" *ngIf="showToast">
+    <div class="chat-toast__body" (click)="openConversation(toast.conversationId)">
+      <p class="chat-toast__title">{{ toast.fromName || 'Nouveau message' }}</p>
+      <p class="chat-toast__preview">{{ toast.preview || 'Vous avez reçu un nouveau message.' }}</p>
+    </div>
+    <div class="chat-toast__actions">
+      <button type="button" class="chat-toast__cta" (click)="openConversation(toast.conversationId)">
+        Ouvrir
+      </button>
+      <button type="button" class="chat-toast__dismiss" (click)="dismissToast($event)" aria-label="Fermer">
+        ×
+      </button>
+    </div>
+  </div>
+
+  <button type="button"
+          class="chat-fab__button"
+          aria-label="Ouvrir la messagerie"
+          (click)="openInbox()">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M2.25 6.75A2.25 2.25 0 0 1 4.5 4.5h15a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 19.5 19.5h-15a2.25 2.25 0 0 1-2.25-2.25V6.75Zm2.7-.75a.75.75 0 0 0-.45 1.35l7.05 5.29a.75.75 0 0 0 .9 0l7.05-5.29a.75.75 0 0 0-.45-1.35H4.95Z" />
+    </svg>
+    <span class="chat-fab__badge" *ngIf="unreadCount > 0">
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
+    </span>
+  </button>
+</div>
