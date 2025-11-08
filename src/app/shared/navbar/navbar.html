@@ -106,6 +106,16 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h18" />
       </svg>
       </a>
+
+      <a routerLink="/favoris"
+         routerLinkActive="active"
+         aria-label="Mes favoris"
+         title="Mes favoris"
+         class="menu-item p-2 rounded-xl">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.5-2.42 8-5.65 8-9.75A4.5 4.5 0 0 0 12 6a4.5 4.5 0 0 0-8 4.5c0 4.1 3.5 7.33 8 9.75Z" />
+        </svg>
+      </a>
 <!--
       <a routerLink="/mes-rendez-vous"
          routerLinkActive="active"
@@ -219,13 +229,22 @@
               <rect width="18" height="14" x="3" y="5" rx="2" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M7 3v4M17 3v4" />
             </svg>
-              <span class="flex items-center gap-2">
-                Mes réservations
-                <span *ngIf="pendingReservations > 0"
-                      class="badge-inline">
-                  {{ pendingReservations > 10 ? '10+' : pendingReservations }}
-                </span>
+            <span class="flex items-center gap-2">
+              Mes réservations
+              <span *ngIf="pendingReservations > 0"
+                    class="badge-inline">
+                {{ pendingReservations > 10 ? '10+' : pendingReservations }}
               </span>
+            </span>
+          </a>
+          <a routerLink="/favoris"
+             routerLinkActive="active"
+             (click)="closeUserMenu()"
+             class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.5-2.42 8-5.65 8-9.75A4.5 4.5 0 0 0 12 6a4.5 4.5 0 0 0-8 4.5c0 4.1 3.5 7.33 8 9.75Z" />
+            </svg>
+            <span>Mes favoris</span>
           </a>
           <a [routerLink]="['/prestataires', user.uid]"
              routerLinkActive="active"
@@ -377,10 +396,6 @@
               class="ml-2 inline-flex items-center justify-center min-w-[1.5rem] px-2 text-[11px] font-bold text-white bg-red-500 rounded-full">
           {{ pendingRequests > 10 ? '10+' : pendingRequests }}
         </span>
-        <span *ngIf="pendingRequests > 0"
-              class="ml-2 inline-flex items-center justify-center min-w-[1.5rem] px-2 text-[11px] font-bold text-white bg-red-500 rounded-full">
-          {{ pendingRequests > 10 ? '10+' : pendingRequests }}
-        </span>
       </a>
 
       <a routerLink="/mes-reservations"
@@ -397,10 +412,16 @@
               class="ml-2 inline-flex items-center justify-center min-w-[1.5rem] px-2 text-[11px] font-bold text-white bg-red-500 rounded-full">
           {{ pendingReservations > 10 ? '10+' : pendingReservations }}
         </span>
-        <span *ngIf="pendingReservations > 0"
-              class="ml-2 inline-flex items-center justify-center min-w-[1.5rem] px-2 text-[11px] font-bold text-white bg-red-500 rounded-full">
-          {{ pendingReservations > 10 ? '10+' : pendingReservations }}
-        </span>
+      </a>
+
+      <a routerLink="/favoris"
+         routerLinkActive="text-[#FF7A00]"
+         (click)="toggleMenu()"
+         class="text-lg font-semibold flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.5-2.42 8-5.65 8-9.75A4.5 4.5 0 0 0 12 6a4.5 4.5 0 0 0-8 4.5c0 4.1 3.5 7.33 8 9.75Z" />
+        </svg>
+        <span>Mes favoris</span>
       </a>
 
       <a [routerLink]="['/prestataires', user.uid]"

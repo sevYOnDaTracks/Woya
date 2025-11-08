@@ -62,6 +62,10 @@
   @apply text-[#3A7AFE];
 }
 
+.badge-inline {
+  @apply inline-flex items-center justify-center min-w-[1.25rem] px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full;
+}
+
 .global-search--mobile {
   display: flex;
   align-items: center; /* aligne verticalement */

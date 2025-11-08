@@ -13,6 +13,7 @@ import ProviderBookings from './pages/provider-bookings';
 import ClientBookings from './pages/client-bookings';
 import GlobalSearch from './pages/global-search';
 import ForgotPassword from './pages/auth/forgot-password';
+import FavoritesPage from './pages/favorites';
 import { requireAuthGuard } from './core/store/auth.guard';
 
 export const routes: Routes = [
@@ -38,6 +39,7 @@ export const routes: Routes = [
     },
     { path: 'mes-rendez-vous', component: ProviderBookings, canActivate: [requireAuthGuard] },
     { path: 'mes-reservations', component: ClientBookings, canActivate: [requireAuthGuard] },
+    { path: 'favoris', component: FavoritesPage, canActivate: [requireAuthGuard] },
     { path: 'recherche', component: GlobalSearch },
 
     { path: 'prestataires', component: SearchUsers },

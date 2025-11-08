@@ -55,6 +55,18 @@
   flex-shrink: 0;
 }
 
+.cta-btn {
+  @apply inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-white text-[#FF7A00] font-semibold shadow-lg hover:bg-[#FFF3E5] transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.favorite-btn {
+  @apply inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-white/70 text-white font-semibold bg-white/10 hover:bg-white/20 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.favorite-btn--active {
+  @apply bg-white text-[#FF7A00] border-white;
+}
+
 @media (max-width: 640px) {
   .profile-stat-card {
     min-width: unset;

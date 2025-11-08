@@ -11,6 +11,7 @@ import { MessagingService } from '../core/services/messaging';
 import { AuthStore } from '../core/store/auth.store';
 import { TimeAgoPipe } from '../shared/time-ago.pipe';
 import { firebaseServices } from '../app.config';
+import { FavoritesService } from '../core/services/favorites';
 
 type ProfileTab = 'services' | 'gallery' | 'reviews' | 'about';
 
@@ -34,6 +35,9 @@ export default class PublicProfile implements OnInit, OnDestroy {
   reviewError = '';
   replyForms: Record<string, string> = {};
   replySubmitting: Record<string, boolean> = {};
+  favoriteId: string | null = null;
+  favoriteLoading = false;
+  favoriteError = '';
   private subs: Subscription[] = [];
   private viewedUid: string | null = null;
 
@@ -42,6 +46,7 @@ export default class PublicProfile implements OnInit, OnDestroy {
     private profilesService: ProfilesService,
     private servicesApi: Services,
     private messaging: MessagingService,
+    private favorites: FavoritesService,
     private auth: AuthStore,
     private router: Router,
   ) {}
@@ -163,6 +168,7 @@ export default class PublicProfile implements OnInit, OnDestroy {
       this.gallery = await this.profilesService.getGallery(uid);
       await this.loadReviews(uid);
       await this.syncReviewState();
+      await this.syncFavoriteState();
     } finally {
       this.loading = false;
     }
@@ -191,5 +197,39 @@ export default class PublicProfile implements OnInit, OnDestroy {
       this.reviewForm.rating = existing.rating;
       this.reviewForm.comment = existing.comment;
     }
+  }
+
+  async toggleFavorite() {
+    if (this.isOwnProfile || !this.viewedUid) return;
+    const current = this.auth.user$.value || firebaseServices.auth.currentUser;
+    if (!current) {
+      this.router.navigate(['/login'], { queryParams: { redirect: this.router.url } });
+      return;
+    }
+    this.favoriteLoading = true;
+    this.favoriteError = '';
+    try {
+      if (this.favoriteId) {
+        await this.favorites.removeFavorite(this.favoriteId);
+        this.favoriteId = null;
+      } else {
+        this.favoriteId = await this.favorites.ensureFavorite(current.uid, this.viewedUid);
+      }
+    } catch (error) {
+      console.error('favorite toggle error', error);
+      this.favoriteError = 'Impossible de mettre à jour tes favoris.';
+    } finally {
+      this.favoriteLoading = false;
+    }
+  }
+
+  private async syncFavoriteState() {
+    const current = this.auth.user$.value || firebaseServices.auth.currentUser;
+    if (!current || !this.viewedUid || this.isOwnProfile) {
+      this.favoriteId = null;
+      return;
+    }
+    const fav = await this.favorites.findEntry(current.uid, this.viewedUid);
+    this.favoriteId = fav?.id ?? null;
   }
 }

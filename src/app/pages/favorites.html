@@ -1,0 +1,37 @@
+<section class="min-h-screen bg-[#FFF7EB] pt-4 pb-16 px-4">
+  <div class="max-w-5xl mx-auto space-y-8">
+    <div class="glass-card flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <p class="hero-eyebrow">Préférés</p>
+        <h1 class="hero-title text-2xl md:text-3xl">Mes prestataires favoris</h1>
+        <p class="text-sm text-gray-500">Accède rapidement aux profils que tu suis de près.</p>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="glass-card flex flex-col items-center gap-3 text-center">
+      <div class="animate-spin h-10 w-10 border-4 border-[#FF7A00] border-t-transparent rounded-full"></div>
+      <p class="text-sm text-gray-500">Chargement de tes favoris…</p>
+    </div>
+
+    <div *ngIf="!loading && !entries.length" class="glass-card text-center text-sm text-gray-500">
+      Tu n’as encore ajouté aucun prestataire à tes favoris.
+    </div>
+
+    <div class="space-y-4" *ngIf="entries.length">
+      <article *ngFor="let item of entries" class="favorite-card">
+        <div class="flex items-center gap-4">
+          <img [src]="item.provider?.photoURL || 'assets/icone.png'" class="w-14 h-14 rounded-2xl object-cover border border-[#FFE0BF]" />
+          <div>
+            <p class="text-lg font-semibold text-[#1A1A1A]">{{ displayName(item.provider) }}</p>
+            <p class="text-sm text-gray-500">{{ item.provider?.profession || 'Prestataire local' }} • {{ item.provider?.city || 'Ville non renseignée' }}</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a [routerLink]="['/prestataires', item.providerId]" class="secondary-btn">Voir le profil</a>
+          <button type="button" class="primary-btn" (click)="contact(item)">Contacter</button>
+          <button type="button" class="danger-outline-btn" (click)="remove(item)">Retirer</button>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
