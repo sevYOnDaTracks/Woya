@@ -150,7 +150,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     isActive: true,
   };
   availability = {
-    durationMinutes: 60,
+    durationMinutes: 30,
     days: [] as AvailabilityFormDay[],
   };
 
@@ -556,7 +556,7 @@ handleFiles(files: File[]) {
       }));
     if (!days.length) return null;
     return {
-      durationMinutes: this.availability.durationMinutes || 60,
+      durationMinutes: this.clampDuration(this.availability.durationMinutes),
       days,
     };
   }
@@ -566,7 +566,7 @@ handleFiles(files: File[]) {
     if (!availability || !Array.isArray(availability.days)) {
       return;
     }
-    this.availability.durationMinutes = availability.durationMinutes || 60;
+    this.availability.durationMinutes = this.clampDuration(availability.durationMinutes);
     this.availability.days = this.weekDays.map(day => {
       const existing = availability.days.find(slot => slot.day === day.value);
       if (existing) {
@@ -594,6 +594,11 @@ handleFiles(files: File[]) {
     const [h, m] = value.split(':').map(part => parseInt(part, 10));
     if (Number.isNaN(h) || Number.isNaN(m)) return 0;
     return h * 60 + m;
+  }
+
+  private clampDuration(value?: number | null) {
+    const base = typeof value === 'number' && !Number.isNaN(value) ? value : 30;
+    return Math.min(480, Math.max(30, base));
   }
 
   dayLabel(dayValue: number) {
