@@ -10,9 +10,9 @@ import { Services } from '../../core/services/services';
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
 import { ServiceAvailability, WoyaService } from '../../core/models/service.model';
+import { CITY_OPTIONS, CityOption } from '../../core/models/cities';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
-type CitySuggestion = { label: string; city: string; lat: number; lng: number };
 type AvailabilityFormDay = { day: number; start: string; end: string; enabled: boolean };
 
 @Component({
@@ -117,8 +117,11 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   private map?: L.Map;
   private marker?: L.Marker;
   private coverageCircle?: L.Circle;
-  citySuggestions: CitySuggestion[] = [];
-  private cityLookupAbort?: AbortController;
+  cityCatalog: CityOption[] = CITY_OPTIONS;
+  citySuggestions: CityOption[] = [];
+  cityDropdownOpen = false;
+  cityError = '';
+  private cityDropdownCloseTimeout?: any;
   titleSearch = '';
   filteredTitleSuggestions: string[] = [];
   titleDropdownOpen = false;
@@ -224,7 +227,12 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       this.openTitleDropdown();
       return;
     }
-    if (!this.form.city) return;
+    const matchedCity = this.findCityOption(this.form.city);
+    if (!matchedCity) {
+      this.cityError = 'Sélectionne une ville proposée.';
+      return;
+    }
+    this.form.city = matchedCity.name;
     this.loading = true;
 
     let imageUrls: string[] = [];
@@ -456,12 +464,12 @@ handleFiles(files: File[]) {
       })
       .subscribe({
         next: result => {
-          const city = this.extractCity(result);
-          if (city) {
-            this.form.city = city;
-          } else if (result?.display_name) {
-            this.form.city = result.display_name.split(',')[0]?.trim() ?? result.display_name;
-          }
+          const city =
+            this.extractCity(result) ||
+            result?.display_name?.split(',')[0]?.trim() ||
+            '';
+          this.form.city = city;
+          this.applyCityMatch(city);
         },
       });
   }
@@ -476,49 +484,53 @@ handleFiles(files: File[]) {
 
   onCityInput(value: string) {
     this.form.city = value;
-    if (!value || value.length < 3) {
-      this.citySuggestions = [];
-      this.cityLookupAbort?.abort();
+    if (!value) {
+      this.citySuggestions = this.cityCatalog.slice(0, 6);
+      this.cityError = '';
+      this.cityDropdownOpen = false;
       return;
     }
+    const normalized = value.trim().toLowerCase();
+    this.citySuggestions = this.cityCatalog
+      .filter(option =>
+        option.name.toLowerCase().includes(normalized) ||
+        (option.aliases ?? []).some(alias => alias.toLowerCase().includes(normalized)),
+      )
+      .slice(0, 6);
 
-    this.cityLookupAbort?.abort();
-    const controller = new AbortController();
-    this.cityLookupAbort = controller;
-    const params = new URLSearchParams({
-      q: value,
-      format: 'json',
-      addressdetails: '1',
-      countrycodes: 'ci',
-      limit: '5',
-    });
-    fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
-      headers: { 'Accept-Language': 'fr' },
-      signal: controller.signal,
-    })
-      .then(response => response.json() as Promise<any[]>)
-      .then(results => {
-        if (this.cityLookupAbort !== controller) return;
-        this.citySuggestions = results.map(item => {
-          const city = this.extractCity(item) || item.display_name?.split(',')[0]?.trim() || '';
-          return {
-            label: item.display_name,
-            city,
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lon),
-          };
-        }).filter(item => item.city);
-      })
-      .catch(error => {
-        if (error.name === 'AbortError') return;
-        this.citySuggestions = [];
-      });
+    const match = this.findCityOption(value);
+    this.cityError = match ? '' : 'Sélectionne une ville proposée.';
+    this.cityDropdownOpen = this.citySuggestions.length > 0;
   }
 
-  selectCitySuggestion(suggestion: CitySuggestion) {
-    this.form.city = suggestion.city;
-    this.setLocation({ lat: suggestion.lat, lng: suggestion.lng });
+  openCityDropdown() {
+    if (this.cityDropdownCloseTimeout) {
+      clearTimeout(this.cityDropdownCloseTimeout);
+    }
+    if (!this.form.city) {
+      this.citySuggestions = this.cityCatalog.slice(0, 6);
+    }
+    this.cityDropdownOpen = this.citySuggestions.length > 0;
+  }
+
+  closeCityDropdownSoon() {
+    if (this.cityDropdownCloseTimeout) {
+      clearTimeout(this.cityDropdownCloseTimeout);
+    }
+    this.cityDropdownCloseTimeout = setTimeout(() => {
+      this.cityDropdownOpen = false;
+    }, 150);
+  }
+
+  selectCitySuggestion(suggestion: CityOption) {
+    this.form.city = suggestion.name;
+    this.cityError = '';
     this.citySuggestions = [];
+    if (this.cityDropdownCloseTimeout) {
+      clearTimeout(this.cityDropdownCloseTimeout);
+    }
+    this.cityDropdownOpen = false;
+    this.setLocation({ lat: suggestion.lat, lng: suggestion.lng });
   }
 
   private resolveContactPhone(currentUser: { phoneNumber?: string } | null) {
@@ -526,6 +538,27 @@ handleFiles(files: File[]) {
     const storePhone = typeof storeUser?.phone === 'string' ? storeUser.phone : '';
     const firebasePhone = typeof currentUser?.phoneNumber === 'string' ? currentUser.phoneNumber : '';
     return storePhone || firebasePhone || this.form.contact || '';
+  }
+
+  private applyCityMatch(value: string | undefined | null) {
+    const match = this.findCityOption(value);
+    if (match) {
+      this.form.city = match.name;
+      this.cityError = '';
+      return true;
+    }
+    this.cityError = value ? 'Ville non prise en charge. Choisis une ville proposée.' : 'Ville obligatoire.';
+    return false;
+  }
+
+  private findCityOption(value: string | undefined | null): CityOption | undefined {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return undefined;
+    const lower = trimmed.toLowerCase();
+    return this.cityCatalog.find(option => {
+      if (option.name.toLowerCase() === lower) return true;
+      return (option.aliases ?? []).some(alias => alias.toLowerCase() === lower);
+    });
   }
 
   private extractCity(result: any): string {

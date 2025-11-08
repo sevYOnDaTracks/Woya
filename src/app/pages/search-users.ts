@@ -10,6 +10,7 @@ import { MessagingService } from '../core/services/messaging';
 import { AuthStore } from '../core/store/auth.store';
 import { TimeAgoPipe } from '../shared/time-ago.pipe';
 import { firebaseServices } from '../app.config';
+import { CITY_OPTIONS, CityOption } from '../core/models/cities';
 
 @Component({
   selector: 'app-search-users',
@@ -23,6 +24,9 @@ export default class SearchUsers implements OnInit, OnDestroy {
   loading = false;
   error = '';
   results: any[] = [];
+  cityFilter = '';
+  private cityFilterKey = '';
+  private cityCatalog: CityOption[] = CITY_OPTIONS;
   private searchInput$ = new Subject<string>();
   private sub?: Subscription;
   private paramSub?: Subscription;
@@ -42,9 +46,15 @@ export default class SearchUsers implements OnInit, OnDestroy {
 
     this.paramSub = this.route.queryParamMap.subscribe(params => {
       const term = params.get('term') ?? '';
+      this.setCityFilter(params.get('city'));
       if (term && term !== this.term) {
         this.term = term;
         this.searchInput$.next(term);
+      } else if (!term) {
+        this.term = '';
+      }
+      if (!term && this.cityFilter) {
+        this.results = [];
       }
     });
   }
@@ -73,7 +83,9 @@ export default class SearchUsers implements OnInit, OnDestroy {
     try {
       const normalized = query.toLowerCase();
       const fetched = await this.profiles.searchProfiles(query);
-      this.results = fetched.filter(user => this.matchesUser(user, normalized));
+      this.results = fetched
+        .filter(user => this.matchesUser(user, normalized))
+        .filter(user => this.matchesCity(user));
     } catch {
       this.error = 'Impossible de lancer la recherche pour le moment.';
     } finally {
@@ -125,5 +137,32 @@ export default class SearchUsers implements OnInit, OnDestroy {
       .join(' ')
       .toLowerCase();
     return haystack.includes(term);
+  }
+
+  private matchesCity(user: any) {
+    if (!this.cityFilterKey) return true;
+    return ((user?.city || '').trim().toLowerCase() === this.cityFilterKey);
+  }
+
+  private setCityFilter(value: string | null) {
+    const trimmed = (value || '').trim();
+    if (!trimmed) {
+      this.cityFilter = '';
+      this.cityFilterKey = '';
+      return;
+    }
+    const match = this.findCityOption(trimmed);
+    const normalized = match?.name || trimmed;
+    this.cityFilter = normalized;
+    this.cityFilterKey = normalized.toLowerCase();
+  }
+
+  private findCityOption(value: string | null): CityOption | undefined {
+    const lower = (value || '').trim().toLowerCase();
+    if (!lower) return undefined;
+    return this.cityCatalog.find(option => {
+      if (option.name.toLowerCase() === lower) return true;
+      return (option.aliases ?? []).some(alias => alias.toLowerCase() === lower);
+    });
   }
 }

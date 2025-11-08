@@ -5,6 +5,7 @@ import { AuthStore } from '../../core/store/auth.store';
 import { Services } from '../../core/services/services';
 import { WoyaService } from '../../core/models/service.model';
 import { ProfilesService } from '../../core/services/profiles';
+import { CITY_OPTIONS, CityOption } from '../../core/models/cities';
 
 @Component({
   selector: 'app-landing',
@@ -22,7 +23,15 @@ export class Landing implements OnInit, OnDestroy {
   searchResults: any[] = [];
   searchLoading = false;
   searchError = '';
+  cityCatalog: CityOption[] = CITY_OPTIONS;
+  cityOptions = this.cityCatalog.map(option => option.name);
+  cityInput = '';
+  filteredCityOptions = this.cityOptions.slice(0, 6);
+  cityDropdownOpen = false;
+  cityError = '';
+  selectedCity = '';
   private searchDebounce?: ReturnType<typeof setTimeout>;
+  private cityDropdownCloseTimeout?: ReturnType<typeof setTimeout>;
   private numberFormatter = new Intl.NumberFormat('fr-FR');
 
   constructor(
@@ -98,6 +107,51 @@ export class Landing implements OnInit, OnDestroy {
     }
   }
 
+  onCityInput(value: string) {
+    this.cityInput = value;
+    const normalized = this.normalizeCityName(value);
+    this.selectedCity = normalized ?? '';
+    this.cityError = !value || normalized ? '' : 'Choisis une ville proposée';
+    this.filteredCityOptions = this.filterCityNames(value);
+    this.cityDropdownOpen = !!value && this.filteredCityOptions.length > 0;
+
+    if (this.hasSearchTerm) {
+      this.scheduleHeroSearch();
+    }
+  }
+
+  chooseCity(name: string) {
+    if (this.cityDropdownCloseTimeout) {
+      clearTimeout(this.cityDropdownCloseTimeout);
+    }
+    this.cityInput = name;
+    this.selectedCity = name;
+    this.cityError = '';
+    this.cityDropdownOpen = false;
+    if (this.hasSearchTerm) {
+      this.scheduleHeroSearch();
+    }
+  }
+
+  openCityDropdown() {
+    if (this.cityDropdownCloseTimeout) {
+      clearTimeout(this.cityDropdownCloseTimeout);
+    }
+    if (!this.filteredCityOptions.length) {
+      this.filteredCityOptions = this.cityOptions.slice(0, 6);
+    }
+    this.cityDropdownOpen = true;
+  }
+
+  closeCityDropdownSoon() {
+    if (this.cityDropdownCloseTimeout) {
+      clearTimeout(this.cityDropdownCloseTimeout);
+    }
+    this.cityDropdownCloseTimeout = setTimeout(() => {
+      this.cityDropdownOpen = false;
+    }, 150);
+  }
+
   submitHeroSearch() {
     const term = this.searchTerm.trim();
     if (!term) {
@@ -108,11 +162,12 @@ export class Landing implements OnInit, OnDestroy {
       this.searchError = 'Tape au moins 2 caractères.';
       return;
     }
-    if (this.searchMode === 'services') {
-      this.router.navigate(['/global-search'], { queryParams: { term } });
-    } else {
-      this.router.navigate(['/search-users'], { queryParams: { term } });
+    const target = this.searchMode === 'services' ? '/recherche' : '/prestataires';
+    const queryParams: any = { term };
+    if (this.selectedCity) {
+      queryParams.city = this.selectedCity;
     }
+    this.router.navigate([target], { queryParams });
   }
 
   async goToSuggestion(item: any) {
@@ -154,6 +209,8 @@ export class Landing implements OnInit, OnDestroy {
     const all = await this.servicesApi.list();
     this.serviceCount = all.length;
     this.serviceStatLabel = this.formatServiceCount(this.serviceCount);
+    this.cityOptions = this.extractCityOptions(all);
+    this.filteredCityOptions = this.cityOptions.slice(0, 6);
 
     const normalized = all
       .map(service => {
@@ -199,6 +256,7 @@ export class Landing implements OnInit, OnDestroy {
         const fetched = await this.profiles.searchProfiles(query);
         results = fetched.slice(0, 5);
       }
+      results = this.applyCityFilter(results);
       if (query === this.searchTerm.trim()) {
         this.searchResults = results;
       }
@@ -220,6 +278,51 @@ export class Landing implements OnInit, OnDestroy {
       return '1 service actif';
     }
     return `Plus de ${this.numberFormatter.format(count)} services actifs`;
+  }
+
+  private extractCityOptions(services: WoyaService[]) {
+    const counts = new Map<string, number>();
+    services.forEach(service => {
+      const normalized = this.normalizeCityName(service.city);
+      if (!normalized) return;
+      const key = normalized.toLowerCase();
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    });
+
+    const sortedCatalog = [...this.cityCatalog].sort((a, b) => {
+      const keyA = a.name.toLowerCase();
+      const keyB = b.name.toLowerCase();
+      const countA = counts.get(keyA) ?? 0;
+      const countB = counts.get(keyB) ?? 0;
+      return countB - countA || a.name.localeCompare(b.name);
+    });
+
+    return sortedCatalog.map(option => option.name);
+  }
+
+  private applyCityFilter(results: any[]) {
+    if (!this.selectedCity) return results;
+    const normalized = this.selectedCity.trim().toLowerCase();
+    return results.filter(item => ((item.city || '').trim().toLowerCase() === normalized));
+  }
+
+  private normalizeCityName(value: string | undefined | null) {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return null;
+    const lower = trimmed.toLowerCase();
+    const match = this.cityCatalog.find(option => {
+      if (option.name.toLowerCase() === lower) return true;
+      return (option.aliases ?? []).some(alias => alias.toLowerCase() === lower);
+    });
+    return match?.name ?? null;
+  }
+
+  private filterCityNames(term: string) {
+    const value = term.trim().toLowerCase();
+    if (!value) {
+      return this.cityOptions.slice(0, 6);
+    }
+    return this.cityOptions.filter(city => city.toLowerCase().includes(value)).slice(0, 6);
   }
 
 }
