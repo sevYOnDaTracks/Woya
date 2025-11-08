@@ -1,0 +1,68 @@
+<section class="min-h-screen bg-[#FFF7EB] pt-28 pb-16 px-4">
+  <div class="max-w-6xl mx-auto space-y-8">
+    <div class="glass-card">
+      <p class="hero-eyebrow">Recherche</p>
+      <h1 class="hero-title text-2xl md:text-3xl">Résultats pour « {{ term }} »</h1>
+      <p class="text-sm text-gray-500 mt-2">
+        Retrouve en un coup d’œil les services et utilisateurs correspondants.
+      </p>
+    </div>
+
+    <div *ngIf="loading" class="glass-card flex flex-col items-center gap-3 text-center">
+      <div class="animate-spin h-10 w-10 border-4 border-[#FF7A00] border-t-transparent rounded-full"></div>
+      <p class="text-sm text-gray-500">Chargement…</p>
+    </div>
+
+    <div class="results-grid" *ngIf="!loading">
+      <div class="glass-card">
+        <div class="section-header">
+          <h2>Services</h2>
+          <span class="badge">{{ servicesResults.length }}</span>
+        </div>
+        <ng-container *ngIf="servicesResults.length; else noServices">
+          <div class="result-list">
+            <a *ngFor="let service of servicesResults"
+               [routerLink]="['/services', service.id]"
+               class="result-item">
+              <img [src]="service.coverUrl || 'assets/icone.png'" alt="cover" class="result-avatar">
+              <div class="result-body">
+                <p class="result-title">{{ service.title }}</p>
+                <p class="result-subtitle">
+                  {{ service.category }} • {{ service.city || 'Ville non renseignée' }}
+                </p>
+              </div>
+            </a>
+          </div>
+        </ng-container>
+        <ng-template #noServices>
+          <p class="empty-state">Aucun service trouvé.</p>
+        </ng-template>
+      </div>
+
+      <div class="glass-card">
+        <div class="section-header">
+          <h2>Utilisateurs</h2>
+          <span class="badge">{{ userResults.length }}</span>
+        </div>
+        <ng-container *ngIf="userResults.length; else noUsers">
+          <div class="result-list">
+            <a *ngFor="let user of userResults"
+               [routerLink]="['/prestataires', user.id]"
+               class="result-item">
+              <img [src]="user.photoURL || 'assets/icone.png'" alt="avatar" class="result-avatar">
+              <div class="result-body">
+                <p class="result-title">{{ displayUserName(user) }}</p>
+                <p class="result-subtitle">
+                  {{ user.profession || 'Prestataire local' }} • {{ user.city || 'Ville non renseignée' }}
+                </p>
+              </div>
+            </a>
+          </div>
+        </ng-container>
+        <ng-template #noUsers>
+          <p class="empty-state">Aucun utilisateur trouvé.</p>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</section>

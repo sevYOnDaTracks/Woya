@@ -40,6 +40,13 @@
                  placeholder="Rechercher un service"
                  class="filter-control" />
         </div>
+        <div class="filter-field">
+          <label>Recherche</label>
+          <input type="text"
+                 [(ngModel)]="searchTerm"
+                 placeholder="Prestataire ou service"
+                 class="filter-control" />
+        </div>
       </div>
     </div>
 
@@ -58,7 +65,7 @@
               <div>
                 <p class="booking-card__title">{{ booking.serviceTitle }}</p>
                 <p class="booking-card__subtitle">
-                  {{ booking.startTime | date:'EEEE d MMMM • HH:mm' }}
+                  {{ booking.startTime | date:'EEEE d MMMM • HH:mm':'':'fr-FR' }}
                 </p>
               </div>
               <span [class]="statusBadgeClass(booking.status)">
@@ -69,7 +76,10 @@
             <div class="booking-card__body">
               <p class="text-sm text-gray-600">
                 Prestataire :
-                <span class="font-semibold text-[#1A1A1A]">{{ providerName(booking) }}</span>
+                <a [routerLink]="providerProfileLink(booking)"
+                   class="booking-link">
+                  {{ providerName(booking) }}
+                </a>
               </p>
               <p class="text-xs text-gray-500" *ngIf="booking.createdAt">
                 Demande envoyée {{ booking.createdAt | timeAgo }}
@@ -83,10 +93,13 @@
                 Voir l'annonce
               </button>
               <button type="button"
-                      class="primary-btn"
+                      class="icon-btn"
                       [disabled]="contactingId === (booking.id || booking.serviceId)"
                       (click)="contactProvider(booking)">
-                {{ contactingId === (booking.id || booking.serviceId) ? 'Ouverture…' : 'Contacter' }}
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m3 8 8.4 6.3a1 1 0 0 0 1.2 0L21 8" />
+                </svg>
               </button>
             </div>
           </article>

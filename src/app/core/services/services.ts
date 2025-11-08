@@ -14,6 +14,9 @@ import {
   GeoPoint,
   QueryDocumentSnapshot,
   DocumentData,
+  limit,
+  startAt,
+  endAt,
 } from 'firebase/firestore';
 import { deleteObject, getStorage, ref as storageRef } from 'firebase/storage';
 import { firebaseServices } from '../../app.config';
@@ -115,5 +118,19 @@ export class Services {
     }
 
     return payload;
+  }
+
+  async searchServices(term: string, maxResults = 10): Promise<WoyaService[]> {
+    const queryTerm = term.trim();
+    if (!queryTerm) return [];
+    const q = query(
+      this.col,
+      orderBy('title'),
+      startAt(queryTerm),
+      endAt(queryTerm + '\uf8ff'),
+      limit(maxResults),
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(docSnap => this.mapService(docSnap));
   }
 }

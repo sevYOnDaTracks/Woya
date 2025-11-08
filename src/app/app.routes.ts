@@ -11,6 +11,7 @@ import SearchUsers from './pages/search-users';
 import PublicProfile from './pages/public-profile';
 import ProviderBookings from './pages/provider-bookings';
 import ClientBookings from './pages/client-bookings';
+import GlobalSearch from './pages/global-search';
 import { requireAuthGuard } from './core/store/auth.guard';
 
 export const routes: Routes = [
@@ -35,6 +36,7 @@ export const routes: Routes = [
     },
     { path: 'mes-rendez-vous', component: ProviderBookings, canActivate: [requireAuthGuard] },
     { path: 'mes-reservations', component: ClientBookings, canActivate: [requireAuthGuard] },
+    { path: 'recherche', component: GlobalSearch },
 
     { path: 'prestataires', component: SearchUsers },
     { path: 'prestataires/:id', component: PublicProfile },

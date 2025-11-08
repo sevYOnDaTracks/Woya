@@ -8,6 +8,7 @@ import { BookingsService } from '../core/services/bookings';
 import { ProfilesService } from '../core/services/profiles';
 import { ServiceBooking } from '../core/models/booking.model';
 import { EmailService } from '../core/services/email';
+import { MessagingService } from '../core/services/messaging';
 import { TimeAgoPipe } from '../shared/time-ago.pipe';
 
 type BookingView = 'upcoming' | 'history';
@@ -27,6 +28,8 @@ export default class ProviderBookings implements OnInit, OnDestroy {
   updatingId: string | null = null;
   statusFilter: 'all' | 'pending' | 'confirmed' | 'cancelled' = 'all';
   serviceFilter = '';
+  searchTerm = '';
+  contactingId: string | null = null;
 
   private providerId: string | null = null;
   private authSub?: Subscription;
@@ -38,6 +41,7 @@ export default class ProviderBookings implements OnInit, OnDestroy {
     private bookingsService: BookingsService,
     private profiles: ProfilesService,
     private emails: EmailService,
+    private messaging: MessagingService,
   ) {}
 
   async ngOnInit() {
@@ -81,13 +85,19 @@ export default class ProviderBookings implements OnInit, OnDestroy {
   get filteredBookings() {
     const now = Date.now();
     return this.bookings
-      .filter(booking =>
-        this.view === 'upcoming' ? booking.startTime >= now : booking.startTime < now,
-      )
+      .filter(booking => {
+        if (this.view === 'history') {
+          return booking.status === 'cancelled' || booking.startTime < now;
+        }
+        return booking.status !== 'cancelled' && booking.startTime >= now;
+      })
       .filter(booking => this.statusFilter === 'all' || booking.status === this.statusFilter)
       .filter(booking =>
         !this.serviceFilter ||
         booking.serviceTitle?.toLowerCase().includes(this.serviceFilter.trim().toLowerCase()),
+      )
+      .filter(booking =>
+        this.matchesSearch(booking),
       )
       .sort((a, b) =>
         this.view === 'upcoming' ? a.startTime - b.startTime : b.startTime - a.startTime,
@@ -213,5 +223,31 @@ Retrouvez tous les détails dans l'espace Mes réservations.
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  clientProfileLink(booking: ServiceBooking) {
+    return ['/prestataires', booking.clientId];
+  }
+
+  private matchesSearch(booking: ServiceBooking) {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    const haystack = [booking.serviceTitle || '', this.clientName(booking)].join(' ').toLowerCase();
+    return haystack.includes(term);
+  }
+
+  async contactClient(booking: ServiceBooking) {
+    if (!booking.clientId) return;
+    this.contactingId = booking.id ?? booking.clientId;
+    try {
+      const conversationId = await this.messaging.ensureConversation(booking.clientId);
+      if (conversationId) {
+        this.router.navigate(['/messagerie', conversationId]);
+      } else {
+        this.router.navigate(['/messagerie']);
+      }
+    } finally {
+      this.contactingId = null;
+    }
   }
 }

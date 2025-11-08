@@ -27,6 +27,7 @@ export default class ClientBookings implements OnInit, OnDestroy {
   contactingId: string | null = null;
   statusFilter: 'all' | 'pending' | 'confirmed' | 'cancelled' = 'all';
   serviceFilter = '';
+  searchTerm = '';
 
   private clientId: string | null = null;
   private authSub?: Subscription;
@@ -81,14 +82,18 @@ export default class ClientBookings implements OnInit, OnDestroy {
   get filteredBookings() {
     const now = Date.now();
     return this.bookings
-      .filter(booking =>
-        this.view === 'upcoming' ? booking.startTime >= now : booking.startTime < now,
-      )
+      .filter(booking => {
+        if (this.view === 'history') {
+          return booking.status === 'cancelled' || booking.startTime < now;
+        }
+        return booking.status !== 'cancelled' && booking.startTime >= now;
+      })
       .filter(booking => this.statusFilter === 'all' || booking.status === this.statusFilter)
       .filter(booking =>
         !this.serviceFilter ||
         booking.serviceTitle?.toLowerCase().includes(this.serviceFilter.trim().toLowerCase()),
       )
+      .filter(booking => this.matchesSearch(booking))
       .sort((a, b) =>
         this.view === 'upcoming' ? a.startTime - b.startTime : b.startTime - a.startTime,
       );
@@ -144,5 +149,16 @@ export default class ClientBookings implements OnInit, OnDestroy {
         this.providerCache.set(id, profile);
       }),
     );
+  }
+
+  providerProfileLink(booking: ServiceBooking) {
+    return ['/prestataires', booking.providerId];
+  }
+
+  private matchesSearch(booking: ServiceBooking) {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    const haystack = [booking.serviceTitle || '', this.providerName(booking)].join(' ').toLowerCase();
+    return haystack.includes(term);
   }
 }
