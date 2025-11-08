@@ -147,6 +147,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     city: '',
     price: null as number | null,
     contact: '',
+    isActive: true,
   };
   availability = {
     durationMinutes: 60,
@@ -261,6 +262,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       ownerId: currentUser.uid,
       location: this.currentLocation,
       coverageKm: this.coverageKm,
+      isActive: this.form.isActive !== false,
       availability: this.buildAvailabilityPayload(),
     };
 
@@ -367,6 +369,7 @@ handleFiles(files: File[]) {
       city: service.city,
       price: service.price ?? null,
       contact: service.contact,
+      isActive: service.isActive !== false,
     };
 
     this.existingCoverUrl = service.coverUrl || null;

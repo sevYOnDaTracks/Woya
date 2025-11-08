@@ -21,6 +21,7 @@ export default class MyServices implements OnInit, OnDestroy {
 
   loading = true;
   deletingId: string | null = null;
+  togglingId: string | null = null;
   services: WoyaService[] = [];
   private authSub?: Subscription;
 
@@ -83,6 +84,18 @@ export default class MyServices implements OnInit, OnDestroy {
       this.services = this.services.filter(s => s.id !== service.id);
     } finally {
       this.deletingId = null;
+    }
+  }
+
+  async toggleVisibility(service: WoyaService) {
+    if (!service.id) return;
+    this.togglingId = service.id;
+    try {
+      const next = service.isActive === false;
+      await this.servicesApi.update(service.id, { isActive: next });
+      service.isActive = next;
+    } finally {
+      this.togglingId = null;
     }
   }
 

@@ -33,6 +33,9 @@
             <div>
               <p class="row-title">{{ service.title }}</p>
               <p class="row-meta">{{ service.category }} • {{ service.city }}</p>
+              <p class="text-xs mt-1" [class.text-green-600]="service.isActive !== false" [class.text-gray-400]="service.isActive === false">
+                {{ service.isActive === false ? 'Masqué' : 'Visible' }}
+              </p>
             </div>
             <span class="row-price">
               {{ service.price ? (service.price | number:'1.0-0') + ' FCFA' : '—' }}
@@ -41,6 +44,9 @@
               {{ service.createdAt | timeAgo }}
             </span>
             <div class="row-actions">
+              <button type="button" class="ghost-btn" (click)="toggleVisibility(service)" [disabled]="togglingId === service.id">
+                {{ service.isActive === false ? 'Réactiver' : 'Masquer' }}
+              </button>
               <button type="button" class="ghost-btn" (click)="viewService(service)">
                 Voir
               </button>

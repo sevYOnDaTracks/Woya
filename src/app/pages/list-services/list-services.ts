@@ -250,6 +250,9 @@ export default class ListServices implements OnInit, AfterViewInit {
     const q = this.q.toLowerCase();
 
     return this.services.filter(s => {
+      if (s.isActive === false) {
+        return false;
+      }
       const matchesText = [s.title, s.description, s.city, s.category]
         .join(' ')
         .toLowerCase()

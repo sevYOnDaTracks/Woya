@@ -99,6 +99,7 @@ export class Services {
       id: docSnap.id,
       ...data,
       location,
+      isActive: data.isActive !== false,
     } as WoyaService;
   }
 

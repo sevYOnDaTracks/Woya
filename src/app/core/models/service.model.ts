@@ -13,6 +13,7 @@ export interface WoyaService {
   ownerId?: string;
   location?: { lat: number; lng: number } | null;
   coverageKm?: number | null;
+  isActive?: boolean;
   availability?: ServiceAvailability | null;
 }
 
