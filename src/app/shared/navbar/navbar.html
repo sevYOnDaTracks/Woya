@@ -55,13 +55,27 @@
       </svg>
     </a>
 
+    <a *ngIf="currentUser"
+       routerLink="/mon-espace"
+       routerLinkActive="active"
+       aria-label="Mon espace"
+       title="Mon espace"
+       class="menu-item p-2 rounded-xl">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    </a>
+
     <a routerLink="/services"
        routerLinkActive="active"
        aria-label="Services"
        title="Services"
        class="menu-item p-2 rounded-xl">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h6v6H4zM14 5h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
       </svg>
     </a>
 
@@ -234,6 +248,18 @@
             </svg>
             <span>Mon compte</span>
           </a>
+          <a routerLink="/mon-espace"
+             routerLinkActive="active"
+             (click)="closeUserMenu()"
+             class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="7" height="7" rx="1" />
+              <rect x="13" y="4" width="7" height="7" rx="1" />
+              <rect x="4" y="13" width="7" height="7" rx="1" />
+              <rect x="13" y="13" width="7" height="7" rx="1" />
+            </svg>
+            <span>Mon espace</span>
+          </a>
           <a routerLink="/notifications"
              routerLinkActive="active"
              (click)="closeUserMenu()"
@@ -322,7 +348,19 @@
   </div>
 
 
-  <div class="md:hidden flex items-center gap-4" *ngIf="auth.user$ | async as user">
+   <div class="md:hidden flex items-center gap-4" *ngIf="auth.user$ | async as user">
+    <!-- <button type="button"
+            class="relative text-[#FF7A00] focus:outline-none p-1"
+            (click)="goToDashboard()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    </button> -->
+
+
     <button type="button"
             class="relative text-[#FF7A00] focus:outline-none p-1"
             (click)="goToAccount()">
@@ -331,6 +369,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-5 0-7 3-7 5v1h14v-1c0-2-2-5-7-5Z" />
       </svg>
     </button>
+
     <button type="button"
             class="relative text-[#FF7A00] focus:outline-none p-1"
             (click)="goToNotifications()">
@@ -343,7 +382,8 @@
         {{ notificationBadgeCount > 9 ? '9+' : notificationBadgeCount }}
       </span>
     </button>
-    <button type="button"
+
+    <!-- <button type="button"
             class="relative text-[#FF7A00] focus:outline-none p-1"
             (click)="goToMessages()">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -354,7 +394,7 @@
             class="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[1.1rem] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
         {{ unreadCount > 9 ? '9+' : unreadCount }}
       </span>
-    </button>
+    </button> -->
     <button (click)="toggleMenu()" class="text-[#FF7A00] focus:outline-none p-1">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none"
         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -467,7 +507,7 @@
        (click)="toggleMenu()"
        class="text-lg font-semibold flex items-center gap-3">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h6v6H4zM14 5h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
       </svg>
       <span>Services</span>
     </a>
@@ -484,6 +524,18 @@
     </a>
 
     <ng-container *ngIf="currentUser as user">
+      <a routerLink="/mon-espace"
+         routerLinkActive="text-[#FF7A00]"
+         (click)="toggleMenu()"
+         class="text-lg font-semibold flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="4" y="4" width="7" height="7" rx="1" />
+          <rect x="13" y="4" width="7" height="7" rx="1" />
+          <rect x="4" y="13" width="7" height="7" rx="1" />
+          <rect x="13" y="13" width="7" height="7" rx="1" />
+        </svg>
+        <span>Mon espace</span>
+      </a>
       <a routerLink="/mes-services"
          routerLinkActive="text-[#FF7A00]"
          (click)="toggleMenu()"

@@ -15,6 +15,7 @@ import GlobalSearch from './pages/global-search';
 import ForgotPassword from './pages/auth/forgot-password';
 import FavoritesPage from './pages/favorites';
 import NotificationsPage from './pages/messages/notifications';
+import DashboardPage from './pages/dashboard';
 import { requireAuthGuard } from './core/store/auth.guard';
 
 export const routes: Routes = [
@@ -29,6 +30,7 @@ export const routes: Routes = [
   path: 'register',component :Register
 },
     { path: 'mot-de-passe-oublie', component: ForgotPassword },
+    { path: 'mon-espace', component: DashboardPage, canActivate: [requireAuthGuard] },
     { path: 'mes-services', component: MyServices, canActivate: [requireAuthGuard] },
     { path: 'mon-compte', component: UserInfo, canActivate: [requireAuthGuard] },
     { path: 'messagerie', component: MessagesInbox, canActivate: [requireAuthGuard] },

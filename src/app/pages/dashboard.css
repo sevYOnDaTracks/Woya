@@ -1,0 +1,103 @@
+.dashboard {
+  @apply min-h-screen bg-[#FFF7EB] pt-10 md:pt-16 pb-16 px-4 md:px-16 space-y-8;
+}
+
+.dashboard__hero {
+  @apply bg-gradient-to-r from-[#FFEDD5] to-[#FFE4C7] rounded-3xl p-8 flex flex-col gap-4 shadow-inner;
+}
+
+.dashboard__welcome-label {
+  @apply text-xs uppercase tracking-[0.4em] text-[#FF8A1F] font-semibold;
+}
+
+.dashboard__welcome-title {
+  @apply text-3xl md:text-4xl font-extrabold text-[#1A1A1A];
+}
+
+.dashboard__welcome-subtitle {
+  @apply text-sm md:text-base text-gray-600 max-w-2xl;
+}
+
+.dashboard__appointment {
+  @apply bg-white rounded-3xl border border-[#FFE0BF] p-6 shadow-sm space-y-4;
+}
+
+.dashboard__appointment-header {
+  @apply flex items-center gap-3 text-sm font-semibold text-[#FF7A00];
+}
+
+.dashboard__appointment-body h2 {
+  @apply text-xl font-semibold text-[#1A1A1A];
+}
+
+.dashboard__appointment-cover {
+  @apply w-full h-40 rounded-2xl overflow-hidden bg-[#FFF2E4] mb-4;
+}
+
+.dashboard__appointment-cover img {
+  @apply w-full h-full object-cover;
+}
+
+.dashboard__appointment-date {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+.dashboard__appointment-role {
+  @apply text-xs text-gray-400 uppercase tracking-wide mt-2;
+}
+
+.dashboard__appointment-link {
+  @apply inline-flex items-center gap-2 mt-4 text-sm font-semibold text-[#FF7A00] hover:text-[#e66d00];
+}
+
+.dashboard__appointment-empty {
+  @apply text-sm text-gray-500;
+}
+
+.dashboard__actions {
+  @apply space-y-4;
+}
+
+.dashboard__section-title {
+  @apply text-lg font-semibold text-[#1A1A1A];
+}
+
+.dashboard__grid {
+  @apply grid gap-4 md:grid-cols-2 xl:grid-cols-3;
+}
+
+.dashboard-card {
+  @apply relative border border-[#FFE0BF] rounded-3xl p-5 bg-white flex flex-col gap-3 hover:shadow-lg transition-shadow;
+}
+
+.dashboard-card--accent {
+  @apply bg-[#FF7A00] text-white border-transparent shadow-lg;
+}
+
+.dashboard-card__badge {
+  @apply absolute top-4 right-4 text-xs font-semibold bg-[#1A1A1A] text-white min-w-[2rem] text-center rounded-full px-2 py-0.5;
+}
+
+.dashboard-card__icon {
+  @apply w-12 h-12 rounded-2xl bg-[#FFF2E4] text-[#FF7A00] flex items-center justify-center;
+}
+
+.dashboard-card--accent .dashboard-card__icon {
+  @apply bg-white text-[#FF7A00];
+}
+
+.dashboard-card__icon svg {
+  @apply w-6 h-6;
+}
+
+.dashboard-card__body h3 {
+  @apply text-lg font-semibold;
+}
+
+.dashboard-card__body p {
+  @apply text-sm text-gray-600;
+}
+
+.dashboard-card--accent .dashboard-card__body p {
+  @apply text-white/80;
+}

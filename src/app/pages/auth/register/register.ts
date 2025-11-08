@@ -58,7 +58,7 @@ export default class Register implements OnInit, OnDestroy {
     this.authSub = this.authStore.user$.subscribe(user => {
       this.isLoggedIn = !!user;
       if (this.isLoggedIn) {
-        this.router.navigate(['/services']);
+        this.router.navigate(['/mon-espace']);
       }
     });
   }
@@ -144,7 +144,7 @@ export default class Register implements OnInit, OnDestroy {
         createdAt: Date.now()
       });
 
-      this.router.navigate(['/services']);
+      this.router.navigate(['/mon-espace']);
 
     } catch (err) {
       const code = (err as any)?.code || (err as Error)?.message;

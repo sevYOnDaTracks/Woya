@@ -26,7 +26,7 @@ export default class Login implements OnInit {
     this.authStore.user$.subscribe(user => {
       this.isLoggedIn = !!user;
       if (this.isLoggedIn) {
-        this.router.navigate(['/services']);
+        this.router.navigate(['/mon-espace']);
       }
     });
   }
@@ -35,7 +35,7 @@ export default class Login implements OnInit {
     this.loading = true;
     try {
       await this.auth.login(this.email, this.password);
-      window.location.href = '/services';
+      await this.router.navigate(['/mon-espace']);
     } catch (e) {
       alert("Identifiants incorrects");
     }
@@ -46,7 +46,7 @@ export default class Login implements OnInit {
  loginWithGoogle() {
     this.auth.googleLogin().then((result) => {
       console.log(result);
-      this.router.navigate(['/services/']);
+      this.router.navigate(['/mon-espace']);
     }).catch((error) => {
       // Handle login error
     });
@@ -55,6 +55,7 @@ export default class Login implements OnInit {
 async loginWithFacebook() {
   const provider = new FacebookAuthProvider();
   const cred = await signInWithPopup(firebaseServices.auth, provider);
+  await this.router.navigate(['/mon-espace']);
   return cred.user; // ✅ renvoie le user
 }
 
