@@ -60,7 +60,9 @@ export default class SearchUsers implements OnInit, OnDestroy {
     this.error = '';
     this.loading = true;
     try {
-      this.results = await this.profiles.searchProfiles(query);
+      const normalized = query.toLowerCase();
+      const fetched = await this.profiles.searchProfiles(query);
+      this.results = fetched.filter(user => this.matchesUser(user, normalized));
     } catch {
       this.error = 'Impossible de lancer la recherche pour le moment.';
     } finally {
@@ -97,5 +99,20 @@ export default class SearchUsers implements OnInit, OnDestroy {
   onSubmit(event: Event) {
     event.preventDefault();
     this.runSearch(this.term);
+  }
+
+  private matchesUser(user: any, term: string) {
+    if (!term) return true;
+    const haystack = [
+      user?.pseudo,
+      user?.firstname,
+      user?.lastname,
+      user?.profession,
+      user?.city,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(term);
   }
 }

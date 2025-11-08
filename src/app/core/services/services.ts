@@ -124,14 +124,22 @@ export class Services {
   async searchServices(term: string, maxResults = 10): Promise<WoyaService[]> {
     const queryTerm = term.trim();
     if (!queryTerm) return [];
-    const q = query(
-      this.col,
-      orderBy('title'),
-      startAt(queryTerm),
-      endAt(queryTerm + '\uf8ff'),
-      limit(maxResults),
-    );
+    const normalized = queryTerm.toLowerCase();
+    const fetchLimit = Math.max(20, maxResults * 5);
+    const q = query(this.col, orderBy('createdAt', 'desc'), limit(fetchLimit));
     const snap = await getDocs(q);
-    return snap.docs.map(docSnap => this.mapService(docSnap));
+    return snap.docs
+      .map(docSnap => this.mapService(docSnap))
+      .filter(service => service.isActive !== false)
+      .filter(service => this.matchesSearchTerm(service, normalized))
+      .slice(0, maxResults);
+  }
+
+  private matchesSearchTerm(service: WoyaService, term: string) {
+    const haystack = [service.title, service.description, service.category, service.city]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(term);
   }
 }

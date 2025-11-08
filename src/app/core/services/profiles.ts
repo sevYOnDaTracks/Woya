@@ -233,19 +233,46 @@ export class ProfilesService {
     if (!queryValue || queryValue.length < 2) {
       return [];
     }
+    const normalized = queryValue.toLowerCase();
     const q = query(
       collection(this.db, 'users'),
-      where('searchKeywords', 'array-contains', queryValue.toLowerCase()),
+      where('searchKeywords', 'array-contains', normalized),
       limit(20),
     );
     const snap = await getDocs(q);
-    return snap.docs.map(docSnap => {
-      const data = docSnap.data() as any;
-      if (data.lastSeen?.seconds) {
-        data.lastSeen = data.lastSeen.seconds * 1000;
-      }
-      return { id: docSnap.id, ...data };
-    });
+    let results = snap.docs.map(docSnap => this.mapProfile(docSnap));
+    results = results.filter(profile => this.matchesProfileTerm(profile, normalized));
+
+    if (!results.length) {
+      const fallback = await getDocs(query(collection(this.db, 'users'), limit(40)));
+      results = fallback.docs
+        .map(docSnap => this.mapProfile(docSnap))
+        .filter(profile => this.matchesProfileTerm(profile, normalized));
+    }
+
+    return results.slice(0, 20);
+  }
+
+  private mapProfile(docSnap: any) {
+    const data = docSnap.data() as any;
+    if (data.lastSeen?.seconds) {
+      data.lastSeen = data.lastSeen.seconds * 1000;
+    }
+    return { id: docSnap.id, ...data };
+  }
+
+  private matchesProfileTerm(profile: any, term: string) {
+    const haystack = [
+      profile?.pseudo,
+      profile?.firstname,
+      profile?.lastname,
+      profile?.profession,
+      profile?.city,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(term);
   }
 
   private mapReview(id: string, data: any): UserReview {
