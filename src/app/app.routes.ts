@@ -9,6 +9,8 @@ import MyServices from './pages/my-services/my-services';
 import MessagesInbox from './pages/messages/messages';
 import SearchUsers from './pages/search-users';
 import PublicProfile from './pages/public-profile';
+import ProviderBookings from './pages/provider-bookings';
+import ClientBookings from './pages/client-bookings';
 import { requireAuthGuard } from './core/store/auth.guard';
 
 export const routes: Routes = [
@@ -31,6 +33,8 @@ export const routes: Routes = [
             loadComponent: () =>
                 import('./pages/messages/conversation').then(c => c.default)
     },
+    { path: 'mes-rendez-vous', component: ProviderBookings, canActivate: [requireAuthGuard] },
+    { path: 'mes-reservations', component: ClientBookings, canActivate: [requireAuthGuard] },
 
     { path: 'prestataires', component: SearchUsers },
     { path: 'prestataires/:id', component: PublicProfile },

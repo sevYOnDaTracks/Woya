@@ -13,4 +13,16 @@ export interface WoyaService {
   ownerId?: string;
   location?: { lat: number; lng: number } | null;
   coverageKm?: number | null;
+  availability?: ServiceAvailability | null;
+}
+
+export interface ServiceAvailability {
+  durationMinutes: number;
+  days: ServiceAvailabilityDay[];
+}
+
+export interface ServiceAvailabilityDay {
+  day: number; // 0 = dimanche, 6 = samedi (JS getDay)
+  start: string; // HH:mm
+  end: string;   // HH:mm
 }

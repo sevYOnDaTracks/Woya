@@ -128,6 +128,83 @@
 
   </div>
 
+  <!-- BOOKING -->
+  <div class="mt-10 bg-white rounded-2xl shadow-sm border border-[#FFE0BF] p-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-[0.35em] text-[#FFB066]">Prendre rendez-vous</p>
+        <h2 class="text-xl font-semibold text-[#1A1A1A] mt-1">Planifie un créneau avec ce prestataire</h2>
+        <p class="text-sm text-gray-500 mt-1">
+          Choisis une date compatible avec ses horaires puis confirme ton rendez-vous en un clic.
+        </p>
+      </div>
+    </div>
+
+    <ng-container *ngIf="availabilityDays.length; else bookingFallback">
+      <ng-container *ngIf="dateOptions.length; else noDates">
+        <div class="flex gap-3 overflow-x-auto mt-4 pb-2">
+          <button type="button"
+                  *ngFor="let option of dateOptions"
+                  (click)="selectDate(option)"
+                  class="min-w-[120px] px-4 py-3 rounded-2xl border text-left transition"
+                  [class.border-[#FF7A00]]="selectedDate?.iso === option.iso"
+                  [class.bg-[#FFF5EB]]="selectedDate?.iso === option.iso"
+                  [class.text-[#FF7A00]]="selectedDate?.iso === option.iso">
+            <p class="text-xs uppercase tracking-widest text-gray-500">{{ option.weekday }}</p>
+            <p class="text-lg font-semibold text-[#1A1A1A]">{{ option.dayLabel }}</p>
+          </button>
+        </div>
+
+        <div class="mt-6" *ngIf="slots.length; else noSlots">
+          <p class="text-sm text-gray-500 mb-3">Choisis un horaire :</p>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <button type="button"
+                    *ngFor="let slot of slots"
+                    (click)="selectSlot(slot)"
+                    class="px-4 py-2 rounded-2xl border text-sm font-semibold transition"
+                    [class.border-[#FF7A00]]="selectedSlot?.startTime === slot.startTime"
+                    [class.bg-[#FF7A00]]="selectedSlot?.startTime === slot.startTime"
+                    [class.text-white]="selectedSlot?.startTime === slot.startTime"
+                    [class.opacity-50]="slot.disabled"
+                    [disabled]="slot.disabled">
+              {{ slot.label }}
+              <span *ngIf="slot.disabled" class="text-[10px] uppercase tracking-widest ml-2 text-white"
+                    [class.text-white]="selectedSlot?.startTime === slot.startTime"
+                    [class.text-gray-400]="selectedSlot?.startTime !== slot.startTime">
+                Réservé
+              </span>
+            </button>
+          </div>
+        </div>
+        <ng-template #noSlots>
+          <p class="text-sm text-gray-500 mt-6">
+            Aucun créneau disponible pour cette date. Essaie un autre jour.
+          </p>
+        </ng-template>
+
+        <button type="button"
+                class="w-full mt-6 px-4 py-3 rounded-xl font-semibold text-white bg-[#FF7A00] hover:bg-[#e66d00] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                (click)="bookSelectedSlot()"
+                [disabled]="!selectedSlot || bookingLoading">
+          {{ bookingLoading ? 'Envoi en cours…' : 'Confirmer ce rendez-vous' }}
+        </button>
+
+        <p *ngIf="bookingSuccess" class="text-sm text-green-600 mt-3">{{ bookingSuccess }}</p>
+        <p *ngIf="bookingError" class="text-sm text-red-500 mt-3">{{ bookingError }}</p>
+      </ng-container>
+      <ng-template #noDates>
+        <p class="text-sm text-gray-500 mt-4">
+          Aucun jour n’est disponible pour le moment.
+        </p>
+      </ng-template>
+    </ng-container>
+    <ng-template #bookingFallback>
+      <p class="text-sm text-gray-500 mt-4">
+        Ce prestataire n’a pas encore activé la prise de rendez-vous en ligne. Utilise la messagerie pour fixer un créneau.
+      </p>
+    </ng-template>
+  </div>
+
   <!-- DESCRIPTION -->
   <div class="mt-10 bg-white rounded-2xl shadow-sm border border-[#FFE0BF] p-6">
     <h2 class="text-lg font-semibold text-[#1A1A1A] mb-3">Description</h2>

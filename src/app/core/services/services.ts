@@ -110,6 +110,9 @@ export class Services {
     if (payload.coverageKm === null || payload.coverageKm === undefined) {
       delete payload.coverageKm;
     }
+    if (!payload.availability) {
+      delete payload.availability;
+    }
 
     return payload;
   }

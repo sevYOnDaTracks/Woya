@@ -125,6 +125,28 @@
             </svg>
             <span>Mes services</span>
           </a>
+          <a routerLink="/mes-rendez-vous"
+             routerLinkActive="active"
+             (click)="closeUserMenu()"
+             class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.5 4h11a2.5 2.5 0 0 1 2.5 2.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6.5A2.5 2.5 0 0 1 6.5 4Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 4v4M15 4v4" />
+            </svg>
+            <span>Mes rendez-vous</span>
+          </a>
+          <a routerLink="/mes-reservations"
+             routerLinkActive="active"
+             (click)="closeUserMenu()"
+             class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] rounded-xl mx-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8M8 11h5" />
+              <rect width="18" height="14" x="3" y="5" rx="2" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 3v4M17 3v4" />
+            </svg>
+            <span>Mes réservations</span>
+          </a>
           <a [routerLink]="['/prestataires', user.uid]"
              routerLinkActive="active"
              (click)="closeUserMenu()"
@@ -227,6 +249,30 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h18" />
         </svg>
         <span>Mes services</span>
+      </a>
+
+      <a routerLink="/mes-rendez-vous"
+         routerLinkActive="text-[#FF7A00]"
+         (click)="toggleMenu()"
+         class="text-lg font-semibold flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.5 4h11a2.5 2.5 0 0 1 2.5 2.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6.5A2.5 2.5 0 0 1 6.5 4Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 4v4M15 4v4" />
+        </svg>
+        <span>Mes rendez-vous</span>
+      </a>
+
+      <a routerLink="/mes-reservations"
+         routerLinkActive="text-[#FF7A00]"
+         (click)="toggleMenu()"
+         class="text-lg font-semibold flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8M8 11h5" />
+          <rect width="18" height="14" x="3" y="5" rx="2" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 3v4M17 3v4" />
+        </svg>
+        <span>Mes réservations</span>
       </a>
 
       <a [routerLink]="['/prestataires', user.uid]"

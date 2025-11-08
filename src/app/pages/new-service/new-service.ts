@@ -9,10 +9,11 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Services } from '../../core/services/services';
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
-import { WoyaService } from '../../core/models/service.model';
+import { ServiceAvailability, WoyaService } from '../../core/models/service.model';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 type CitySuggestion = { label: string; city: string; lat: number; lng: number };
+type AvailabilityFormDay = { day: number; start: string; end: string; enabled: boolean };
 
 @Component({
   selector: 'app-new-service',
@@ -129,6 +130,15 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     'Transport & Déménagement', 'Informatique', 'Bricolage / Réparation',
     'Beauté & Bien-être', 'Garde d\'enfants',
   ];
+  readonly weekDays = [
+    { value: 1, label: 'Lundi' },
+    { value: 2, label: 'Mardi' },
+    { value: 3, label: 'Mercredi' },
+    { value: 4, label: 'Jeudi' },
+    { value: 5, label: 'Vendredi' },
+    { value: 6, label: 'Samedi' },
+    { value: 0, label: 'Dimanche' },
+  ];
 
   form = {
     title: '',
@@ -138,6 +148,10 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     price: null as number | null,
     contact: '',
   };
+  availability = {
+    durationMinutes: 60,
+    days: [] as AvailabilityFormDay[],
+  };
 
   constructor(
     private api: Services,
@@ -146,7 +160,19 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     private route: ActivatedRoute,
     private location: Location,
     private http: HttpClient
-  ) {}
+  ) {
+    this.initAvailability();
+  }
+
+  private initAvailability() {
+    if (this.availability.days.length) return;
+    this.availability.days = this.weekDays.map(day => ({
+      day: day.value,
+      start: '09:00',
+      end: '18:00',
+      enabled: false,
+    }));
+  }
 
   async ngOnInit() {
     const currentUser = this.auth.user$.value || firebaseServices.auth.currentUser;
@@ -235,6 +261,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       ownerId: currentUser.uid,
       location: this.currentLocation,
       coverageKm: this.coverageKm,
+      availability: this.buildAvailabilityPayload(),
     };
 
     try {
@@ -362,6 +389,7 @@ handleFiles(files: File[]) {
     if (service.city) {
       this.form.city = service.city;
     }
+    this.patchAvailability(service.availability ?? null);
     this.ensureTitleInSuggestions(service.title, service.category);
     this.syncTitleControls();
   }
@@ -509,6 +537,65 @@ handleFiles(files: File[]) {
       address.county ||
       ''
     ).toString().trim();
+  }
+
+  get hasActiveAvailability() {
+    return this.availability.days.some(day => day.enabled && this.isValidRange(day));
+  }
+
+  private buildAvailabilityPayload(): ServiceAvailability | null {
+    const days = this.availability.days
+      .filter(day => day.enabled && this.isValidRange(day))
+      .map(day => ({
+        day: day.day,
+        start: day.start,
+        end: day.end,
+      }));
+    if (!days.length) return null;
+    return {
+      durationMinutes: this.availability.durationMinutes || 60,
+      days,
+    };
+  }
+
+  private patchAvailability(availability: ServiceAvailability | null) {
+    this.initAvailability();
+    if (!availability || !Array.isArray(availability.days)) {
+      return;
+    }
+    this.availability.durationMinutes = availability.durationMinutes || 60;
+    this.availability.days = this.weekDays.map(day => {
+      const existing = availability.days.find(slot => slot.day === day.value);
+      if (existing) {
+        return {
+          day: day.value,
+          start: existing.start,
+          end: existing.end,
+          enabled: true,
+        };
+      }
+      return {
+        day: day.value,
+        start: '09:00',
+        end: '18:00',
+        enabled: false,
+      };
+    });
+  }
+
+  private isValidRange(day: AvailabilityFormDay) {
+    return this.timeToMinutes(day.end) > this.timeToMinutes(day.start);
+  }
+
+  private timeToMinutes(value: string) {
+    const [h, m] = value.split(':').map(part => parseInt(part, 10));
+    if (Number.isNaN(h) || Number.isNaN(m)) return 0;
+    return h * 60 + m;
+  }
+
+  dayLabel(dayValue: number) {
+    const found = this.weekDays.find(day => day.value === dayValue);
+    return found?.label ?? '';
   }
 
   get titleSuggestions(): string[] {

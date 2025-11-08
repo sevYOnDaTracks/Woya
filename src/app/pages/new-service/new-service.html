@@ -117,6 +117,51 @@
     <p *ngIf="locationError" class="text-xs text-red-500">{{ locationError }}</p>
   </div>
 
+  <h2 class="text-2xl mt-6 font-bold mb-4 text-[#FF7A00]">Disponibilités & rendez-vous</h2>
+  <p class="text-sm text-gray-500 mb-4">
+    Active les jours où tu travailles et indique tes horaires pour que les clients puissent réserver un créneau en ligne.
+  </p>
+
+  <div class="rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2] p-4 space-y-4">
+    <div class="space-y-3">
+      <div *ngFor="let day of availability.days; let i = index"
+           class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border border-dashed border-[#FFE0BF] rounded-2xl px-3 py-2 bg-white">
+        <label class="flex items-center gap-3 text-sm font-semibold text-[#1A1A1A]">
+          <input type="checkbox"
+                 class="size-4 rounded border-gray-300 text-[#FF7A00] focus:ring-[#FF7A00]"
+                 [(ngModel)]="availability.days[i].enabled" />
+          {{ dayLabel(day.day) }}
+        </label>
+        <div class="flex items-center gap-2 text-xs text-gray-500" *ngIf="!availability.days[i].enabled">
+          Inactif
+        </div>
+        <div class="flex items-center gap-2" *ngIf="availability.days[i].enabled">
+          <input type="time"
+                 class="border rounded-xl px-3 py-2 text-sm"
+                 [(ngModel)]="availability.days[i].start" />
+          <span class="text-sm text-gray-500">à</span>
+          <input type="time"
+                 class="border rounded-xl px-3 py-2 text-sm"
+                 [(ngModel)]="availability.days[i].end" />
+        </div>
+      </div>
+    </div>
+
+    <div class="border border-[#FFE0BF] rounded-2xl bg-white p-4">
+      <label class="text-sm font-semibold text-[#1A1A1A]">Durée d'un créneau</label>
+      <input type="range"
+             min="30"
+             max="180"
+             step="15"
+             class="w-full accent-[#FF7A00] mt-2"
+             [(ngModel)]="availability.durationMinutes" />
+      <p class="text-xs text-gray-500 mt-1">{{ availability.durationMinutes }} minutes</p>
+      <p class="text-xs text-gray-400 mt-1" *ngIf="!hasActiveAvailability">
+        Active au moins un jour pour proposer la prise de rendez-vous.
+      </p>
+    </div>
+  </div>
+
   <h2 class="text-2xl mt-4 font-bold mb-6 text-[#FF7A00]">Photos du service</h2>
 
   <div *ngIf="editing && existingImages.length > 0" class="mb-4">

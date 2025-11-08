@@ -1,0 +1,96 @@
+<section class="min-h-screen bg-[#FFF7EB] pt-28 pb-16 px-4">
+  <div class="max-w-5xl mx-auto space-y-8">
+    <div class="glass-card flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="hero-eyebrow">Rendez-vous</p>
+        <h1 class="hero-title text-2xl md:text-3xl">Mes demandes clients</h1>
+        <p class="text-sm text-gray-500">Confirme ou annule les créneaux pris directement depuis tes annonces.</p>
+      </div>
+      <div class="flex gap-2 rounded-2xl border border-[#FFE0BF] bg-white p-1">
+        <button type="button"
+                class="tab-pill"
+                [class.tab-pill--active]="view === 'upcoming'"
+                (click)="switchView('upcoming')">
+          À venir
+        </button>
+        <button type="button"
+                class="tab-pill"
+                [class.tab-pill--active]="view === 'history'"
+                (click)="switchView('history')">
+          Historique
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="glass-card flex flex-col items-center gap-3 text-center">
+      <div class="animate-spin h-10 w-10 border-4 border-[#FF7A00] border-t-transparent rounded-full"></div>
+      <p class="text-sm text-gray-500">Chargement des rendez-vous…</p>
+    </div>
+
+    <p *ngIf="error" class="text-sm text-red-500 text-center">{{ error }}</p>
+
+    <ng-container *ngIf="!loading">
+      <ng-container *ngIf="filteredBookings.length; else emptyState">
+        <div class="space-y-4">
+          <article *ngFor="let booking of filteredBookings"
+                   class="booking-card">
+            <div class="booking-card__header">
+              <div>
+                <p class="booking-card__title">{{ booking.serviceTitle }}</p>
+                <p class="booking-card__subtitle">
+                  {{ booking.startTime | date:'EEEE d MMMM • HH:mm' }}
+                </p>
+              </div>
+              <span [class]="statusBadgeClass(booking.status)">
+                {{ booking.status === 'pending' ? 'En attente' : (booking.status === 'confirmed' ? 'Confirmé' : 'Annulé') }}
+              </span>
+            </div>
+
+            <div class="booking-card__body">
+              <p class="text-sm text-gray-600">
+                Client : <span class="font-semibold text-[#1A1A1A]">{{ clientName(booking) }}</span>
+              </p>
+              <p class="text-xs text-gray-500" *ngIf="booking.createdAt">
+                Demande envoyée {{ booking.createdAt | timeAgo }}
+              </p>
+            </div>
+
+            <div class="booking-card__actions">
+              <button type="button"
+                      class="secondary-btn"
+                      [routerLink]="['/services', booking.serviceId]">
+                Voir l'annonce
+              </button>
+              <div class="flex gap-2" *ngIf="!isPast(booking)">
+                <button type="button"
+                        class="primary-btn"
+                        *ngIf="booking.status === 'pending'"
+                        [disabled]="updatingId === booking.id"
+                        (click)="confirmBooking(booking)">
+                  {{ updatingId === booking.id ? 'Validation…' : 'Confirmer' }}
+                </button>
+                <button type="button"
+                        class="danger-outline-btn"
+                        [disabled]="updatingId === booking.id"
+                        (click)="cancelBooking(booking)">
+                  {{ updatingId === booking.id ? 'Annulation…' : 'Annuler' }}
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </ng-container>
+
+      <ng-template #emptyState>
+        <div class="glass-card text-center">
+          <p class="text-lg font-semibold text-[#1A1A1A] mb-2">
+            Aucun rendez-vous {{ view === 'upcoming' ? 'programmé' : 'enregistré' }}.
+          </p>
+          <p class="text-sm text-gray-500">
+            Partage tes annonces pour recevoir des demandes de créneaux.
+          </p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </div>
+</section>

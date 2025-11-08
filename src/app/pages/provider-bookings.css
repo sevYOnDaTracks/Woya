@@ -1,0 +1,71 @@
+.glass-card {
+  @apply bg-white rounded-3xl shadow-sm border border-[#FFE0BF] p-6;
+}
+
+.hero-eyebrow {
+  @apply text-xs uppercase tracking-[0.35em] text-[#FFB066];
+}
+
+.hero-title {
+  @apply font-bold text-[#1A1A1A];
+}
+
+.tab-pill {
+  @apply px-4 py-2 rounded-2xl text-sm font-semibold text-gray-500 transition;
+}
+
+.tab-pill--active {
+  @apply bg-[#FF7A00] text-white shadow-sm;
+}
+
+.booking-card {
+  @apply bg-white border border-[#FFE0BF] rounded-3xl p-5 shadow-sm;
+}
+
+.booking-card__header {
+  @apply flex flex-col gap-2 md:flex-row md:items-center md:justify-between;
+}
+
+.booking-card__title {
+  @apply text-lg font-semibold text-[#1A1A1A];
+}
+
+.booking-card__subtitle {
+  @apply text-sm text-gray-500;
+}
+
+.booking-card__body {
+  @apply mt-4 space-y-1;
+}
+
+.booking-card__actions {
+  @apply mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between;
+}
+
+.status-badge {
+  @apply inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
+}
+
+.status-badge.warn {
+  @apply bg-[#FFF5EB] text-[#FF7A00];
+}
+
+.status-badge.success {
+  @apply bg-green-100 text-green-700;
+}
+
+.status-badge.danger {
+  @apply bg-red-100 text-red-600;
+}
+
+.primary-btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-2xl bg-[#FF7A00] text-white font-semibold hover:bg-[#e66d00] transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.secondary-btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-2xl border border-[#FF7A00] text-[#FF7A00] font-semibold hover:bg-[#FF7A00] hover:text-white transition;
+}
+
+.danger-outline-btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-2xl border border-red-200 text-red-600 font-semibold hover:bg-red-50 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
