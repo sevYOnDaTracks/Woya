@@ -50,12 +50,18 @@
         <ul class="divide-y divide-[#FFE0BF]">
           <li *ngFor="let item of visibleConversations" (click)="open(item.conversation)" class="cursor-pointer px-6 py-5 hover:bg-[#FFF4E6] transition">
             <div class="flex gap-4 items-start">
-              <img [src]="item.otherUser?.photoURL || 'assets/icone.png'" alt="Avatar" class="w-12 h-12 rounded-full object-cover border border-[#FFE0BF]" />
+              <button type="button"
+                      class="focus:outline-none"
+                      (click)="goToProfile(item, $event)">
+                <img [src]="item.otherUser?.photoURL || 'assets/icone.png'" alt="Avatar" class="w-12 h-12 rounded-full object-cover border border-[#FFE0BF]" />
+              </button>
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
-                  <p class="font-semibold text-[#1A1A1A] text-base truncate">
+                  <button type="button"
+                          (click)="goToProfile(item, $event)"
+                          class="font-semibold text-[#1A1A1A] text-base truncate text-left hover:text-[#FF7A00] focus:outline-none">
                     {{ displayName(item.otherUser) }}
-                  </p>
+                  </button>
                   <span *ngIf="item.unread" class="px-2 py-0.5 text-xs rounded-full bg-[#FF7A00] text-white uppercase tracking-wide">Nouveau</span>
                 </div>
                 <p class="text-xs text-gray-500" *ngIf="item.otherUser?.pseudo && (item.otherUser?.firstname || item.otherUser?.lastname)">

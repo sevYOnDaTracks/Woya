@@ -148,4 +148,10 @@ export default class ConversationPage implements OnInit, OnDestroy {
     const lastname = user.lastname ? ` ${user.lastname}` : '';
     return `${firstname}${lastname}`;
   }
+
+  openPublicProfile() {
+    const targetId = this.otherUser?.uid || this.otherUser?.id;
+    if (!targetId) return;
+    this.router.navigate(['/prestataires', targetId]);
+  }
 }

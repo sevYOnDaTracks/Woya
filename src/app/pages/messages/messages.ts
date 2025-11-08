@@ -33,6 +33,13 @@ export default class MessagesInbox implements OnInit, OnDestroy {
   get searchTerm() {
     return this._searchTerm;
   }
+
+  goToProfile(item: ConversationItem, event?: Event) {
+    event?.stopPropagation();
+    const targetId = item.otherUser?.uid || item.otherUser?.id;
+    if (!targetId) return;
+    this.router.navigate(['/prestataires', targetId]);
+  }
   set searchTerm(value: string) {
     if (this._searchTerm === value) return;
     this._searchTerm = value;

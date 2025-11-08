@@ -89,6 +89,7 @@ export class BookingsService {
       durationMinutes: duration,
       status: data.status ?? 'pending',
       createdAt: this.toMillis(data.createdAt) ?? Date.now(),
+      updatedAt: this.toMillis(data.updatedAt) ?? this.toMillis(data.createdAt) ?? Date.now(),
     };
   }
 

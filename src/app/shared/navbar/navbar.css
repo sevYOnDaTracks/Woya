@@ -79,3 +79,43 @@
   margin-top: 0;
   @apply w-full border border-[#FFE0BF] rounded-2xl shadow-lg max-h-60 overflow-y-auto bg-white;
 }
+
+.notification-dropdown {
+  @apply absolute right-0 mt-3 w-80 bg-white border border-[#FFE0BF] rounded-2xl shadow-xl overflow-hidden z-50 flex flex-col;
+}
+
+.notification-header {
+  @apply px-4 py-3 text-sm font-semibold text-[#1A1A1A] border-b border-[#FFE0BF];
+}
+
+.notification-list {
+  @apply divide-y divide-[#FFF0DD] max-h-80 overflow-y-auto;
+}
+
+.notification-item {
+  @apply w-full text-left px-4 py-3 flex flex-col gap-1 hover:bg-[#FFF9F2] transition rounded-none;
+}
+
+.notification-item__title {
+  @apply text-sm font-semibold text-[#1A1A1A];
+}
+
+.notification-item__description {
+  @apply text-xs text-gray-600 leading-snug text-left;
+}
+
+.notification-item__meta {
+  @apply text-[11px] text-gray-400;
+}
+
+.notification-empty {
+  @apply px-4 py-6 text-sm text-gray-500 text-center;
+}
+
+.notification-footer {
+  @apply block text-center text-sm font-semibold text-[#FF7A00] py-3 border-t border-[#FFE0BF] hover:bg-[#FFF9F2];
+}
+
+.notification-badge {
+  @apply absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[1.15rem] px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full;
+}

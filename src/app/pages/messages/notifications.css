@@ -1,0 +1,51 @@
+.badge-new {
+  @apply px-2 py-0.5 text-[10px] rounded-full bg-[#FF7A00] text-white uppercase tracking-wide;
+}
+
+.notification-feed__item {
+  @apply p-5 flex gap-4;
+}
+
+.notification-feed__icon {
+  @apply w-12 h-12 rounded-full bg-[#FFF2E4] text-[#FF7A00] flex items-center justify-center flex-shrink-0;
+}
+
+.notification-feed__icon--review {
+  @apply bg-[#FFE3C8];
+}
+
+.notification-feed__body {
+  @apply flex-1 min-w-0;
+}
+
+.notification-feed__header {
+  @apply flex flex-col md:flex-row md:items-start md:justify-between gap-2;
+}
+
+.notification-feed__title {
+  @apply text-base font-semibold text-[#1A1A1A];
+}
+
+.notification-feed__meta {
+  @apply flex items-center gap-3 text-xs text-gray-500;
+}
+
+.notification-feed__time {
+  @apply font-medium;
+}
+
+.notification-feed__description {
+  @apply text-sm text-gray-700 mt-2;
+}
+
+.notification-feed__footer {
+  @apply mt-4;
+}
+
+.notification-feed__cta {
+  @apply inline-flex items-center gap-2 text-sm font-semibold text-[#FF7A00] hover:text-[#e66d00] disabled:text-gray-400;
+}
+
+.notification-feed__dismiss {
+  @apply text-gray-400 hover:text-gray-600 transition text-base;
+}

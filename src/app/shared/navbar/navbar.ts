@@ -5,9 +5,18 @@ import { CommonModule } from '@angular/common';
 import { MessagingService } from '../../core/services/messaging';
 import { Subscription } from 'rxjs';
 import { Services } from '../../core/services/services';
-import { ProfilesService } from '../../core/services/profiles';
-import { collection, onSnapshot, query, where, Unsubscribe } from 'firebase/firestore';
+import { ProfilesService, UserReview } from '../../core/services/profiles';
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+  Unsubscribe,
+  DocumentData,
+  QuerySnapshot,
+} from 'firebase/firestore';
 import { firebaseServices } from '../../app.config';
+import { BookingStatus } from '../../core/models/booking.model';
 
 @Component({
   selector: 'app-navbar',
@@ -35,6 +44,16 @@ export class Navbar implements OnInit, OnDestroy {
   searchLoading = false;
   private searchDebounce?: any;
   private searchMin = 2;
+  notifications: NavbarNotification[] = [];
+  notificationMenuOpen = false;
+  notificationBadgeCount = 0;
+  private reviewNotifications: NavbarNotification[] = [];
+  private bookingNotifications: NavbarNotification[] = [];
+  private providerSnapshotReady = false;
+  private clientSnapshotReady = false;
+  private providerBookingStates = new Map<string, BookingDoc>();
+  private clientBookingStates = new Map<string, BookingDoc>();
+  private notificationsLastSeen = this.getStoredNotificationsLastSeen();
 
   constructor(
     public auth: AuthStore,
@@ -57,16 +76,18 @@ export class Navbar implements OnInit, OnDestroy {
       }
 
       this.currentUid = uid;
+      this.resetNotifications();
+      this.clearInbox();
+      this.clearBookingCounters();
       if (!this.currentUid) {
         this.currentUser = null;
-        this.clearInbox();
-        this.clearBookingCounters();
         this.closeUserMenu();
         return;
       }
 
       this.bindInbox();
       this.bindBookingCounters();
+      this.loadRecentReviews();
     });
   }
 
@@ -74,6 +95,7 @@ export class Navbar implements OnInit, OnDestroy {
     this.authSub?.unsubscribe();
     this.clearInbox();
     this.clearBookingCounters();
+    this.resetNotifications();
   }
 
   toggleMenu() {
@@ -85,12 +107,14 @@ export class Navbar implements OnInit, OnDestroy {
     if (!this.isMenuOpen) {
       this.logoutConfirmOpen = false;
     }
+    this.notificationMenuOpen = false;
   }
 
   requestLogout() {
     this.logoutConfirmOpen = true;
     this.userMenuOpen = false;
     this.isMenuOpen = false;
+    this.closeNotificationMenu();
   }
 
   confirmLogout() {
@@ -105,6 +129,7 @@ export class Navbar implements OnInit, OnDestroy {
     if (!this.logoutConfirmOpen) return;
     this.auth.logout();
     this.closeUserMenu();
+    this.closeNotificationMenu();
     this.isMenuOpen = false;
     this.logoutConfirmOpen = false;
     this.router.navigate(['/']);
@@ -138,25 +163,13 @@ export class Navbar implements OnInit, OnDestroy {
     if (!this.currentUid) return;
     const col = collection(firebaseServices.db, 'bookings');
 
-    this.providerBookingsSub = onSnapshot(query(col, where('providerId', '==', this.currentUid)), snapshot => {
-      const now = Date.now();
-      this.pendingRequests = snapshot.docs.filter(docSnap => {
-        const data = docSnap.data() as any;
-        const status = data.status ?? 'pending';
-        const startTime = this.toMillis(data.startTime) ?? 0;
-        return status === 'pending' && startTime >= now;
-      }).length;
-    });
+    this.providerBookingsSub = onSnapshot(query(col, where('providerId', '==', this.currentUid)), snapshot =>
+      this.handleProviderBookings(snapshot),
+    );
 
-    this.clientBookingsSub = onSnapshot(query(col, where('clientId', '==', this.currentUid)), snapshot => {
-      const now = Date.now();
-      this.pendingReservations = snapshot.docs.filter(docSnap => {
-        const data = docSnap.data() as any;
-        const status = data.status ?? 'pending';
-        const startTime = this.toMillis(data.startTime) ?? 0;
-        return status === 'pending' && startTime >= now;
-      }).length;
-    });
+    this.clientBookingsSub = onSnapshot(query(col, where('clientId', '==', this.currentUid)), snapshot =>
+      this.handleClientBookings(snapshot),
+    );
   }
 
   private clearBookingCounters() {
@@ -166,15 +179,59 @@ export class Navbar implements OnInit, OnDestroy {
     this.clientBookingsSub = undefined;
     this.pendingRequests = 0;
     this.pendingReservations = 0;
+    this.providerSnapshotReady = false;
+    this.clientSnapshotReady = false;
+    this.providerBookingStates.clear();
+    this.clientBookingStates.clear();
   }
 
   toggleUserMenu() {
     this.userMenuOpen = !this.userMenuOpen;
+    if (this.userMenuOpen) {
+      this.notificationMenuOpen = false;
+    }
   }
 
   closeUserMenu() {
     this.userMenuOpen = false;
     this.logoutConfirmOpen = false;
+  }
+
+  toggleNotificationMenu() {
+    this.notificationMenuOpen = !this.notificationMenuOpen;
+    if (this.notificationMenuOpen) {
+      this.userMenuOpen = false;
+      this.logoutConfirmOpen = false;
+      this.loadRecentReviews();
+      this.markNotificationsAsSeen();
+    }
+  }
+
+  closeNotificationMenu() {
+    this.notificationMenuOpen = false;
+  }
+
+  openNotification(notification: NavbarNotification) {
+    this.markNotificationsAsSeen();
+    if (notification.queryParams) {
+      this.router.navigate(notification.route, { queryParams: notification.queryParams });
+    } else {
+      this.router.navigate(notification.route);
+    }
+    this.closeNotificationMenu();
+  }
+
+  goToAccount() {
+    this.router.navigate(['/mon-compte']);
+  }
+
+  goToMessages() {
+    this.router.navigate(['/messagerie']);
+  }
+
+  goToNotifications() {
+    this.markNotificationsAsSeen();
+    this.router.navigate(['/notifications']);
   }
 
   @HostListener('document:click', ['$event'])
@@ -185,6 +242,13 @@ export class Navbar implements OnInit, OnDestroy {
         // keep open
       } else {
         this.userMenuOpen = false;
+      }
+    }
+    if (this.notificationMenuOpen) {
+      if (target && target.closest('.notification-menu')) {
+        // keep open
+      } else {
+        this.notificationMenuOpen = false;
       }
     }
     if (this.searchOpen) {
@@ -279,6 +343,230 @@ export class Navbar implements OnInit, OnDestroy {
   closeSearchDropdown() {
     this.searchOpen = false;
   }
+
+  private async loadRecentReviews() {
+    if (!this.currentUid) return;
+    const targetUid = this.currentUid;
+    try {
+      const reviews = await this.profiles.getReviews(targetUid);
+      if (targetUid !== this.currentUid) {
+        return;
+      }
+      this.reviewNotifications = reviews
+        .map(review => this.mapReviewNotification(review))
+        .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+        .slice(0, 10);
+      this.mergeNotifications();
+    } catch (error) {
+      console.error('Unable to load review notifications', error);
+    }
+  }
+
+  private mergeNotifications() {
+    const combined = [...this.bookingNotifications, ...this.reviewNotifications];
+    combined.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    this.notifications = combined.slice(0, 10);
+    this.updateNotificationBadge();
+  }
+
+  private resetNotifications() {
+    this.notifications = [];
+    this.reviewNotifications = [];
+    this.bookingNotifications = [];
+    this.notificationMenuOpen = false;
+    this.notificationBadgeCount = 0;
+    this.providerBookingStates.clear();
+    this.clientBookingStates.clear();
+    this.providerSnapshotReady = false;
+    this.clientSnapshotReady = false;
+    this.notificationsLastSeen = this.getStoredNotificationsLastSeen();
+  }
+
+  private updateNotificationBadge() {
+    const lastSeen = this.notificationsLastSeen;
+    this.notificationBadgeCount = this.notifications.filter(
+      notification => (notification.createdAt ?? 0) > lastSeen,
+    ).length;
+  }
+
+  private markNotificationsAsSeen() {
+    const newest = this.notifications.length
+      ? this.notifications[0].createdAt ?? Date.now()
+      : Date.now();
+    this.notificationsLastSeen = newest;
+    this.persistNotificationsLastSeen(newest);
+    this.updateNotificationBadge();
+  }
+
+  private getStoredNotificationsLastSeen() {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return 0;
+    }
+    const stored = Number(window.localStorage.getItem(this.getNotificationStorageKey()));
+    return Number.isFinite(stored) ? stored : 0;
+  }
+
+  private persistNotificationsLastSeen(value: number) {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+    window.localStorage.setItem(this.getNotificationStorageKey(), String(value));
+  }
+
+  private getNotificationStorageKey() {
+    return this.currentUid
+      ? `navbarNotifications:lastSeen:${this.currentUid}`
+      : 'navbarNotifications:lastSeen';
+  }
+
+  private mapReviewNotification(review: UserReview): NavbarNotification {
+    const identity =
+      review.reviewer?.pseudo ||
+      [review.reviewer?.firstname, review.reviewer?.lastname].filter(Boolean).join(' ').trim();
+    const name = identity && identity.length ? identity : 'Un client';
+    const ratingLabel = review.rating ? `Note ${review.rating}/5` : 'Nouvel avis';
+    const comment = (review.comment || '').trim();
+    const preview =
+      comment.length > 90 ? `${comment.slice(0, 90).trim()}…` : comment;
+    const description = preview ? `${ratingLabel} · ${preview}` : ratingLabel;
+
+    return {
+      id: `review-${review.id}`,
+      kind: 'review',
+      title: `${name} a laissé un avis`,
+      description,
+      createdAt: review.createdAt ?? Date.now(),
+      route: ['/notifications'],
+      queryParams: { highlight: review.id },
+    };
+  }
+
+  private handleProviderBookings(snapshot: QuerySnapshot<DocumentData>) {
+    const bookings = snapshot.docs
+      .map(docSnap => this.mapBookingDoc(docSnap.id, docSnap.data()))
+      .filter((booking): booking is BookingDoc => !!booking);
+    const now = Date.now();
+    this.pendingRequests = bookings.filter(
+      booking => booking.status === 'pending' && (booking.startTime ?? 0) >= now,
+    ).length;
+
+    if (!this.providerSnapshotReady) {
+      bookings.forEach(booking => this.providerBookingStates.set(booking.id, booking));
+      this.providerSnapshotReady = true;
+      return;
+    }
+
+    const ids = new Set(bookings.map(booking => booking.id));
+    Array.from(this.providerBookingStates.keys()).forEach(id => {
+      if (!ids.has(id)) {
+        this.providerBookingStates.delete(id);
+      }
+    });
+
+    bookings.forEach(booking => this.processBookingNotification(booking, 'provider'));
+  }
+
+  private handleClientBookings(snapshot: QuerySnapshot<DocumentData>) {
+    const bookings = snapshot.docs
+      .map(docSnap => this.mapBookingDoc(docSnap.id, docSnap.data()))
+      .filter((booking): booking is BookingDoc => !!booking);
+    const now = Date.now();
+    this.pendingReservations = bookings.filter(
+      booking => booking.status === 'pending' && (booking.startTime ?? 0) >= now,
+    ).length;
+
+    if (!this.clientSnapshotReady) {
+      bookings.forEach(booking => this.clientBookingStates.set(booking.id, booking));
+      this.clientSnapshotReady = true;
+      return;
+    }
+
+    const ids = new Set(bookings.map(booking => booking.id));
+    Array.from(this.clientBookingStates.keys()).forEach(id => {
+      if (!ids.has(id)) {
+        this.clientBookingStates.delete(id);
+      }
+    });
+
+    bookings.forEach(booking => this.processBookingNotification(booking, 'client'));
+  }
+
+  private processBookingNotification(booking: BookingDoc, role: 'provider' | 'client') {
+    const store = role === 'provider' ? this.providerBookingStates : this.clientBookingStates;
+    const previous = store.get(booking.id);
+    if (!previous) {
+      store.set(booking.id, booking);
+      if (role === 'provider' && booking.status === 'pending') {
+        this.emitBookingEvent(booking, role, 'pending');
+      }
+      return;
+    }
+
+    if (previous.status !== booking.status) {
+      this.emitBookingEvent(booking, role, booking.status);
+    }
+    store.set(booking.id, booking);
+  }
+
+  private emitBookingEvent(booking: BookingDoc, role: 'provider' | 'client', status: BookingStatus) {
+    if (status === 'pending' && role !== 'provider') {
+      return;
+    }
+
+    const serviceTitle = booking.serviceTitle || 'Ton service';
+    let title = '';
+    let description = '';
+    switch (status) {
+      case 'pending':
+        title = 'Nouvelle demande';
+        description = `Nouvelle demande pour "${serviceTitle}"`;
+        break;
+      case 'confirmed':
+        title = 'Réservation confirmée';
+        description =
+          role === 'provider'
+            ? `"${serviceTitle}" est confirmée`
+            : `Ta réservation "${serviceTitle}" est confirmée`;
+        break;
+      case 'cancelled':
+        title = 'Réservation annulée';
+        description =
+          role === 'provider'
+            ? `Le rendez-vous "${serviceTitle}" a été annulé`
+            : `Ta réservation "${serviceTitle}" a été annulée`;
+        break;
+      default:
+        return;
+    }
+
+    const baseTimestamp = booking.updatedAt ?? booking.createdAt ?? Date.now();
+    const timestamp = status === 'pending' ? baseTimestamp : Date.now();
+    const notification: NavbarNotification = {
+      id: `booking-${booking.id}-${status}-${timestamp}`,
+      kind: 'booking',
+      title,
+      description,
+      createdAt: timestamp,
+      route: [role === 'provider' ? '/mes-rendez-vous' : '/mes-reservations'],
+    };
+
+    this.bookingNotifications = [notification, ...this.bookingNotifications.filter(n => n.id !== notification.id)]
+      .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+      .slice(0, 10);
+    this.mergeNotifications();
+  }
+
+  private mapBookingDoc(id: string, data: any): BookingDoc | null {
+    if (!data) return null;
+    return {
+      id,
+      status: (data.status ?? 'pending') as BookingStatus,
+      serviceTitle: data.serviceTitle ?? 'Service',
+      createdAt: this.toMillis(data.createdAt) ?? Date.now(),
+      updatedAt: this.toMillis(data.updatedAt) ?? this.toMillis(data.createdAt) ?? Date.now(),
+      startTime: this.toMillis(data.startTime) ?? undefined,
+    };
+  }
 }
 
 interface SearchResult {
@@ -288,4 +576,23 @@ interface SearchResult {
   avatar?: string | null;
   route: any[];
   kind: 'service' | 'user';
+}
+
+interface NavbarNotification {
+  id: string;
+  kind: 'review' | 'booking';
+  title: string;
+  description: string;
+  createdAt?: number;
+  route: any[];
+  queryParams?: Record<string, any>;
+}
+
+interface BookingDoc {
+  id: string;
+  status: BookingStatus;
+  serviceTitle?: string;
+  createdAt?: number;
+  updatedAt?: number;
+  startTime?: number;
 }

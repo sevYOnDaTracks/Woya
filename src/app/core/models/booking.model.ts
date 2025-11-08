@@ -11,6 +11,7 @@ export interface ServiceBooking {
   durationMinutes: number;
   status: BookingStatus;
   createdAt: number;
+  updatedAt?: number;
 }
 
 export interface CreateBookingInput {

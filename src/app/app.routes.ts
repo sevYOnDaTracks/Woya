@@ -14,6 +14,7 @@ import ClientBookings from './pages/client-bookings';
 import GlobalSearch from './pages/global-search';
 import ForgotPassword from './pages/auth/forgot-password';
 import FavoritesPage from './pages/favorites';
+import NotificationsPage from './pages/messages/notifications';
 import { requireAuthGuard } from './core/store/auth.guard';
 
 export const routes: Routes = [
@@ -37,6 +38,7 @@ export const routes: Routes = [
             loadComponent: () =>
                 import('./pages/messages/conversation').then(c => c.default)
     },
+    { path: 'notifications', component: NotificationsPage, canActivate: [requireAuthGuard] },
     { path: 'mes-rendez-vous', component: ProviderBookings, canActivate: [requireAuthGuard] },
     { path: 'mes-reservations', component: ClientBookings, canActivate: [requireAuthGuard] },
     { path: 'favoris', component: FavoritesPage, canActivate: [requireAuthGuard] },

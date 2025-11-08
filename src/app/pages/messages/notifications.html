@@ -1,0 +1,64 @@
+<section class="min-h-screen bg-[#FFF7EB] pt-10 md:pt-24 pb-16 px-4 md:px-16">
+  <div class="max-w-4xl mx-auto">
+    <header class="mb-8">
+      <p class="text-sm uppercase tracking-[0.3em] text-[#FFB066] font-semibold">Notifications</p>
+      <h1 class="text-3xl font-bold text-[#1A1A1A] mt-1">Notifications récentes</h1>
+      <p class="text-sm text-gray-600 mt-2">
+        Retrouve ici les avis, confirmations et demandes qui concernent ton activité. Archive les alertes que tu as déjà consultées pour garder de l’ordre.
+      </p>
+    </header>
+
+    <div class="rounded-3xl border border-[#FFE0BF] bg-white/90 backdrop-blur shadow-sm overflow-hidden">
+      <div *ngIf="loading" class="py-16 text-center text-gray-500">
+        Chargement des notifications…
+      </div>
+
+      <ng-container *ngIf="!loading">
+        <div *ngIf="!notifications.length" class="py-16 text-center text-gray-500 text-sm">
+          Aucune notification pour le moment. Tes nouvelles alertes s’afficheront ici.
+        </div>
+
+        <ul *ngIf="notifications.length" class="notification-feed divide-y divide-[#FFE0BF]">
+          <li *ngFor="let item of notifications" class="notification-feed__item">
+            <div class="notification-feed__icon" [class.notification-feed__icon--review]="item.kind === 'review'">
+              <ng-container [ngSwitch]="item.kind">
+                <svg *ngSwitchCase="'review'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M11.48 3.5a.56.56 0 0 1 1.04 0l2.12 5.11a.56.56 0 0 0 .48.35l5.52.4c.5.04.7.66.32.99l-4.2 3.55a.57.57 0 0 0-.18.56l1.3 5.38a.56.56 0 0 1-.84.61l-4.73-2.88a.56.56 0 0 0-.59 0l-4.72 2.88a.56.56 0 0 1-.84-.61l1.3-5.38a.57.57 0 0 0-.19-.56L3.04 10.35a.56.56 0 0 1 .32-.99l5.52-.4a.56.56 0 0 0 .48-.35L11.48 3.5Z"/>
+                </svg>
+                <svg *ngSwitchDefault xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 8.25h16.5M5.25 6.75h13.5a1.5 1.5 0 0 1 1.5 1.5V19.5A1.5 1.5 0 0 1 18.75 21h-13.5A1.5 1.5 0 0 1 3.75 19.5V8.25a1.5 1.5 0 0 1 1.5-1.5Z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 12h3v3h-3z"/>
+                </svg>
+              </ng-container>
+            </div>
+            <div class="notification-feed__body">
+              <div class="notification-feed__header">
+                <p class="notification-feed__title">{{ item.title }}</p>
+                <div class="notification-feed__meta">
+                  <span class="notification-feed__time">{{ item.createdAt | timeAgo }}</span>
+                  <span *ngIf="item.isNew" class="badge-new">Nouveau</span>
+                  <button type="button"
+                          class="notification-feed__dismiss"
+                          (click)="dismissNotification(item)"
+                          aria-label="Supprimer cette notification">
+                    X
+                  </button>
+                </div>
+              </div>
+              <p class="notification-feed__description">{{ item.description }}</p>
+              <div class="notification-feed__footer">
+                <button type="button"
+                        class="notification-feed__cta"
+                        [disabled]="!item.route"
+                        (click)="openNotification(item)">
+                  {{ item.actionLabel }}
+                </button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </ng-container>
+    </div>
+  </div>
+</section>
