@@ -31,13 +31,26 @@ export default class Register implements OnInit, OnDestroy {
     address: '',
   };
 
+  confirmPassword = '';
   preview: string | null = null;
   file: File | null = null;
   loading = false;
   error = '';
   showBirthdatePicker = false;
+  showPassword = false;
+  showConfirmPassword = false;
+  passwordCriteria = {
+    minLength: false,
+    uppercase: false,
+    digit: false,
+    special: false,
+  };
+  emailStatus: 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error' = 'idle';
+  phoneStatus: 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error' = 'idle';
   isLoggedIn = false;
   private authSub?: Subscription;
+  private emailCheckTimeout?: ReturnType<typeof setTimeout>;
+  private phoneCheckTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(private router: Router, private authStore: AuthStore) {}
 
@@ -52,6 +65,12 @@ export default class Register implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.authSub?.unsubscribe();
+    if (this.emailCheckTimeout) {
+      clearTimeout(this.emailCheckTimeout);
+    }
+    if (this.phoneCheckTimeout) {
+      clearTimeout(this.phoneCheckTimeout);
+    }
   }
 
   selectProfileImage(e: any) {
@@ -65,16 +84,39 @@ export default class Register implements OnInit, OnDestroy {
   }
 
   async register() {
-    this.loading = true;
     this.error = '';
+
+    if (!this.isPasswordValid) {
+      this.error = 'Le mot de passe ne respecte pas les critères requis.';
+      return;
+    }
+
+    if (!this.passwordsMatch) {
+      this.error = 'Les mots de passe ne correspondent pas.';
+      return;
+    }
+
+    if (!this.isValidEmail(this.form.email)) {
+      this.error = 'Adresse email invalide.';
+      return;
+    }
+
+    const phone = this.buildFullPhoneNumber();
+    if (!this.isValidPhone(phone)) {
+      this.error = 'Numéro de téléphone invalide.';
+      return;
+    }
+
+    this.loading = true;
 
     try {
       const auth = firebaseServices.auth;
       const db = firebaseServices.db;
       const storage = getStorage();
+      this.form.email = this.form.email.trim().toLowerCase();
 
       await this.ensureUniqueEmail(db, this.form.email);
-      await this.ensureUniquePhone(db, this.form.countryCode + this.form.phone);
+      await this.ensureUniquePhone(db, phone);
 
       const cred = await createUserWithEmailAndPassword(auth, this.form.email, this.form.password);
 
@@ -89,7 +131,7 @@ export default class Register implements OnInit, OnDestroy {
         ...this.form,
         pseudo: this.form.pseudo.trim(),
         profession: this.form.profession.trim(),
-        phone: `${this.form.countryCode}${this.form.phone}`,
+        phone,
         city: this.form.city,
         address: this.form.address,
         coverURL: '',
@@ -105,10 +147,22 @@ export default class Register implements OnInit, OnDestroy {
       this.router.navigate(['/services']);
 
     } catch (err) {
-      this.error = "Impossible de créer le compte.";
+      const code = (err as any)?.code || (err as Error)?.message;
+      if (code === 'email-exists' || code === 'auth/email-already-in-use') {
+        this.emailStatus = 'taken';
+        this.error = "Cette adresse e-mail est déjà utilisée.";
+      } else if (code === 'phone-exists') {
+        this.phoneStatus = 'taken';
+        this.error = "Ce numéro de téléphone est déjà utilisé.";
+      } else if (code === 'auth/weak-password') {
+        this.error = "Le mot de passe est trop faible.";
+      } else {
+        this.error = "Impossible de créer le compte.";
+      }
+    } finally {
+      this.loading = false;
     }
 
-    this.loading = false;
   }
 
   private async ensureUniqueEmail(db: any, email: string) {
@@ -127,6 +181,112 @@ export default class Register implements OnInit, OnDestroy {
     if (!snap.empty) {
       throw new Error('phone-exists');
     }
+  }
+
+  onPasswordChange(value: string) {
+    this.updatePasswordCriteria(value);
+  }
+
+  onConfirmPasswordChange() {
+    // Trigger change detection for password match indicator.
+  }
+
+  get isPasswordValid() {
+    return Object.values(this.passwordCriteria).every(Boolean);
+  }
+
+  get passwordsMatch() {
+    return !!this.form.password && !!this.confirmPassword && this.form.password === this.confirmPassword;
+  }
+
+  togglePasswordVisibility(field: 'password' | 'confirm') {
+    if (field === 'password') {
+      this.showPassword = !this.showPassword;
+    } else {
+      this.showConfirmPassword = !this.showConfirmPassword;
+    }
+  }
+
+  onEmailChange(value: string) {
+    if (this.emailCheckTimeout) {
+      clearTimeout(this.emailCheckTimeout);
+    }
+    if (!value) {
+      this.emailStatus = 'idle';
+      return;
+    }
+    this.emailStatus = 'checking';
+    const email = value.trim().toLowerCase();
+    this.emailCheckTimeout = setTimeout(() => this.checkEmailAvailability(email), 400);
+  }
+
+  onPhoneChange() {
+    if (this.phoneCheckTimeout) {
+      clearTimeout(this.phoneCheckTimeout);
+    }
+    const phone = this.buildFullPhoneNumber();
+    if (!this.form.phone) {
+      this.phoneStatus = 'idle';
+      return;
+    }
+    this.phoneStatus = 'checking';
+    this.phoneCheckTimeout = setTimeout(() => this.checkPhoneAvailability(phone), 400);
+  }
+
+  private async checkEmailAvailability(email: string) {
+    if (this.form.email.trim().toLowerCase() !== email) {
+      return;
+    }
+    if (!this.isValidEmail(email)) {
+      this.emailStatus = 'invalid';
+      return;
+    }
+    try {
+      await this.ensureUniqueEmail(firebaseServices.db, email);
+      this.emailStatus = 'available';
+    } catch (err) {
+      const message = (err as Error).message;
+      this.emailStatus = message === 'email-exists' ? 'taken' : 'error';
+    }
+  }
+
+  private async checkPhoneAvailability(phone: string) {
+    if (this.buildFullPhoneNumber() !== phone) {
+      return;
+    }
+    if (!this.isValidPhone(phone)) {
+      this.phoneStatus = 'invalid';
+      return;
+    }
+    try {
+      await this.ensureUniquePhone(firebaseServices.db, phone);
+      this.phoneStatus = 'available';
+    } catch (err) {
+      const message = (err as Error).message;
+      this.phoneStatus = message === 'phone-exists' ? 'taken' : 'error';
+    }
+  }
+
+  private updatePasswordCriteria(password: string) {
+    this.passwordCriteria = {
+      minLength: password.length >= 6,
+      uppercase: /[A-Z]/.test(password),
+      digit: /\d/.test(password),
+      special: /[^A-Za-z0-9]/.test(password),
+    };
+  }
+
+  private isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  private isValidPhone(phone: string) {
+    return /^\+\d{6,15}$/.test(phone);
+  }
+
+  private buildFullPhoneNumber() {
+    const localPhone = (this.form.phone || '').replace(/\D+/g, '');
+    return `${this.form.countryCode}${localPhone}`;
   }
 
   private buildSearchKeywords(values: { firstname?: string; lastname?: string; pseudo?: string }) {

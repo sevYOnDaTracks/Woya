@@ -45,23 +45,143 @@
       class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
 
       <!-- Email -->
-      <input [(ngModel)]="form.email" type="email" placeholder="Email"
-        class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
+      <div class="mb-3">
+        <input [(ngModel)]="form.email"
+               type="email"
+               placeholder="Email"
+               class="w-full border rounded-xl px-4 py-3 outline-none"
+               (ngModelChange)="onEmailChange($event)" />
+        <p *ngIf="emailStatus !== 'idle'"
+           class="text-xs mt-1"
+           [ngClass]="{
+             'text-gray-500': emailStatus === 'checking',
+             'text-green-600': emailStatus === 'available',
+             'text-red-600': emailStatus === 'taken' || emailStatus === 'invalid',
+             'text-orange-600': emailStatus === 'error'
+           }">
+          <ng-container [ngSwitch]="emailStatus">
+            <span *ngSwitchCase="'checking'">Vérification de l'email…</span>
+            <span *ngSwitchCase="'available'">Adresse disponible.</span>
+            <span *ngSwitchCase="'taken'">Cette adresse e-mail est déjà utilisée.</span>
+            <span *ngSwitchCase="'invalid'">Adresse e-mail invalide.</span>
+            <span *ngSwitchCase="'error'">Impossible de vérifier l'adresse pour le moment.</span>
+          </ng-container>
+        </p>
+      </div>
 
       <!-- Password -->
-      <input [(ngModel)]="form.password" type="password" placeholder="Mot de passe"
-        class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
+      <div class="relative mb-3">
+        <input [(ngModel)]="form.password"
+               [type]="showPassword ? 'text' : 'password'"
+               placeholder="Mot de passe"
+               class="w-full border rounded-xl px-4 py-3 pr-12 outline-none"
+               (ngModelChange)="onPasswordChange($event)" />
+        <button type="button"
+                class="absolute inset-y-0 right-3 flex items-center text-gray-500"
+                (click)="togglePasswordVisibility('password')">
+          <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M3 3l18 18M10.584 10.59a1.5 1.5 0 102.827 2.82M7.362 7.37A9.936 9.936 0 001.458 12C2.732 16.057 6.523 19 11 19c1.32 0 2.59-.235 3.766-.666M18.05 14.14c1.748-1.257 3.064-3.028 3.492-5.14A9.956 9.956 0 0013 5c-.835 0-1.65.1-2.431.288" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="bg-[#FFF7EB] border border-[#FFE0BF] rounded-xl px-4 py-3 mb-3 text-sm">
+        <p class="text-xs uppercase text-gray-500 tracking-wide mb-2">Critères du mot de passe</p>
+        <ul class="space-y-1">
+          <li class="flex items-center gap-2"
+              [ngClass]="passwordCriteria.minLength ? 'text-green-600' : 'text-gray-600'">
+            <span class="w-2 h-2 rounded-full"
+                  [ngClass]="passwordCriteria.minLength ? 'bg-green-500' : 'bg-gray-300'"></span>
+            6 caractères minimum
+          </li>
+          <li class="flex items-center gap-2"
+              [ngClass]="passwordCriteria.uppercase ? 'text-green-600' : 'text-gray-600'">
+            <span class="w-2 h-2 rounded-full"
+                  [ngClass]="passwordCriteria.uppercase ? 'bg-green-500' : 'bg-gray-300'"></span>
+            Au moins une lettre majuscule
+          </li>
+          <li class="flex items-center gap-2"
+              [ngClass]="passwordCriteria.digit ? 'text-green-600' : 'text-gray-600'">
+            <span class="w-2 h-2 rounded-full"
+                  [ngClass]="passwordCriteria.digit ? 'bg-green-500' : 'bg-gray-300'"></span>
+            Au moins un chiffre
+          </li>
+          <li class="flex items-center gap-2"
+              [ngClass]="passwordCriteria.special ? 'text-green-600' : 'text-gray-600'">
+            <span class="w-2 h-2 rounded-full"
+                  [ngClass]="passwordCriteria.special ? 'bg-green-500' : 'bg-gray-300'"></span>
+            Au moins un caractère spécial
+          </li>
+        </ul>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="relative mb-1">
+        <input [(ngModel)]="confirmPassword"
+               [type]="showConfirmPassword ? 'text' : 'password'"
+               placeholder="Confirmer le mot de passe"
+               class="w-full border rounded-xl px-4 py-3 pr-12 outline-none"
+               (ngModelChange)="onConfirmPasswordChange()" />
+        <button type="button"
+                class="absolute inset-y-0 right-3 flex items-center text-gray-500"
+                (click)="togglePasswordVisibility('confirm')">
+          <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M3 3l18 18M10.584 10.59a1.5 1.5 0 102.827 2.82M7.362 7.37A9.936 9.936 0 001.458 12C2.732 16.057 6.523 19 11 19c1.32 0 2.59-.235 3.766-.666M18.05 14.14c1.748-1.257 3.064-3.028 3.492-5.14A9.956 9.956 0 0013 5c-.835 0-1.65.1-2.431.288" />
+          </svg>
+        </button>
+      </div>
+      <p *ngIf="confirmPassword"
+         class="text-xs mb-3"
+         [ngClass]="passwordsMatch ? 'text-green-600' : 'text-red-600'">
+        {{ passwordsMatch ? 'Les mots de passe correspondent.' : 'Les mots de passe ne correspondent pas.' }}
+      </p>
 
       <!-- Téléphone -->
-      <div class="flex gap-3 flex-wrap mb-3">
-        <select [(ngModel)]="form.countryCode" class="border rounded-xl px-3 py-3 outline-none bg-white flex-none">
+      <div class="flex gap-3 flex-wrap mb-1">
+        <select [(ngModel)]="form.countryCode"
+                class="border rounded-xl px-3 py-3 outline-none bg-white flex-none"
+                (ngModelChange)="onPhoneChange()">
           <option value="+225">🇨🇮 +225</option>
           <option value="+33">🇫🇷 +33</option>
           <option value="+1">🇺🇸 +1</option>
         </select>
-        <input [(ngModel)]="form.phone" placeholder="Téléphone"
-          class="flex-1 border rounded-xl px-4 py-3 outline-none" />
+        <input [(ngModel)]="form.phone"
+               placeholder="Téléphone"
+               class="flex-1 border rounded-xl px-4 py-3 outline-none"
+               (ngModelChange)="onPhoneChange()" />
       </div>
+      <p *ngIf="phoneStatus !== 'idle'"
+         class="text-xs mb-3"
+         [ngClass]="{
+           'text-gray-500': phoneStatus === 'checking',
+           'text-green-600': phoneStatus === 'available',
+           'text-red-600': phoneStatus === 'taken' || phoneStatus === 'invalid',
+           'text-orange-600': phoneStatus === 'error'
+         }">
+        <ng-container [ngSwitch]="phoneStatus">
+          <span *ngSwitchCase="'checking'">Vérification du numéro…</span>
+          <span *ngSwitchCase="'available'">Numéro disponible.</span>
+          <span *ngSwitchCase="'taken'">Ce numéro est déjà utilisé.</span>
+          <span *ngSwitchCase="'invalid'">Numéro invalide.</span>
+          <span *ngSwitchCase="'error'">Impossible de vérifier le numéro pour le moment.</span>
+        </ng-container>
+      </p>
 
       <!-- Date de naissance -->
       <div class="relative mb-4">
@@ -87,8 +207,8 @@
 
       <!-- Submit -->
       <button (click)="register()" [disabled]="loading"
-        class="w-full py-3 bg-[#FF7A00] text-white rounded-xl font-semibold hover:bg-[#e66d00] transition">
-        {{ loading ? 'Connexion...' : 'Se connecter' }}
+        class="w-full py-3 bg-[#FF7A00] text-white rounded-xl font-semibold hover:bg-[#e66d00] transition disabled:opacity-60 disabled:cursor-not-allowed">
+        {{ loading ? 'Création...' : 'Créer un compte' }}
       </button>
 
       <p class="text-center text-sm mt-6 text-gray-600">
