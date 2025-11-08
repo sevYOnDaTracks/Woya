@@ -11,7 +11,7 @@
             {{ displayName(otherUser) }}
           </p>
           <p class="text-xs text-gray-500" *ngIf="otherUser?.pseudo && (otherUser?.firstname || otherUser?.lastname)">
-            {{ otherUser?.firstname }} {{ otherUser?.lastname }}
+            {{ otherUser?.lastname }} {{ otherUser?.firstname }} 
           </p>
        <!--  <p class="text-xs text-gray-500" *ngIf="otherUser?.profession">
             {{ otherUser.profession }}
