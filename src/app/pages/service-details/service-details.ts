@@ -8,6 +8,7 @@ import { TimeAgoPipe } from '../../shared/time-ago.pipe';
 import { MessagingService } from '../../core/services/messaging';
 import { BookingsService } from '../../core/services/bookings';
 import { ServiceBooking } from '../../core/models/booking.model';
+import { EmailService } from '../../core/services/email';
 
 interface DateOption {
   date: Date;
@@ -60,6 +61,7 @@ export class ServiceDetails {
     private router: Router,
     private messaging: MessagingService,
     private bookings: BookingsService,
+    private emails: EmailService,
   ) {
     this.load();
   }
@@ -240,6 +242,7 @@ export class ServiceDetails {
       });
       this.bookedSlots.add(this.selectedSlot.startTime);
       this.bookingSuccess = 'Demande envoyée ! Le prestataire te confirmera le rendez-vous.';
+      await this.notifyProviderByEmail(current);
       this.selectedSlot = undefined;
       this.refreshSlots();
     } catch (error) {
@@ -248,6 +251,28 @@ export class ServiceDetails {
     } finally {
       this.bookingLoading = false;
     }
+  }
+
+  private async notifyProviderByEmail(currentUser: any) {
+    if (!this.owner?.email || !this.selectedDate) return;
+    const requester =
+      currentUser?.displayName ||
+      currentUser?.email ||
+      'Un client Woya';
+    const dateLabel = this.formatDate(this.selectedSlot?.startTime);
+    await this.emails.send({
+      to: this.owner.email,
+      subject: `Nouvelle demande de rendez-vous - ${this.service.title}`,
+      body: `
+Bonjour ${this.displayName(this.owner)},
+
+${requester} vient de demander un créneau pour "${this.service.title}" le ${dateLabel}.
+Rendez-vous dans ton espace Mes rendez-vous pour confirmer ou annuler: https://woya.shop/mes-rendez-vous
+
+À très vite,
+L'équipe Woya!
+      `.trim(),
+    });
   }
 
   private async loadBookings() {
@@ -348,5 +373,17 @@ export class ServiceDetails {
 
   private weekdayLabel(day: number) {
     return this.weekDays.find(item => item.value === day)?.short ?? '';
+  }
+
+  private formatDate(timestamp?: number) {
+    if (!timestamp) return '';
+    return new Date(timestamp).toLocaleString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

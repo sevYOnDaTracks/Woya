@@ -1,0 +1,14 @@
+<div class="booking-alerts" *ngIf="toasts.length">
+  <div class="booking-toast" *ngFor="let toast of toasts" (click)="navigate(toast)">
+    <p class="booking-toast__title">
+      {{ toast.role === 'provider' ? 'Nouveau rendez-vous' : 'Mise à jour' }}
+    </p>
+    <p class="booking-toast__message">{{ toast.message }}</p>
+    <div class="booking-toast__actions">
+      <button type="button" class="booking-toast__cta">{{ toast.actionLabel }}</button>
+      <button type="button" class="booking-toast__dismiss" (click)="dismiss(toast.id); $event.stopPropagation();">
+        ×
+      </button>
+    </div>
+  </div>
+</div>

@@ -22,7 +22,28 @@
       </div>
     </div>
 
-    <div *ngIf="loading" class="glass-card flex flex-col items-center gap-3 text-center">
+    <div class="glass-card flex flex-col gap-4" *ngIf="!loading">
+      <div class="filters">
+        <div class="filter-field">
+          <label>Statut</label>
+          <select [(ngModel)]="statusFilter" class="filter-control">
+            <option value="all">Tous</option>
+            <option value="pending">En attente</option>
+            <option value="confirmed">Confirmés</option>
+            <option value="cancelled">Annulés</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>Service</label>
+          <input type="text"
+                 [(ngModel)]="serviceFilter"
+                 placeholder="Rechercher un service"
+                 class="filter-control" />
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="glass-card flex flex-col items-center gap-3 text-center mt-6">
       <div class="animate-spin h-10 w-10 border-4 border-[#FF7A00] border-t-transparent rounded-full"></div>
       <p class="text-sm text-gray-500">Chargement de tes réservations…</p>
     </div>

@@ -25,6 +25,8 @@ export default class ClientBookings implements OnInit, OnDestroy {
   bookings: ServiceBooking[] = [];
   view: BookingView = 'upcoming';
   contactingId: string | null = null;
+  statusFilter: 'all' | 'pending' | 'confirmed' | 'cancelled' = 'all';
+  serviceFilter = '';
 
   private clientId: string | null = null;
   private authSub?: Subscription;
@@ -82,9 +84,18 @@ export default class ClientBookings implements OnInit, OnDestroy {
       .filter(booking =>
         this.view === 'upcoming' ? booking.startTime >= now : booking.startTime < now,
       )
+      .filter(booking => this.statusFilter === 'all' || booking.status === this.statusFilter)
+      .filter(booking =>
+        !this.serviceFilter ||
+        booking.serviceTitle?.toLowerCase().includes(this.serviceFilter.trim().toLowerCase()),
+      )
       .sort((a, b) =>
         this.view === 'upcoming' ? a.startTime - b.startTime : b.startTime - a.startTime,
       );
+  }
+
+  get serviceOptions() {
+    return Array.from(new Set(this.bookings.map(b => b.serviceTitle))).filter(Boolean);
   }
 
   providerName(booking: ServiceBooking) {
