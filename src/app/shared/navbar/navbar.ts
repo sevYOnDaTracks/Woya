@@ -22,6 +22,7 @@ export class Navbar implements OnInit, OnDestroy {
   logoutConfirmOpen = false;
   pendingRequests = 0;
   pendingReservations = 0;
+  currentUser: any | null = null;
 
   private currentUid: string | null = null;
   private authSub?: Subscription;
@@ -45,7 +46,8 @@ export class Navbar implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.authSub = this.auth.user$.subscribe(user => {
-      const uid = user?.uid ?? null;
+      this.currentUser = user ?? null;
+      const uid = this.currentUser?.uid ?? null;
       if (this.currentUid === uid) {
         if (!uid) {
           this.clearInbox();
@@ -56,6 +58,7 @@ export class Navbar implements OnInit, OnDestroy {
 
       this.currentUid = uid;
       if (!this.currentUid) {
+        this.currentUser = null;
         this.clearInbox();
         this.clearBookingCounters();
         this.closeUserMenu();

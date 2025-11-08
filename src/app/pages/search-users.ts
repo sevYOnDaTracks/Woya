@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -25,22 +25,33 @@ export default class SearchUsers implements OnInit, OnDestroy {
   results: any[] = [];
   private searchInput$ = new Subject<string>();
   private sub?: Subscription;
+  private paramSub?: Subscription;
 
   constructor(
     private profiles: ProfilesService,
     private messaging: MessagingService,
     private auth: AuthStore,
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
     this.sub = this.searchInput$
       .pipe(debounceTime(200), distinctUntilChanged())
       .subscribe(value => this.runSearch(value));
+
+    this.paramSub = this.route.queryParamMap.subscribe(params => {
+      const term = params.get('term') ?? '';
+      if (term && term !== this.term) {
+        this.term = term;
+        this.searchInput$.next(term);
+      }
+    });
   }
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
+    this.paramSub?.unsubscribe();
   }
 
   private async runSearch(value: string) {
