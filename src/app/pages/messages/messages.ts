@@ -6,6 +6,7 @@ import { MessagingService } from '../../core/services/messaging';
 import { AuthStore } from '../../core/store/auth.store';
 import { ConversationSummary } from '../../core/models/conversation.model';
 import { TimeAgoPipe } from '../../shared/time-ago.pipe';
+import { ProfilesService } from '../../core/services/profiles';
 
 interface ConversationItem {
   conversation: ConversationSummary;
@@ -27,6 +28,10 @@ export default class MessagesInbox implements OnInit, OnDestroy {
   filteredConversations: ConversationItem[] = [];
   visibleConversations: ConversationItem[] = [];
   visibleCount = 5;
+  newContactTerm = '';
+  newContactResults: any[] = [];
+  newContactLoading = false;
+  private newContactDebounce?: ReturnType<typeof setTimeout>;
 
   private readonly pageSize = 5;
   private _searchTerm = '';
@@ -54,6 +59,7 @@ export default class MessagesInbox implements OnInit, OnDestroy {
     private messaging: MessagingService,
     private auth: AuthStore,
     private router: Router,
+    private profiles: ProfilesService,
   ) {
     this.updateFiltered();
   }
@@ -86,6 +92,40 @@ export default class MessagesInbox implements OnInit, OnDestroy {
 
   startNew() {
     this.router.navigate(['/services']);
+  }
+  onNewContactInput(value: string) {
+    this.newContactTerm = value;
+    if (this.newContactDebounce) {
+      clearTimeout(this.newContactDebounce);
+    }
+    if (!value || value.trim().length < 2) {
+      this.newContactResults = [];
+      return;
+    }
+    this.newContactDebounce = setTimeout(() => this.fetchNewContacts(value.trim()), 250);
+  }
+
+  async fetchNewContacts(term: string) {
+    this.newContactLoading = true;
+    try {
+      const results = await this.profiles.searchProfiles(term);
+      this.newContactResults = results.slice(0, 5);
+    } catch (error) {
+      console.error('Unable to search contacts', error);
+      this.newContactResults = [];
+    } finally {
+      this.newContactLoading = false;
+    }
+  }
+
+  async startConversationWith(user: any) {
+    if (!user?.id) return;
+    const conversationId = await this.messaging.ensureConversation(user.id);
+    this.newContactTerm = '';
+    this.newContactResults = [];
+    if (conversationId) {
+      this.router.navigate(['/messagerie', conversationId]);
+    }
   }
 
   private bindInbox() {
