@@ -21,6 +21,10 @@ export default class AdminDashboard implements OnInit {
   error = '';
   activeTab: AdminTab = 'users';
   searchTerm = '';
+  userSearch = '';
+  serviceSearch = '';
+  serviceOwnerSearch = '';
+  serviceCategoryFilter = 'all';
 
   users: AdminUserRecord[] = [];
   services: WoyaService[] = [];
@@ -71,27 +75,33 @@ export default class AdminDashboard implements OnInit {
   }
 
   get filteredUsers() {
-    return this.applySearch(this.users, user => [
+    return this.applySearch(this.users, this.userSearch, user => [
       user.firstname,
       user.lastname,
       user.pseudo,
       user.email,
       user.city,
       user.profession,
-    ]);
+    ]).slice(0, 5);
   }
 
   get filteredServices() {
-    return this.applySearch(this.services, service => [
-      service.title,
-      service.category,
-      service.city,
-      service.ownerId,
-    ]);
+    const categoryTerm = this.serviceCategoryFilter.trim().toLowerCase();
+    const ownerTerm = this.serviceOwnerSearch.trim().toLowerCase();
+    return this.applySearch(
+      this.services.filter(service => {
+        const categoryMatch =
+          categoryTerm === 'all' || categoryTerm === '' || (service.category || '').toLowerCase() === categoryTerm;
+        const ownerMatch = !ownerTerm || this.displayUserName(service.ownerId).toLowerCase().includes(ownerTerm);
+        return categoryMatch && ownerMatch;
+      }),
+      this.serviceSearch,
+      service => [service.title, service.category, service.city, this.displayUserName(service.ownerId)],
+    ).slice(0, 5);
   }
 
   get filteredBookings() {
-    return this.applySearch(this.bookings, booking => [
+    return this.applySearch(this.bookings, this.searchTerm, booking => [
       booking.serviceTitle,
       this.displayUserName(booking.providerId),
       this.displayUserName(booking.clientId),
@@ -119,6 +129,11 @@ export default class AdminDashboard implements OnInit {
       confirmed,
       pending,
     };
+  }
+
+  get serviceCategoryOptions() {
+    const categories = Array.from(new Set(this.services.map(s => s.category).filter(Boolean))) as string[];
+    return categories;
   }
 
   switchTab(tab: AdminTab) {
@@ -254,13 +269,20 @@ export default class AdminDashboard implements OnInit {
     return fullName || profile.pseudo || profile.email || uid;
   }
 
-  private applySearch<T>(collection: T[], extractor: (value: T) => (string | undefined | null)[]) {
-    const term = this.searchTerm.trim().toLowerCase();
-    if (!term) return collection;
+  private applySearch<T>(
+    collection: T[],
+    termOrExtractor: string | ((value: T) => (string | undefined | null)[]),
+    extractorOrUndefined?: (value: T) => (string | undefined | null)[],
+  ) {
+    const term = typeof termOrExtractor === 'string' ? termOrExtractor : this.searchTerm;
+    const extractor = typeof termOrExtractor === 'string' ? extractorOrUndefined : termOrExtractor;
+    if (!extractor) return collection;
+    const normalized = term.trim().toLowerCase();
+    if (!normalized) return collection;
     return collection.filter(item =>
       extractor(item)
         .filter(Boolean)
-        .some(field => (field ?? '').toString().toLowerCase().includes(term)),
+        .some(field => (field ?? '').toString().toLowerCase().includes(normalized)),
     );
   }
 

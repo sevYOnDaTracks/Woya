@@ -82,6 +82,13 @@
 
     <div *ngIf="!loading" class="space-y-8">
       <div *ngIf="activeTab === 'users'" class="space-y-4">
+        <div class="filters-panel">
+          <input type="search"
+                 [(ngModel)]="userSearch"
+                 placeholder="Rechercher par nom, pseudo, email…"
+                 class="form-control flex-1" />
+          <span class="filters-panel__hint">Affichage limité à 5 utilisateurs</span>
+        </div>
         <div class="glass-panel overflow-auto">
           <table class="admin-table">
             <thead>
@@ -197,7 +204,23 @@
         </div>
       </div>
 
-      <div *ngIf="activeTab === 'services'" class="glass-panel overflow-auto">
+      <div *ngIf="activeTab === 'services'" class="space-y-4">
+        <div class="filters-panel">
+          <select [(ngModel)]="serviceCategoryFilter" class="form-control max-w-xs">
+            <option value="all">Toutes les catégories</option>
+            <option *ngFor="let category of serviceCategoryOptions" [value]="category">{{ category }}</option>
+          </select>
+          <input type="search"
+                 [(ngModel)]="serviceOwnerSearch"
+                 placeholder="Filtrer par propriétaire"
+                 class="form-control" />
+          <input type="search"
+                 [(ngModel)]="serviceSearch"
+                 placeholder="Rechercher un service"
+                 class="form-control flex-1" />
+          <span class="filters-panel__hint">5 services affichés maximum</span>
+        </div>
+        <div class="glass-panel overflow-auto">
         <table class="admin-table">
           <thead>
             <tr>
@@ -254,6 +277,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <div *ngIf="activeTab === 'bookings'" class="glass-panel overflow-auto">
