@@ -96,9 +96,14 @@
             <tbody>
               <tr *ngFor="let user of filteredUsers">
                 <td>
-                  <div class="flex flex-col">
-                    <span class="font-semibold text-slate-900">{{ displayUserName(user.id) }}</span>
-                    <span class="text-xs text-slate-500">{{ user.pseudo || '—' }}</span>
+                  <div class="flex items-center gap-3">
+                    <img [src]="user.photoURL || defaultAvatar"
+                         alt="avatar"
+                         class="w-10 h-10 rounded-full object-cover border border-orange-100" />
+                    <div class="flex flex-col">
+                      <span class="font-semibold text-slate-900">{{ displayUserName(user.id) }}</span>
+                      <span class="text-xs text-slate-500">{{ user.pseudo || '—' }}</span>
+                    </div>
                   </div>
                 </td>
                 <td>{{ user.email || '—' }}</td>
@@ -206,9 +211,14 @@
           <tbody>
             <tr *ngFor="let service of filteredServices">
               <td>
-                <div class="flex flex-col">
-                  <span class="font-semibold">{{ service.title }}</span>
-                  <span class="text-xs text-slate-500">{{ service.city || '—' }}</span>
+                <div class="flex items-center gap-3">
+                  <img [src]="service.coverUrl || service.extraImages?.[0] || defaultServiceImage"
+                       alt="service"
+                       class="w-16 h-12 rounded-xl object-cover border border-orange-100" />
+                  <div class="flex flex-col">
+                    <span class="font-semibold">{{ service.title }}</span>
+                    <span class="text-xs text-slate-500">{{ service.city || '—' }}</span>
+                  </div>
                 </div>
               </td>
               <td>{{ service.category || '—' }}</td>

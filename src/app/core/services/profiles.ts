@@ -28,6 +28,7 @@ export interface AdminUserRecord {
   city?: string;
   profession?: string;
   role?: string;
+  photoURL?: string;
   createdAt?: number;
   updatedAt?: number;
 }
@@ -349,6 +350,7 @@ export class ProfilesService {
       city: raw?.city,
       profession: raw?.profession,
       role: raw?.role,
+      photoURL: raw?.photoURL,
       createdAt: this.toMillis(raw?.createdAt),
       updatedAt: this.toMillis(raw?.updatedAt),
     };
