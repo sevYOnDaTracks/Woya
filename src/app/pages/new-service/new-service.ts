@@ -12,6 +12,8 @@ import { firebaseServices } from '../../app.config';
 import { ServiceAvailability, WoyaService } from '../../core/models/service.model';
 import { CITY_OPTIONS, CityOption } from '../../core/models/cities';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { CategoriesService } from '../../core/services/categories';
+import { Category } from '../../core/models/category.model';
 
 type AvailabilityFormDay = { day: number; start: string; end: string; enabled: boolean };
 
@@ -25,7 +27,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapContainer') mapContainer?: ElementRef<HTMLDivElement>;
 
   private readonly defaultCoverIcon = 'assets/icone.png';
-  private readonly serviceSuggestions: Record<string, string[]> = {
+  private readonly defaultServiceSuggestions: Record<string, string[]> = {
     'Jardinage': [
       'Entretien jardin',
       'Tonte de pelouse',
@@ -160,21 +162,10 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   titleTouched = false;
   private titleDropdownCloseTimeout?: any;
 
-  categoryCatalog = [
-    'Jardinage',
-    'Ménage & Aide à domicile',
-    'Cours particuliers',
-    'Transport & Déménagement',
-    'Informatique',
-    'Bricolage / Réparation',
-    'Beauté & Bien-être',
-    'Garde d\'enfants',
-    'Coaching et Formation',
-    'Santé & Bien-être',
-    'Événementiel',
-    'Services administratifs',
-  ];
-  filteredCategories = this.categoryCatalog.slice(0, 6);
+  categories: Category[] = [];
+  categoryCatalog: string[] = [];
+  filteredCategories: string[] = [];
+  private categorySuggestions = new Map<string, string[]>();
   categoryDropdownOpen = false;
   categoryTouched = false;
   private categoryDropdownCloseTimeout?: any;
@@ -209,7 +200,8 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     private auth: AuthStore,
     private route: ActivatedRoute,
     private location: Location,
-    private http: HttpClient
+    private http: HttpClient,
+    private categoriesService: CategoriesService,
   ) {
     this.initAvailability();
   }
@@ -224,7 +216,38 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     }));
   }
 
+  private async loadCategories() {
+    try {
+      const fetched = await this.categoriesService.listAll();
+      this.categories = fetched.filter(cat => cat.isActive !== false);
+      if (this.categories.length) {
+        this.categoryCatalog = this.categories.map(cat => cat.name);
+        this.categorySuggestions = new Map(
+          this.categories.map(cat => [cat.name, (cat.serviceTitles ?? []).filter(Boolean)]),
+        );
+      } else {
+        this.applyDefaultCategories();
+      }
+    } catch (error) {
+      console.error('Unable to load categories', error);
+      this.applyDefaultCategories();
+    }
+    if (!this.categoryCatalog.length) {
+      this.applyDefaultCategories();
+    }
+    this.filteredCategories = this.categoryCatalog.slice(0, 6);
+  }
+
+  private applyDefaultCategories() {
+    const defaults = Object.keys(this.defaultServiceSuggestions).filter(key => key !== 'default');
+    this.categoryCatalog = defaults;
+    this.categorySuggestions = new Map(
+      defaults.map(name => [name, [...this.defaultServiceSuggestions[name]]]),
+    );
+  }
+
   async ngOnInit() {
+    await this.loadCategories();
     const currentUser = this.auth.user$.value || firebaseServices.auth.currentUser;
     if (!currentUser) {
       this.router.navigate(['/login']);
@@ -489,6 +512,10 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     }
     if (service.category && !this.categoryCatalog.includes(service.category)) {
       this.categoryCatalog = [...this.categoryCatalog, service.category];
+      if (!this.categorySuggestions.has(service.category)) {
+        const fallback = this.defaultServiceSuggestions[service.category] ?? this.defaultServiceSuggestions['default'];
+        this.categorySuggestions.set(service.category, [...fallback]);
+      }
     }
     this.categoryInput = service.category;
     this.filteredCategories = this.categoryCatalog.slice(0, 6);
@@ -902,19 +929,19 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
 
   private ensureTitleInSuggestions(title: string, category: string) {
     if (!title || !category) return;
-    const suggestions = this.serviceSuggestions[category];
-    if (!suggestions) {
-      this.serviceSuggestions[category] = [title];
-      return;
-    }
-    if (!suggestions.includes(title)) {
-      this.serviceSuggestions[category] = [...suggestions, title];
+    const current = this.categorySuggestions.get(category) ?? [];
+    if (!current.includes(title)) {
+      this.categorySuggestions.set(category, [...current, title]);
     }
   }
 
   private getCurrentSuggestions(): string[] {
     if (!this.validateCategory()) return [];
-    return this.serviceSuggestions[this.form.category] ?? this.serviceSuggestions['default'];
+    const dynamic = this.categorySuggestions.get(this.form.category) ?? [];
+    if (dynamic.length) {
+      return dynamic;
+    }
+    return this.defaultServiceSuggestions[this.form.category] ?? this.defaultServiceSuggestions['default'];
   }
 
   private clearTitleCloseTimeout() {

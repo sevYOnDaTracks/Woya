@@ -35,6 +35,10 @@
         <p class="stat-value">{{ stats.services }}</p>
       </div>
       <div class="stat-card">
+        <p class="stat-label">Catégories</p>
+        <p class="stat-value">{{ stats.categories }}</p>
+      </div>
+      <div class="stat-card">
         <p class="stat-label">Demandes</p>
         <p class="stat-value">{{ stats.bookings }}</p>
       </div>
@@ -55,7 +59,13 @@
               class="admin-tab"
               [class.admin-tab--active]="activeTab === 'services'"
               (click)="switchTab('services')">
-        Services
+        Services actifs
+      </button>
+      <button type="button"
+              class="admin-tab"
+              [class.admin-tab--active]="activeTab === 'categories'"
+              (click)="switchTab('categories')">
+        Catégories
       </button>
       <button type="button"
               class="admin-tab"
@@ -221,6 +231,127 @@
         </div>
       </div>
 
+      <div *ngIf="activeTab === 'categories'" class="space-y-4">
+        <div class="filters-panel">
+          <input type="search"
+                 [(ngModel)]="categorySearch"
+                 placeholder="Rechercher une catégorie"
+                 class="form-control flex-1" />
+          <span class="filters-panel__hint">Gère les catégories actives/inactives</span>
+        </div>
+
+        <div class="glass-panel overflow-auto">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Description</th>
+                <th>Sous-services</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let category of filteredCategories">
+                <td class="font-semibold">{{ category.name }}</td>
+                <td>{{ category.description || '—' }}</td>
+                <td>
+                  <div class="chips" *ngIf="category.serviceTitles?.length; else noTitles">
+                    <span class="chip" *ngFor="let title of category.serviceTitles">{{ title }}</span>
+                  </div>
+                  <ng-template #noTitles>
+                    <span class="text-xs text-slate-400">Aucun titre</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <span class="status-pill"
+                        [class.status-pill--success]="category.isActive !== false"
+                        [class.status-pill--danger]="category.isActive === false">
+                    {{ category.isActive === false ? 'Désactivée' : 'Active' }}
+                  </span>
+                </td>
+                <td class="flex flex-wrap gap-2">
+                  <button type="button"
+                          class="icon-btn"
+                          (click)="startCategoryEdit(category)"
+                          title="Modifier">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.728 5.322 18.68 8.274m-2.952-2.952 1.414-1.414a2 2 0 0 1 2.828 2.828l-9.9 9.9a2 2 0 0 1-.878.506l-3.338.834.834-3.338a2 2 0 0 1 .506-.878l9.9-9.9Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 21h14" />
+                    </svg>
+                  </button>
+                  <button type="button"
+                          class="icon-btn warn"
+                          (click)="toggleCategoryStatus(category)"
+                          title="Basculer statut">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 6h.01M5.22 19.78a10 10 0 1 1 13.56 0" />
+                    </svg>
+                  </button>
+                  <button type="button"
+                          class="icon-btn danger"
+                          (click)="deleteCategory(category)"
+                          title="Supprimer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-1 4v6m-4-6v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="!filteredCategories.length">
+                <td colspan="4" class="text-center text-slate-500 py-6">Aucune catégorie trouvée.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="glass-panel space-y-3">
+          <h3 class="panel-title">{{ editingCategoryId ? 'Modifier la catégorie' : 'Ajouter une catégorie' }}</h3>
+          <form class="grid gap-4 md:grid-cols-2" (ngSubmit)="saveCategory()">
+            <label class="form-field md:col-span-1">
+              <span>Nom</span>
+              <input type="text" [(ngModel)]="categoryForm.name" name="categoryName" class="form-control" />
+            </label>
+            <label class="form-field md:col-span-1">
+              <span>Statut</span>
+              <select [(ngModel)]="categoryForm.isActive" name="categoryActive" class="form-control">
+                <option [ngValue]="true">Active</option>
+                <option [ngValue]="false">Désactivée</option>
+              </select>
+            </label>
+            <label class="form-field md:col-span-2">
+              <span>Description</span>
+              <textarea [(ngModel)]="categoryForm.description" name="categoryDescription" rows="3" class="form-control"></textarea>
+            </label>
+            <div class="md:col-span-2 space-y-2">
+              <label class="form-field">
+                <span>Titres de services associés</span>
+                <div class="flex gap-2">
+                  <input type="text" [(ngModel)]="newServiceTitle" name="categoryTitle" class="form-control" placeholder="Ex: Tondre la pelouse" />
+                  <button type="button" class="primary-btn" (click)="addServiceTitle()">Ajouter</button>
+                </div>
+              </label>
+              <div class="chips" *ngIf="categoryForm.serviceTitles.length">
+                <span class="chip chip--removable" *ngFor="let title of categoryForm.serviceTitles">
+                  {{ title }}
+                  <button type="button" (click)="removeServiceTitle(title)">×</button>
+                </span>
+              </div>
+            </div>
+            <div class="md:col-span-2 flex justify-end gap-3">
+              <button type="button" class="secondary-btn" (click)="cancelCategoryEdit()" *ngIf="editingCategoryId">Annuler</button>
+              <button type="submit" class="primary-btn">{{ editingCategoryId ? 'Mettre à jour' : 'Ajouter' }}</button>
+            </div>
+          </form>
+          <p *ngIf="categoryMessage" [ngClass]="{
+                'text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-2xl px-3 py-2': categoryMessageType === 'success',
+                'text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-3 py-2': categoryMessageType === 'error'
+              }">
+            {{ categoryMessage }}
+          </p>
+        </div>
+      </div>
+
       <div *ngIf="activeTab === 'services'" class="space-y-4">
         <div class="filters-panel">
           <select [(ngModel)]="serviceCategoryFilter" class="form-control max-w-xs">
@@ -236,6 +367,21 @@
                  placeholder="Rechercher un service"
                  class="form-control flex-1" />
           <span class="filters-panel__hint">5 services affichés maximum</span>
+        </div>
+        <div *ngIf="serviceCategoryOptions.length" class="category-pills">
+          <button type="button"
+                  class="category-pill"
+                  [class.category-pill--active]="serviceCategoryFilter === 'all'"
+                  (click)="setServiceCategoryFilter('all')">
+            Toutes
+          </button>
+          <button type="button"
+                  class="category-pill"
+                  *ngFor="let category of serviceCategoryOptions"
+                  [class.category-pill--active]="serviceCategoryFilter === category"
+                  (click)="setServiceCategoryFilter(category)">
+            {{ category }}
+          </button>
         </div>
         <div class="glass-panel overflow-auto">
         <table class="admin-table">

@@ -114,3 +114,27 @@ section {
 .filters-panel__hint {
   @apply text-xs text-slate-400;
 }
+
+.category-pills {
+  @apply flex flex-wrap gap-2;
+}
+
+.category-pill {
+  @apply px-4 py-1.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-500 bg-white hover:border-orange-300 hover:text-orange-600 transition;
+}
+
+.category-pill--active {
+  @apply border-orange-400 text-white bg-orange-500;
+}
+
+.chips {
+  @apply flex flex-wrap gap-2;
+}
+
+.chip {
+  @apply inline-flex items-center gap-1 text-xs bg-slate-100 border border-slate-200 px-2 py-1 rounded-full text-slate-600;
+}
+
+.chip.chip--removable button {
+  @apply text-slate-400 hover:text-red-500;
+}

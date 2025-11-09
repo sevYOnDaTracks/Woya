@@ -2,8 +2,10 @@ import { Injectable } from '@angular/core';
 import { ProfilesService, AdminUserRecord } from './profiles';
 import { Services } from './services';
 import { BookingsService } from './bookings';
+import { CategoriesService } from './categories';
 import { WoyaService } from '../models/service.model';
 import { ServiceBooking, BookingStatus } from '../models/booking.model';
+import { Category } from '../models/category.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdminDataService {
@@ -11,6 +13,7 @@ export class AdminDataService {
     private profiles: ProfilesService,
     private servicesApi: Services,
     private bookings: BookingsService,
+    private categories: CategoriesService,
   ) {}
 
   listUsers(): Promise<AdminUserRecord[]> {
@@ -47,5 +50,21 @@ export class AdminDataService {
 
   deleteBooking(bookingId: string) {
     return this.bookings.delete(bookingId);
+  }
+
+  listCategories(): Promise<Category[]> {
+    return this.categories.listAll();
+  }
+
+  createCategory(payload: { name: string; description?: string; serviceTitles?: string[] }) {
+    return this.categories.create(payload);
+  }
+
+  updateCategory(id: string, payload: Partial<Category>) {
+    return this.categories.update(id, payload);
+  }
+
+  deleteCategory(id: string) {
+    return this.categories.remove(id);
   }
 }

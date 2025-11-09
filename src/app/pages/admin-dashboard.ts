@@ -6,8 +6,9 @@ import { AdminDataService } from '../core/services/admin-data';
 import { AdminUserRecord } from '../core/services/profiles';
 import { WoyaService } from '../core/models/service.model';
 import { BookingStatus, ServiceBooking } from '../core/models/booking.model';
+import { Category } from '../core/models/category.model';
 
-type AdminTab = 'users' | 'services' | 'bookings' | 'reservations';
+type AdminTab = 'users' | 'services' | 'categories' | 'bookings' | 'reservations';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -25,6 +26,13 @@ export default class AdminDashboard implements OnInit {
   serviceSearch = '';
   serviceOwnerSearch = '';
   serviceCategoryFilter = 'all';
+  categories: Category[] = [];
+  categorySearch = '';
+  categoryForm: { name: string; description: string; isActive: boolean; serviceTitles: string[] } = this.createEmptyCategoryForm();
+  editingCategoryId: string | null = null;
+  categoryMessage = '';
+  categoryMessageType: 'success' | 'error' | '' = '';
+  newServiceTitle = '';
 
   users: AdminUserRecord[] = [];
   services: WoyaService[] = [];
@@ -58,14 +66,16 @@ export default class AdminDashboard implements OnInit {
     this.loading = true;
     this.error = '';
     try {
-      const [users, services, bookings] = await Promise.all([
+      const [users, services, bookings, categories] = await Promise.all([
         this.adminData.listUsers(),
         this.adminData.listServices(),
         this.adminData.listBookings(),
+        this.adminData.listCategories(),
       ]);
       this.users = users;
       this.services = services;
       this.bookings = bookings;
+      this.categories = categories;
       this.buildUserIndex();
     } catch (error) {
       console.error('Admin data load failed', error);
@@ -110,6 +120,13 @@ export default class AdminDashboard implements OnInit {
     ]);
   }
 
+  get filteredCategories() {
+    return this.applySearch(this.categories, this.categorySearch, category => [
+      category.name,
+      category.description,
+    ]);
+  }
+
   get upcomingReservations() {
     const now = Date.now();
     return this.filteredBookings.filter(b => (b.startTime ?? 0) >= now);
@@ -126,6 +143,7 @@ export default class AdminDashboard implements OnInit {
     return {
       users: this.users.length,
       services: this.services.length,
+      categories: this.categories.length,
       bookings: this.bookings.length,
       confirmed,
       pending,
@@ -133,12 +151,21 @@ export default class AdminDashboard implements OnInit {
   }
 
   get serviceCategoryOptions() {
-    const categories = Array.from(new Set(this.services.map(s => s.category).filter(Boolean))) as string[];
-    return categories;
+    const active = Array.from(new Set(this.categories.filter(cat => cat.isActive !== false).map(cat => cat.name))).filter(
+      Boolean,
+    ) as string[];
+    if (active.length) {
+      return active;
+    }
+    return Array.from(new Set(this.services.map(service => service.category).filter(Boolean))) as string[];
   }
 
   switchTab(tab: AdminTab) {
     this.activeTab = tab;
+  }
+
+  setServiceCategoryFilter(value: string) {
+    this.serviceCategoryFilter = value;
   }
 
   async toggleService(service: WoyaService) {
@@ -214,6 +241,96 @@ export default class AdminDashboard implements OnInit {
     } finally {
       this.deletingBookingId = null;
     }
+  }
+
+  startCategoryEdit(category: Category) {
+    this.editingCategoryId = category.id;
+    this.categoryForm = {
+      name: category.name,
+      description: category.description || '',
+      isActive: category.isActive !== false,
+      serviceTitles: [...(category.serviceTitles ?? [])],
+    };
+    this.categoryMessage = '';
+    this.categoryMessageType = '';
+  }
+
+  cancelCategoryEdit() {
+    this.editingCategoryId = null;
+    this.categoryForm = this.createEmptyCategoryForm();
+    this.categoryMessage = '';
+    this.categoryMessageType = '';
+    this.newServiceTitle = '';
+  }
+
+  async saveCategory() {
+    if (!this.categoryForm.name.trim()) {
+      this.categoryMessage = 'Le nom de la catégorie est obligatoire.';
+      this.categoryMessageType = 'error';
+      return;
+    }
+    try {
+      if (this.editingCategoryId) {
+        await this.adminData.updateCategory(this.editingCategoryId, {
+          name: this.categoryForm.name.trim(),
+          description: this.categoryForm.description.trim(),
+          isActive: this.categoryForm.isActive,
+          serviceTitles: this.categoryForm.serviceTitles,
+        });
+      } else {
+        await this.adminData.createCategory({
+          name: this.categoryForm.name.trim(),
+          description: this.categoryForm.description.trim(),
+          serviceTitles: this.categoryForm.serviceTitles,
+        });
+      }
+      this.categories = await this.adminData.listCategories();
+      this.cancelCategoryEdit();
+      this.categoryMessage = 'Catégorie enregistrée.';
+      this.categoryMessageType = 'success';
+    } catch (error) {
+      console.error('Unable to save category', error);
+      this.categoryMessage = 'Impossible d’enregistrer cette catégorie.';
+      this.categoryMessageType = 'error';
+    }
+  }
+
+  async deleteCategory(category: Category) {
+    if (!category?.id) return;
+    if (!window.confirm('Supprimer cette catégorie ?')) return;
+    try {
+      await this.adminData.deleteCategory(category.id);
+      this.categories = this.categories.filter(cat => cat.id !== category.id);
+    } catch (error) {
+      console.error('Unable to delete category', error);
+      this.categoryMessage = 'Suppression impossible pour le moment.';
+      this.categoryMessageType = 'error';
+    }
+  }
+
+  async toggleCategoryStatus(category: Category) {
+    if (!category?.id) return;
+    try {
+      await this.adminData.updateCategory(category.id, { isActive: category.isActive === false });
+      category.isActive = category.isActive === false;
+    } catch (error) {
+      console.error('Unable to toggle category', error);
+      this.categoryMessage = 'Impossible de mettre à jour le statut.';
+      this.categoryMessageType = 'error';
+    }
+  }
+
+  addServiceTitle() {
+    const value = this.newServiceTitle.trim();
+    if (!value) return;
+    if (!this.categoryForm.serviceTitles.includes(value)) {
+      this.categoryForm.serviceTitles.push(value);
+    }
+    this.newServiceTitle = '';
+  }
+
+  removeServiceTitle(title: string) {
+    this.categoryForm.serviceTitles = this.categoryForm.serviceTitles.filter(item => item !== title);
   }
 
   logout() {
@@ -323,5 +440,14 @@ export default class AdminDashboard implements OnInit {
       }
     });
     return payload;
+  }
+
+  private createEmptyCategoryForm() {
+    return {
+      name: '',
+      description: '',
+      isActive: true,
+      serviceTitles: [] as string[],
+    };
   }
 }
