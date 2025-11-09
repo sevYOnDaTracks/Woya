@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SharedImports } from '../shared/shared-imports';
 import { Services } from '../core/services/services';
@@ -26,6 +26,7 @@ export default class GlobalSearch implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private servicesApi: Services,
     private profiles: ProfilesService,
   ) {}
@@ -66,6 +67,20 @@ export default class GlobalSearch implements OnInit, OnDestroy {
     if (!user) return 'Utilisateur';
     if (user.pseudo) return user.pseudo;
     return [user.firstname, user.lastname].filter(Boolean).join(' ').trim() || 'Utilisateur';
+  }
+
+  onMobileSearchInput(value: string) {
+    this.term = value;
+  }
+
+  submitMobileSearch() {
+    const query = this.term.trim();
+    if (!query) return;
+    const params: any = { term: query };
+    if (this.cityFilter) {
+      params.city = this.cityFilter;
+    }
+    this.router.navigate(['/recherche'], { queryParams: params });
   }
 
   private applyCityFilterOnServices(services: WoyaService[]) {

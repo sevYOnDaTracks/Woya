@@ -67,7 +67,7 @@
 }
 
 .global-search--mobile input {
-  @apply w-full border-2 border-[#FF7A00] rounded-2xl px-4 py-3 text-base text-gray-700 outline-none bg-white focus:border-[#FF7A00] focus:ring-2 focus:ring-[#FFD4B0];
+  @apply w-full border-2 border-[#FF7A00] rounded-2xl px-4 py-3 text-base text-gray-700 outline-none focus:border-[#FF7A00] focus:ring-2 focus:ring-[#FFD4B0];
   font-size: 16px; /* évite le zoom iOS */
 }
 

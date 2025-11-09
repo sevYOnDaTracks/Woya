@@ -1,3 +1,22 @@
+<section class="global-search-mobile md:hidden">
+  <div class="global-search-mobile__field">
+    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-[#FF7A00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+    </svg>
+    <input type="text"
+           [value]="term"
+           (input)="onMobileSearchInput($event.target.value)"
+           (keydown.enter)="submitMobileSearch()"
+           placeholder="Rechercher un service ou un prestataire"
+           class="global-search-mobile__input" />
+    <button type="button"
+            (click)="submitMobileSearch()"
+            class="global-search-mobile__submit">
+      Rechercher
+    </button>
+  </div>
+</section>
+
 <section class="min-h-screen bg-[#FFF7EB] pt-4 pb-16 px-4">
   <div class="max-w-6xl mx-auto space-y-8">
     <div class="glass-card">
