@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AdminAuthService } from '../core/store/admin-auth.service';
@@ -5,6 +6,7 @@ import { AdminAuthService } from '../core/store/admin-auth.service';
 @Component({
   selector: 'app-admin-navbar',
   standalone: true,
+  imports: [CommonModule],
   template: `
     <header class="admin-nav">
       <div class="admin-nav__brand" (click)="router.navigate(['/admin/panel'])">
