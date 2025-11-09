@@ -218,6 +218,10 @@
   <p class="text-xs text-gray-400">(Jusqu’à 10 images)</p>
 </div>
 
+<p *ngIf="imageError" class="text-sm text-red-500 mt-2 text-center">
+  {{ imageError }}
+</p>
+
 <!-- ✅ PREVIEW GRID MODERNE -->
 <div *ngIf="previews.length > 0" class="grid grid-cols-3 gap-3 mt-4">
 

@@ -137,6 +137,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   existingCoverUrl: string | null = null;
   existingExtraImages: string[] = [];
   existingImages: string[] = [];
+  imageError = '';
 
   // ✅ MULTI IMAGE
   files: File[] = [];
@@ -349,30 +350,39 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onDrop(event: DragEvent) {
-  event.preventDefault();
-  const files = Array.from(event.dataTransfer?.files || [] as File[])
-  .filter((f: File) => f.type.startsWith('image/'));
-
-  this.handleFiles(files);
-}
-
-onSelectImages(event: any) {
-  const files = Array.from(event.target.files as File[])
-  .filter((f: File) => f.type.startsWith('image/'));
-
-  this.handleFiles(files);
-}
-
-handleFiles(files: File[]) {
-  this.files.push(...files);
-  this.previews = [];
-
-  for (let file of this.files) {
-    const reader = new FileReader();
-    reader.onload = () => this.previews.push(reader.result as string);
-    reader.readAsDataURL(file);
+    event.preventDefault();
+    const files = Array.from(event.dataTransfer?.files || []);
+    if (!files.length || !this.ensureOnlyImages(files)) {
+      return;
+    }
+    this.handleFiles(files);
   }
-}
+
+  onSelectImages(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files || []);
+    if (!files.length) {
+      return;
+    }
+    if (!this.ensureOnlyImages(files)) {
+      input.value = '';
+      return;
+    }
+    this.handleFiles(files);
+    input.value = '';
+  }
+
+  handleFiles(files: File[]) {
+    if (!files.length) return;
+    this.files.push(...files);
+    this.previews = [];
+
+    for (let file of this.files) {
+      const reader = new FileReader();
+      reader.onload = () => this.previews.push(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  }
 
   removeImage(index: number) {
     this.files.splice(index, 1);
@@ -397,6 +407,25 @@ handleFiles(files: File[]) {
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );
+  }
+
+  private ensureOnlyImages(files: File[]) {
+    const invalid = files.filter(file => !this.isImageFile(file));
+    if (invalid.length) {
+      this.imageError = 'Formats acceptés : uniquement des images (PNG, JPG, WebP, etc.).';
+      return false;
+    }
+    this.imageError = '';
+    return true;
+  }
+
+  private isImageFile(file: File) {
+    const mime = (file.type || '').toLowerCase();
+    if (mime) {
+      return mime.startsWith('image/');
+    }
+    const extension = file.name ? file.name.toLowerCase() : '';
+    return /\.(png|jpe?g|gif|bmp|webp|avif|heic|heif)$/.test(extension);
   }
 
   updateCoverage() {

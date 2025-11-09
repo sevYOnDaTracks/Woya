@@ -10,6 +10,14 @@ import { MessagingService } from '../core/services/messaging';
 import { ServiceBooking } from '../core/models/booking.model';
 import { TimeAgoPipe } from '../shared/time-ago.pipe';
 
+interface CalendarDay {
+  timestamp: number;
+  label: number;
+  inCurrentMonth: boolean;
+  isToday: boolean;
+  count: number;
+}
+
 type BookingView = 'upcoming' | 'history';
 
 @Component({
@@ -28,6 +36,9 @@ export default class ClientBookings implements OnInit, OnDestroy {
   statusFilter: 'all' | 'pending' | 'confirmed' | 'cancelled' = 'all';
   serviceFilter = '';
   searchTerm = '';
+  readonly weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  activeDate = this.startOfDay(Date.now()).getTime();
+  visibleMonth = this.startOfMonth(Date.now());
 
   private clientId: string | null = null;
   private authSub?: Subscription;
@@ -67,6 +78,7 @@ export default class ClientBookings implements OnInit, OnDestroy {
     try {
       this.bookings = await this.bookingsService.listForClient(this.clientId);
       await this.hydrateProviders(this.bookings.map(b => b.providerId));
+      this.ensureActiveDateHasContext();
     } catch (error) {
       console.error('Unable to load client bookings', error);
       this.error = 'Impossible de récupérer tes réservations.';
@@ -77,6 +89,7 @@ export default class ClientBookings implements OnInit, OnDestroy {
 
   switchView(mode: BookingView) {
     this.view = mode;
+    this.ensureActiveDateHasContext(true);
   }
 
   get filteredBookings() {
@@ -97,6 +110,54 @@ export default class ClientBookings implements OnInit, OnDestroy {
       .sort((a, b) =>
         this.view === 'upcoming' ? a.startTime - b.startTime : b.startTime - a.startTime,
       );
+  }
+
+  get bookingsForSelectedDate() {
+    const key = this.activeDate;
+    return this.filteredBookings.filter(
+      booking => this.startOfDay(booking.startTime).getTime() === key,
+    );
+  }
+
+  get calendarWeeks(): CalendarDay[][] {
+    const counts = this.buildDailyCounts(this.filteredBookings);
+    const start = this.getCalendarGridStart(this.visibleMonth);
+    const cursor = new Date(start);
+    const month = this.visibleMonth;
+    const todayKey = this.startOfDay(Date.now()).getTime();
+    const weeks: CalendarDay[][] = [];
+
+    for (let week = 0; week < 6; week++) {
+      const days: CalendarDay[] = [];
+      for (let day = 0; day < 7; day++) {
+        const current = new Date(cursor);
+        const timestamp = current.getTime();
+        days.push({
+          timestamp,
+          label: current.getDate(),
+          inCurrentMonth:
+            current.getMonth() === month.getMonth() && current.getFullYear() === month.getFullYear(),
+          isToday: timestamp === todayKey,
+          count: counts.get(timestamp) ?? 0,
+        });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      weeks.push(days);
+    }
+
+    return weeks;
+  }
+
+  get monthLabel() {
+    return this.visibleMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  }
+
+  get selectedDateLabel() {
+    return new Date(this.activeDate).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
   }
 
   get serviceOptions() {
@@ -160,5 +221,81 @@ export default class ClientBookings implements OnInit, OnDestroy {
     if (!term) return true;
     const haystack = [booking.serviceTitle || '', this.providerName(booking)].join(' ').toLowerCase();
     return haystack.includes(term);
+  }
+
+  changeMonth(step: number) {
+    this.visibleMonth = this.addMonths(this.visibleMonth, step);
+    if (!this.isSameMonth(this.activeDate, this.visibleMonth)) {
+      this.activeDate = this.startOfMonth(this.visibleMonth).getTime();
+    }
+  }
+
+  selectDate(timestamp: number) {
+    const normalized = this.startOfDay(timestamp);
+    this.activeDate = normalized.getTime();
+    this.visibleMonth = this.startOfMonth(normalized);
+  }
+
+  private ensureActiveDateHasContext(force = false) {
+    const filtered = this.filteredBookings;
+    if (!filtered.length) {
+      const today = this.startOfDay(Date.now());
+      this.activeDate = today.getTime();
+      this.visibleMonth = this.startOfMonth(today);
+      return;
+    }
+
+    const hasSelectedDay = filtered.some(
+      booking => this.startOfDay(booking.startTime).getTime() === this.activeDate,
+    );
+
+    if (!hasSelectedDay || force) {
+      const anchor = filtered[0];
+      const anchorDay = this.startOfDay(anchor.startTime);
+      this.activeDate = anchorDay.getTime();
+      this.visibleMonth = this.startOfMonth(anchorDay);
+    } else if (!this.isSameMonth(this.activeDate, this.visibleMonth)) {
+      this.visibleMonth = this.startOfMonth(this.activeDate);
+    }
+  }
+
+  private buildDailyCounts(bookings: ServiceBooking[]) {
+    return bookings.reduce((acc, booking) => {
+      if (!booking.startTime) return acc;
+      const key = this.startOfDay(booking.startTime).getTime();
+      acc.set(key, (acc.get(key) ?? 0) + 1);
+      return acc;
+    }, new Map<number, number>());
+  }
+
+  private getCalendarGridStart(month: Date) {
+    const firstDay = this.startOfMonth(month);
+    const weekday = (firstDay.getDay() + 6) % 7;
+    const start = new Date(firstDay);
+    start.setDate(firstDay.getDate() - weekday);
+    return start;
+  }
+
+  private startOfDay(value: number | Date) {
+    const date = new Date(value);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  private startOfMonth(value: number | Date) {
+    const date = this.startOfDay(value);
+    date.setDate(1);
+    return date;
+  }
+
+  private addMonths(date: Date, offset: number) {
+    const next = new Date(date.getFullYear(), date.getMonth() + offset, 1);
+    return this.startOfMonth(next);
+  }
+
+  private isSameMonth(a: number | Date, b: number | Date) {
+    const first = new Date(a);
+    const second = new Date(b);
+    return first.getFullYear() === second.getFullYear() && first.getMonth() === second.getMonth();
   }
 }

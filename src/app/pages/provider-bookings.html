@@ -59,68 +59,155 @@
 
     <ng-container *ngIf="!loading">
       <ng-container *ngIf="filteredBookings.length; else emptyState">
-        <div class="space-y-4">
-          <article *ngFor="let booking of filteredBookings"
-                   class="booking-card">
-            <div class="booking-card__header">
-              <div>
-                <p class="booking-card__title">{{ booking.serviceTitle }}</p>
-                <p class="booking-card__subtitle">
-                  {{ booking.startTime | date:'EEEE d MMMM • HH:mm':'':'fr-FR' }}
-                </p>
-              </div>
-              <span [class]="statusBadgeClass(booking.status)">
-                {{ booking.status === 'pending' ? 'En attente' : (booking.status === 'confirmed' ? 'Confirmé' : 'Annulé') }}
-              </span>
-            </div>
-
-            <div class="booking-card__body">
-              <p class="text-sm text-gray-600">
-                Client :
-                <a [routerLink]="clientProfileLink(booking)"
-                   class="booking-link">
-                  {{ clientName(booking) }}
+        <ng-container *ngIf="bookingsForSelectedDate as dayBookings">
+          <div class="calendar-layout">
+            <div class="glass-card calendar-panel">
+              <div class="calendar-panel__header">
+                <div>
+                  <p class="calendar-panel__eyebrow">Le {{ selectedDateLabel }}</p>
+                  <h2 class="calendar-panel__title">
+                    {{ dayBookings.length ? (dayBookings.length === 1 ? '1 rendez-vous' : dayBookings.length + ' rendez-vous') : 'Aucun rendez-vous' }}
+                  </h2>
+                  <p class="calendar-panel__subtitle">
+                    {{ dayBookings.length ? 'Clients à gérer pour cette date.' : 'Choisis une date dans le calendrier pour afficher les demandes.' }}
+                  </p>
+                </div>
+                <a class="primary-btn calendar-panel__cta"
+                   routerLink="/services/new">
+                  Ajouter un créneau
                 </a>
-              </p>
-              <p class="text-xs text-gray-500" *ngIf="booking.createdAt">
-                Demande envoyée {{ booking.createdAt | timeAgo }}
-              </p>
+              </div>
+
+              <div *ngIf="dayBookings.length; else emptySelectedDate" class="space-y-4">
+                <article *ngFor="let booking of dayBookings"
+                         class="booking-card">
+                  <div class="booking-card__header">
+                    <div class="booking-card__time-block">
+                      <span class="booking-card__time">
+                        {{ booking.startTime | date:'HH:mm':'':'fr-FR' }}
+                      </span>
+                      <div>
+                        <p class="booking-card__title">{{ booking.serviceTitle }}</p>
+                        <p class="booking-card__subtitle">
+                          {{ clientName(booking) }}
+                        </p>
+                      </div>
+                    </div>
+                    <span [class]="statusBadgeClass(booking.status)">
+                      {{ booking.status === 'pending' ? 'En attente' : (booking.status === 'confirmed' ? 'Confirmé' : 'Annulé') }}
+                    </span>
+                  </div>
+
+                  <div class="booking-card__body">
+                    <p class="text-sm text-gray-600 flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7.5A2.5 2.5 0 0 0 18.5 5h-13A2.5 2.5 0 0 0 3 7.5V19a2 2 0 0 0 2 2Z" />
+                      </svg>
+                      {{ booking.startTime | date:'EEEE d MMMM • HH:mm':'':'fr-FR' }}
+                    </p>
+                    <p class="text-sm text-gray-600 flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 7.5 12 12l7.5-4.5M4.5 12l7.5 4.5 7.5-4.5M4.5 16.5 12 21l7.5-4.5" />
+                      </svg>
+                      <a [routerLink]="clientProfileLink(booking)" class="booking-link">
+                        {{ clientName(booking) }}
+                      </a>
+                    </p>
+                    <p class="text-xs text-gray-500" *ngIf="booking.createdAt">
+                      Demande envoyée {{ booking.createdAt | timeAgo }}
+                    </p>
+                  </div>
+
+                  <div class="booking-card__actions">
+                    <button type="button"
+                            class="secondary-btn"
+                            [routerLink]="['/services', booking.serviceId]">
+                      Voir l'annonce
+                    </button>
+                    <div class="flex flex-wrap gap-2 justify-end" *ngIf="!isPast(booking)">
+                      <button type="button"
+                              class="primary-btn"
+                              *ngIf="booking.status === 'pending'"
+                              [disabled]="updatingId === booking.id"
+                              (click)="confirmBooking(booking)">
+                        {{ updatingId === booking.id ? 'Validation…' : 'Confirmer' }}
+                      </button>
+                      <button type="button"
+                              class="danger-outline-btn"
+                              [disabled]="updatingId === booking.id"
+                              (click)="cancelBooking(booking)">
+                        {{ updatingId === booking.id ? 'Annulation…' : 'Annuler' }}
+                      </button>
+                      <button type="button"
+                              class="icon-btn"
+                              [disabled]="contactingId === (booking.id || booking.clientId)"
+                              (click)="contactClient(booking)"
+                              title="Envoyer un message">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m3 8 8.4 6.3a1 1 0 0 0 1.2 0L21 8" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <ng-template #emptySelectedDate>
+                <div class="calendar-panel__empty">
+                  <p class="text-base font-semibold text-[#1A1A1A]">Aucun créneau ce jour.</p>
+                  <p class="text-sm text-gray-500">Sélectionne une autre date pour voir les demandes reçues.</p>
+                </div>
+              </ng-template>
             </div>
 
-            <div class="booking-card__actions">
-              <button type="button"
-                      class="secondary-btn"
-                      [routerLink]="['/services', booking.serviceId]">
-                Voir l'annonce
-              </button>
-              <div class="flex gap-2" *ngIf="!isPast(booking)">
+            <div class="glass-card calendar-shell">
+              <div class="calendar-shell__header">
                 <button type="button"
-                        class="primary-btn"
-                        *ngIf="booking.status === 'pending'"
-                        [disabled]="updatingId === booking.id"
-                        (click)="confirmBooking(booking)">
-                  {{ updatingId === booking.id ? 'Validation…' : 'Confirmer' }}
+                        class="calendar-nav-btn"
+                        (click)="changeMonth(-1)"
+                        aria-label="Mois précédent">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7" />
+                  </svg>
                 </button>
+                <div>
+                  <p class="calendar-shell__eyebrow">Calendrier</p>
+                  <p class="calendar-shell__title">{{ monthLabel }}</p>
+                </div>
                 <button type="button"
-                        class="danger-outline-btn"
-                        [disabled]="updatingId === booking.id"
-                        (click)="cancelBooking(booking)">
-                  {{ updatingId === booking.id ? 'Annulation…' : 'Annuler' }}
-                </button>
-                <button type="button"
-                        class="icon-btn"
-                        [disabled]="contactingId === (booking.id || booking.clientId)"
-                        (click)="contactClient(booking)"
-                        title="Envoyer un message">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m3 8 8.4 6.3a1 1 0 0 0 1.2 0L21 8" />
+                        class="calendar-nav-btn"
+                        (click)="changeMonth(1)"
+                        aria-label="Mois suivant">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7" />
                   </svg>
                 </button>
               </div>
+
+              <div class="calendar-weekdays">
+                <span *ngFor="let weekday of weekDays">{{ weekday }}</span>
+              </div>
+
+              <div class="calendar-grid">
+                <div *ngFor="let week of calendarWeeks" class="calendar-week">
+                  <button type="button"
+                          *ngFor="let day of week"
+                          class="calendar-day"
+                          [class.calendar-day--outside]="!day.inCurrentMonth"
+                          [class.calendar-day--selected]="day.timestamp === activeDate"
+                          [class.calendar-day--today]="day.isToday"
+                          (click)="selectDate(day.timestamp)">
+                    <span>{{ day.label }}</span>
+                    <span *ngIf="day.count" class="calendar-day__badge">
+                      {{ day.count }}
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
-          </article>
-        </div>
+          </div>
+        </ng-container>
       </ng-container>
 
       <ng-template #emptyState>

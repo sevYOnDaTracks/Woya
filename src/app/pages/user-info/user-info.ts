@@ -185,7 +185,17 @@ export default class UserInfo implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-
+    const message = 'Seules les images (PNG, JPG, WebP, etc.) sont autorisées pour la photo de profil.';
+    if (!this.isImageFile(file)) {
+      this.photoFile = null;
+      input.value = '';
+      this.error = message;
+      this.success = '';
+      return;
+    }
+    if (this.error === message) {
+      this.error = '';
+    }
     this.photoFile = file;
     const reader = new FileReader();
     reader.onload = () => this.photoPreview = reader.result as string;
@@ -224,6 +234,17 @@ export default class UserInfo implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const message = 'La photo de couverture doit obligatoirement être une image (PNG, JPG, WebP, etc.).';
+    if (!this.isImageFile(file)) {
+      this.coverFile = null;
+      input.value = '';
+      this.error = message;
+      this.success = '';
+      return;
+    }
+    if (this.error === message) {
+      this.error = '';
+    }
     this.coverFile = file;
     const reader = new FileReader();
     reader.onload = () => (this.coverPreview = reader.result as string);
@@ -274,6 +295,16 @@ export default class UserInfo implements OnInit, OnDestroy {
   onSelectGalleryFile(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
+    const message = 'La galerie n’accepte que des images (PNG, JPG, WebP, etc.).';
+    if (file && !this.isImageFile(file)) {
+      this.newGalleryFile = null;
+      this.galleryError = message;
+      input.value = '';
+      return;
+    }
+    if (this.galleryError === message) {
+      this.galleryError = '';
+    }
     this.newGalleryFile = file;
   }
 
@@ -321,4 +352,12 @@ export default class UserInfo implements OnInit, OnDestroy {
     return Array.from(tokens);
   }
 
+  private isImageFile(file: File) {
+    const mime = (file.type || '').toLowerCase();
+    if (mime) {
+      return mime.startsWith('image/');
+    }
+    const extension = file.name ? file.name.toLowerCase() : '';
+    return /\.(png|jpe?g|gif|bmp|webp|avif|heic|heif)$/.test(extension);
+  }
 }

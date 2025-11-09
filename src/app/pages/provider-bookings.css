@@ -93,3 +93,99 @@
 .icon-btn {
   @apply inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#FFE0BF] text-[#FF7A00] hover:bg-[#FFF5EB] transition disabled:opacity-60 disabled:cursor-not-allowed;
 }
+
+.calendar-layout {
+  @apply grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)];
+}
+
+.calendar-panel {
+  @apply flex flex-col gap-6;
+}
+
+.calendar-panel__header {
+  @apply flex flex-col gap-4 md:flex-row md:items-center md:justify-between;
+}
+
+.calendar-panel__eyebrow {
+  @apply text-xs uppercase tracking-[0.3em] text-[#FFB066];
+}
+
+.calendar-panel__title {
+  @apply text-2xl font-semibold text-[#1A1A1A] capitalize;
+}
+
+.calendar-panel__subtitle {
+  @apply text-sm text-gray-500;
+}
+
+.calendar-panel__cta {
+  @apply whitespace-nowrap;
+}
+
+.calendar-panel__empty {
+  @apply text-center border border-dashed border-[#FFE0BF] rounded-2xl py-8 px-4 space-y-2 bg-[#FFF9F4];
+}
+
+.calendar-shell {
+  @apply flex flex-col gap-4;
+}
+
+.calendar-shell__header {
+  @apply flex items-center justify-between gap-3;
+}
+
+.calendar-shell__eyebrow {
+  @apply text-xs uppercase tracking-[0.3em] text-[#FFB066];
+}
+
+.calendar-shell__title {
+  @apply text-xl font-semibold text-[#1A1A1A];
+}
+
+.calendar-nav-btn {
+  @apply inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#FFE0BF] text-[#FF7A00] hover:bg-[#FFF5EB] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A00]/40;
+}
+
+.calendar-weekdays {
+  @apply grid grid-cols-7 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400;
+}
+
+.calendar-grid {
+  @apply space-y-2;
+}
+
+.calendar-week {
+  @apply grid grid-cols-7 gap-2;
+}
+
+.calendar-day {
+  @apply relative flex flex-col items-center justify-center rounded-2xl border border-transparent py-3 text-sm font-semibold text-[#1A1A1A] transition hover:border-[#FF7A00]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A00]/30;
+}
+
+.calendar-day--outside {
+  @apply text-gray-300 hover:border-transparent;
+}
+
+.calendar-day--today:not(.calendar-day--selected) {
+  @apply border-dashed border-[#FF7A00]/40;
+}
+
+.calendar-day--selected {
+  @apply bg-[#FF7A00] text-white shadow-lg border-[#FF7A00];
+}
+
+.calendar-day__badge {
+  @apply absolute bottom-1 text-[11px] px-2 py-[1px] rounded-full font-semibold bg-[#FFF5EB] text-[#FF7A00];
+}
+
+.calendar-day--selected .calendar-day__badge {
+  @apply bg-white text-[#FF7A00];
+}
+
+.booking-card__time-block {
+  @apply flex items-start gap-4;
+}
+
+.booking-card__time {
+  @apply text-2xl font-bold text-[#FF7A00];
+}
