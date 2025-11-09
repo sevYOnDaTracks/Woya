@@ -18,6 +18,20 @@ import { firebaseServices } from '../../app.config';
 import { Services } from './services';
 import { WoyaService } from '../models/service.model';
 
+export interface AdminUserRecord {
+  id: string;
+  firstname?: string;
+  lastname?: string;
+  pseudo?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  profession?: string;
+  role?: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
 export interface GalleryItem {
   id: string;
   ownerId: string;
@@ -63,6 +77,7 @@ export class ProfilesService {
   private db = firebaseServices.db;
   private galleryCol = collection(this.db, 'userGallery');
   private reviewsCol = collection(this.db, 'reviews');
+  private usersCol = collection(this.db, 'users');
 
   constructor(private servicesApi: Services) {}
 
@@ -132,6 +147,41 @@ export class ProfilesService {
         // ignore errors on delete
       }
     }
+  }
+
+  async listAllUsers(): Promise<AdminUserRecord[]> {
+    const snap = await getDocs(this.usersCol);
+    return snap.docs.map(docSnap => this.mapUserRecord(docSnap.id, docSnap.data()));
+  }
+
+  async deleteUser(uid: string) {
+    if (!uid) return;
+    const ref = doc(this.db, 'users', uid);
+    await deleteDoc(ref);
+  }
+
+  async updateUser(uid: string, payload: Partial<AdminUserRecord>) {
+    if (!uid) return;
+    const ref = doc(this.db, 'users', uid);
+    const sanitized: Record<string, any> = {};
+    const keys: (keyof AdminUserRecord)[] = [
+      'firstname',
+      'lastname',
+      'pseudo',
+      'email',
+      'phone',
+      'city',
+      'profession',
+      'role',
+    ];
+    keys.forEach(key => {
+      if (payload[key] !== undefined) {
+        const value = payload[key];
+        sanitized[key] = typeof value === 'string' ? value.trim() : value;
+      }
+    });
+    sanitized['updatedAt'] = Date.now();
+    await setDoc(ref, sanitized, { merge: true });
   }
 
   async saveCover(uid: string, file: File) {
@@ -285,6 +335,22 @@ export class ProfilesService {
       createdAt: this.toMillis(data.createdAt),
       updatedAt: this.toMillis(data.updatedAt),
       reviewer: data.reviewer,
+    };
+  }
+
+  private mapUserRecord(id: string, raw: any): AdminUserRecord {
+    return {
+      id,
+      firstname: raw?.firstname,
+      lastname: raw?.lastname,
+      pseudo: raw?.pseudo,
+      email: raw?.email,
+      phone: raw?.phone,
+      city: raw?.city,
+      profession: raw?.profession,
+      role: raw?.role,
+      createdAt: this.toMillis(raw?.createdAt),
+      updatedAt: this.toMillis(raw?.updatedAt),
     };
   }
 

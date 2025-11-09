@@ -3,8 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';  // ✅ ICI
 import { firebaseServices } from '../../../app.config';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, User } from 'firebase/auth';
+import { doc, setDoc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthStore } from '../../../core/store/auth.store';
 import { Subscription } from 'rxjs';
@@ -51,6 +51,15 @@ export default class Register implements OnInit, OnDestroy {
   private authSub?: Subscription;
   private emailCheckTimeout?: ReturnType<typeof setTimeout>;
   private phoneCheckTimeout?: ReturnType<typeof setTimeout>;
+  showProfilePrompt = false;
+  profilePrompt = {
+    firstname: '',
+    lastname: '',
+    pseudo: '',
+    phone: '',
+  };
+  profilePromptError = '';
+  private pendingSocialUser: User | null = null;
 
   constructor(private router: Router, private authStore: AuthStore) {}
 
@@ -307,8 +316,32 @@ export default class Register implements OnInit, OnDestroy {
     return Array.from(tokens);
   }
 
-  loginWithGoogle() {
-    signInWithPopup(firebaseServices.auth, new GoogleAuthProvider());
+  async loginWithGoogle() {
+    this.error = '';
+    this.loading = true;
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const credential = await signInWithPopup(firebaseServices.auth, provider);
+      const user = credential.user;
+      if (user) {
+        this.hydrateFormFromProvider(user);
+        const needsProfile = await this.needsProfileCompletion(user);
+        if (needsProfile) {
+          this.pendingSocialUser = user;
+          this.prefillProfilePrompt();
+          this.showProfilePrompt = true;
+          return;
+        }
+        await this.ensureSocialUserDocument(user);
+        this.router.navigate(['/mon-espace']);
+      }
+    } catch (error) {
+      console.error('Google sign-in failed', error);
+      this.error = 'Connexion Google impossible pour le moment.';
+    } finally {
+      this.loading = false;
+    }
   }
 
   loginWithFacebook() {
@@ -317,5 +350,105 @@ export default class Register implements OnInit, OnDestroy {
 
   toggleBirthdatePicker() {
     this.showBirthdatePicker = !this.showBirthdatePicker;
+  }
+
+  async submitProfilePrompt() {
+    if (!this.pendingSocialUser) return;
+    const { firstname, lastname, pseudo } = this.profilePrompt;
+    if (!firstname.trim() || !lastname.trim() || !pseudo.trim()) {
+      this.profilePromptError = 'Merci de renseigner prénom, nom et pseudo.';
+      return;
+    }
+    this.profilePromptError = '';
+    this.loading = true;
+    try {
+      await this.ensureSocialUserDocument(this.pendingSocialUser, {
+        firstname: firstname.trim(),
+        lastname: lastname.trim(),
+        pseudo: pseudo.trim(),
+        phone: this.profilePrompt.phone.trim(),
+      });
+      this.showProfilePrompt = false;
+      this.pendingSocialUser = null;
+      this.router.navigate(['/mon-espace']);
+    } catch (error) {
+      console.error('Unable to save profile prompt', error);
+      this.profilePromptError = 'Impossible de sauvegarder ces informations pour le moment.';
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private hydrateFormFromProvider(user: User) {
+    if (user.email) {
+      this.form.email = user.email;
+      this.emailStatus = 'available';
+    }
+    if (user.displayName) {
+      const [firstname, ...rest] = user.displayName.split(' ');
+      const lastname = rest.join(' ').trim();
+      this.form.firstname = this.form.firstname || firstname || '';
+      this.form.lastname = this.form.lastname || lastname || '';
+      if (!this.form.pseudo) {
+        this.form.pseudo = user.displayName.replace(/\s+/g, '').toLowerCase();
+      }
+    }
+  }
+
+  private prefillProfilePrompt() {
+    this.profilePrompt = {
+      firstname: this.form.firstname || '',
+      lastname: this.form.lastname || '',
+      pseudo: this.form.pseudo || '',
+      phone: this.form.phone || '',
+    };
+  }
+
+  private async needsProfileCompletion(user: User) {
+    const ref = doc(firebaseServices.db, 'users', user.uid);
+    const snap = await getDoc(ref);
+    return !snap.exists();
+  }
+
+  private async ensureSocialUserDocument(user: User, overrides?: { firstname: string; lastname: string; pseudo: string; phone?: string }) {
+    const db = firebaseServices.db;
+    const ref = doc(db, 'users', user.uid);
+    const snap = await getDoc(ref);
+    if (snap.exists() && !overrides) {
+      return;
+    }
+    const firstname = overrides?.firstname ?? (this.form.firstname || '');
+    const lastname = overrides?.lastname ?? (this.form.lastname || '');
+    const pseudo = overrides?.pseudo ?? (this.form.pseudo || user.displayName || '');
+    const email = (this.form.email || user.email || '').toLowerCase();
+    const existing = snap.data() as Record<string, any> | undefined;
+    const payload = {
+      firstname,
+      lastname,
+      pseudo,
+      email,
+      profession: this.form.profession,
+      phone: overrides?.phone || (this.form.phone ? this.buildFullPhoneNumber() : ''),
+      city: this.form.city,
+      address: this.form.address,
+      coverURL: '',
+      photoURL: user.photoURL ?? '',
+      provider: 'google',
+      searchKeywords: this.buildSearchKeywords({
+        firstname,
+        lastname,
+        pseudo,
+      }),
+      createdAt: snap.exists() ? this.toMillis(existing?.['createdAt']) ?? Date.now() : Date.now(),
+      updatedAt: Date.now(),
+    };
+    await setDoc(ref, payload, { merge: true });
+  }
+
+  private toMillis(value: any) {
+    if (!value) return undefined;
+    if (typeof value === 'number') return value;
+    if (value.seconds) return value.seconds * 1000;
+    return undefined;
   }
 }

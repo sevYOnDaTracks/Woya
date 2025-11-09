@@ -1,0 +1,104 @@
+section {
+  min-height: 100vh;
+}
+
+.glass-panel {
+  @apply bg-white border border-orange-100 rounded-3xl p-4 shadow-sm;
+}
+
+.stat-card {
+  @apply bg-white border border-orange-100 rounded-3xl p-4 shadow-sm;
+}
+
+.stat-label {
+  @apply text-xs uppercase tracking-[0.3em] text-slate-500;
+}
+
+.stat-value {
+  @apply text-3xl font-semibold mt-2 text-slate-900;
+}
+
+.admin-tab {
+  @apply px-4 py-2 rounded-2xl text-sm font-semibold text-slate-500 border border-transparent hover:text-orange-600 hover:border-orange-200 transition;
+}
+
+.admin-tab--active {
+  @apply bg-orange-500 text-white border-orange-400 shadow-lg shadow-orange-500/30;
+}
+
+.admin-table {
+  @apply w-full text-sm;
+}
+
+.admin-table thead {
+  @apply text-left text-slate-500 uppercase text-xs tracking-widest;
+}
+
+.admin-table th,
+.admin-table td {
+  @apply px-3 py-3 align-top;
+}
+
+.admin-table tbody tr {
+  @apply border-t border-slate-100;
+}
+
+.primary-btn {
+  @apply inline-flex items-center justify-center px-3 py-1.5 rounded-2xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.secondary-btn {
+  @apply inline-flex items-center justify-center px-3 py-1.5 rounded-2xl border border-slate-200 text-slate-700 text-xs font-semibold hover:border-orange-300 hover:text-orange-600 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.danger-btn {
+  @apply inline-flex items-center justify-center px-3 py-1.5 rounded-2xl bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.danger-outline-btn {
+  @apply inline-flex items-center justify-center px-3 py-1.5 rounded-2xl border border-red-300 text-red-600 text-xs font-semibold hover:bg-red-50 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.icon-btn {
+  @apply inline-flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 bg-white text-slate-500 hover:text-orange-600 hover:border-orange-300 transition disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.icon-btn.danger {
+  @apply border-red-200 text-red-500 hover:text-red-600 hover:border-red-400;
+}
+
+.status-pill {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-600;
+}
+
+.status-pill--success {
+  @apply bg-emerald-50 border-emerald-100 text-emerald-700;
+}
+
+.status-pill--warn {
+  @apply bg-amber-50 border-amber-100 text-amber-700;
+}
+
+.status-pill--danger {
+  @apply bg-red-50 border-red-100 text-red-600;
+}
+
+.panel-title {
+  @apply text-lg font-semibold;
+}
+
+.reservation-row {
+  @apply p-3 rounded-2xl border border-slate-100 bg-slate-50 space-y-2;
+}
+
+.form-field {
+  @apply flex flex-col gap-1;
+}
+
+.form-field span {
+  @apply text-xs uppercase tracking-widest text-slate-500;
+}
+
+.form-control {
+  @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400;
+}

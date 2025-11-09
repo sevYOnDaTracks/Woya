@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   query,
@@ -70,6 +71,19 @@ export class BookingsService {
       status,
       updatedAt: serverTimestamp(),
     });
+  }
+
+  async listAll(): Promise<ServiceBooking[]> {
+    const snap = await getDocs(this.col);
+    return snap.docs
+      .map(docSnap => this.mapBooking(docSnap))
+      .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+  }
+
+  async delete(bookingId: string) {
+    if (!bookingId) return;
+    const ref = doc(this.db, 'bookings', bookingId);
+    await deleteDoc(ref);
   }
 
   private mapBooking(docSnap: QueryDocumentSnapshot<DocumentData>): ServiceBooking {

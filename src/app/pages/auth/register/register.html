@@ -220,6 +220,47 @@
   </div>
 </ng-container>
 
+<div *ngIf="showProfilePrompt" class="fixed inset-0 bg-black/50 flex items-center justify-center px-4 py-8 z-50">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 relative">
+    <button type="button"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            (click)="showProfilePrompt = false">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </button>
+    <div class="space-y-2 mb-4">
+      <p class="text-xs uppercase tracking-[0.4em] text-[#FF7A00]">Bienvenue</p>
+      <h2 class="text-2xl font-semibold text-gray-900">Complète ton profil</h2>
+      <p class="text-sm text-gray-500">Renseigne au moins ces informations pour finaliser ton inscription.</p>
+    </div>
+    <form class="space-y-3" (ngSubmit)="submitProfilePrompt()">
+      <input [(ngModel)]="profilePrompt.firstname"
+             name="promptFirstName"
+             placeholder="Prénom"
+             class="w-full border rounded-2xl px-4 py-3 outline-none" />
+      <input [(ngModel)]="profilePrompt.lastname"
+             name="promptLastName"
+             placeholder="Nom"
+             class="w-full border rounded-2xl px-4 py-3 outline-none" />
+      <input [(ngModel)]="profilePrompt.pseudo"
+             name="promptPseudo"
+             placeholder="Pseudo"
+             class="w-full border rounded-2xl px-4 py-3 outline-none" />
+      <input [(ngModel)]="profilePrompt.phone"
+             name="promptPhone"
+             placeholder="Téléphone (optionnel)"
+             class="w-full border rounded-2xl px-4 py-3 outline-none" />
+      <p *ngIf="profilePromptError" class="text-sm text-red-600">{{ profilePromptError }}</p>
+      <button type="submit"
+              class="w-full rounded-2xl bg-[#FF7A00] text-white font-semibold py-3"
+              [disabled]="loading">
+        {{ loading ? 'Enregistrement…' : 'Valider' }}
+      </button>
+    </form>
+  </div>
+</div>
+
 <ng-template #alreadyLoggedRegister>
   <div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4">
     <div class="bg-white w-full max-w-md p-10 rounded-2xl shadow-lg border text-center space-y-4">

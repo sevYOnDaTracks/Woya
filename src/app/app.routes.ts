@@ -17,6 +17,9 @@ import FavoritesPage from './pages/favorites';
 import NotificationsPage from './pages/messages/notifications';
 import DashboardPage from './pages/dashboard';
 import { requireAuthGuard } from './core/store/auth.guard';
+import AdminLogin from './pages/admin-login';
+import AdminDashboard from './pages/admin-dashboard';
+import { requireAdminGuard } from './core/store/admin.guard';
 
 export const routes: Routes = [
     { path: '', component: Landing },
@@ -45,6 +48,13 @@ export const routes: Routes = [
     { path: 'mes-reservations', component: ClientBookings, canActivate: [requireAuthGuard] },
     { path: 'favoris', component: FavoritesPage, canActivate: [requireAuthGuard] },
     { path: 'recherche', component: GlobalSearch },
+    {
+        path: 'admin',
+        children: [
+            { path: '', component: AdminLogin },
+            { path: 'panel', component: AdminDashboard, canActivate: [requireAdminGuard] },
+        ],
+    },
 
     { path: 'prestataires', component: SearchUsers },
     { path: 'prestataires/:id', component: PublicProfile },

@@ -1,0 +1,366 @@
+<section class="min-h-screen bg-gradient-to-b from-white via-orange-50 to-white text-slate-900 pb-16">
+  <header class="px-6 py-8 border-b border-orange-100 flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white/70 backdrop-blur">
+    <div>
+      <p class="text-xs uppercase tracking-[0.5em] text-orange-500">Admin</p>
+      <h1 class="text-3xl font-semibold">Console de supervision</h1>
+      <p class="text-sm text-slate-500">Gère les utilisateurs, services et rendez-vous de la plateforme.</p>
+    </div>
+    <div class="flex flex-wrap gap-3 items-center">
+      <input type="search"
+             [(ngModel)]="searchTerm"
+             placeholder="Rechercher (utilisateur, service, ville…)"
+             class="rounded-2xl bg-white border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 placeholder-slate-400" />
+      <button type="button"
+              class="rounded-2xl border border-slate-200 px-4 py-2 text-sm hover:border-orange-400 transition bg-white"
+              (click)="loadData()"
+              [disabled]="loading">
+        Rafraîchir
+      </button>
+      <button type="button"
+              class="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 transition"
+              (click)="logout()">
+        Déconnexion
+      </button>
+    </div>
+  </header>
+
+  <div class="px-6 py-8 space-y-8">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div class="stat-card">
+        <p class="stat-label">Utilisateurs</p>
+        <p class="stat-value">{{ stats.users }}</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Services actifs</p>
+        <p class="stat-value">{{ stats.services }}</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Demandes</p>
+        <p class="stat-value">{{ stats.bookings }}</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Confirmés / En attente</p>
+        <p class="stat-value">{{ stats.confirmed }} / {{ stats.pending }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-orange-100 rounded-3xl p-3 flex flex-wrap gap-2">
+      <button type="button"
+              class="admin-tab"
+              [class.admin-tab--active]="activeTab === 'users'"
+              (click)="switchTab('users')">
+        Utilisateurs
+      </button>
+      <button type="button"
+              class="admin-tab"
+              [class.admin-tab--active]="activeTab === 'services'"
+              (click)="switchTab('services')">
+        Services
+      </button>
+      <button type="button"
+              class="admin-tab"
+              [class.admin-tab--active]="activeTab === 'bookings'"
+              (click)="switchTab('bookings')">
+        Rendez-vous
+      </button>
+      <button type="button"
+              class="admin-tab"
+              [class.admin-tab--active]="activeTab === 'reservations'"
+              (click)="switchTab('reservations')">
+        Réservations
+      </button>
+    </div>
+
+    <div *ngIf="error" class="rounded-2xl border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm">
+      {{ error }}
+    </div>
+
+    <div *ngIf="loading" class="glass-panel text-center py-12">
+      <div class="mx-auto h-12 w-12 border-4 border-orange-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-sm text-slate-500">Chargement des données administrateur…</p>
+    </div>
+
+    <div *ngIf="!loading" class="space-y-8">
+      <div *ngIf="activeTab === 'users'" class="space-y-4">
+        <div class="glass-panel overflow-auto">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Identité</th>
+                <th>Email</th>
+                <th>Ville</th>
+                <th>Profession</th>
+                <th class="w-48">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of filteredUsers">
+                <td>
+                  <div class="flex flex-col">
+                    <span class="font-semibold text-slate-900">{{ displayUserName(user.id) }}</span>
+                    <span class="text-xs text-slate-500">{{ user.pseudo || '—' }}</span>
+                  </div>
+                </td>
+                <td>{{ user.email || '—' }}</td>
+                <td>{{ user.city || '—' }}</td>
+                <td>{{ user.profession || '—' }}</td>
+                <td class="flex flex-wrap gap-2">
+                <button type="button"
+                        class="icon-btn"
+                        (click)="startEditUser(user)"
+                        title="Modifier">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.728 5.322 18.68 8.274m-2.952-2.952 1.414-1.414a2 2 0 0 1 2.828 2.828l-9.9 9.9a2 2 0 0 1-.878.506l-3.338.834.834-3.338a2 2 0 0 1 .506-.878l9.9-9.9Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 21h14" />
+                  </svg>
+                </button>
+                <button type="button"
+                        class="icon-btn danger"
+                        (click)="deleteUser(user)"
+                        [disabled]="deletingUserId === user.id"
+                        title="Supprimer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-1 4v6m-4-6v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+              <tr *ngIf="!filteredUsers.length">
+                <td colspan="5" class="text-center text-slate-500 py-6">Aucun utilisateur ne correspond au filtre.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="selectedUserId" class="glass-panel space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="panel-title">Modifier {{ displayUserName(selectedUserId) }}</p>
+              <p class="text-sm text-slate-500">Met à jour les informations principales du compte.</p>
+            </div>
+            <button type="button" class="text-sm text-slate-500 underline" (click)="cancelEditUser()">Annuler</button>
+          </div>
+
+          <form class="grid gap-4 md:grid-cols-2" (ngSubmit)="saveUser()">
+            <label class="form-field">
+              <span>Prénom</span>
+              <input type="text" [(ngModel)]="userForm.firstname" name="firstname" class="form-control" />
+            </label>
+            <label class="form-field">
+              <span>Nom</span>
+              <input type="text" [(ngModel)]="userForm.lastname" name="lastname" class="form-control" />
+            </label>
+            <label class="form-field">
+              <span>Pseudo</span>
+              <input type="text" [(ngModel)]="userForm.pseudo" name="pseudo" class="form-control" />
+            </label>
+            <label class="form-field">
+              <span>Email</span>
+              <input type="email" [(ngModel)]="userForm.email" name="email" class="form-control" />
+            </label>
+            <label class="form-field">
+              <span>Téléphone</span>
+              <input type="text" [(ngModel)]="userForm.phone" name="phone" class="form-control" />
+            </label>
+            <label class="form-field">
+              <span>Ville</span>
+              <input type="text" [(ngModel)]="userForm.city" name="city" class="form-control" />
+            </label>
+            <label class="form-field">
+              <span>Profession</span>
+              <input type="text" [(ngModel)]="userForm.profession" name="profession" class="form-control" />
+            </label>
+            <label class="form-field">
+              <span>Rôle</span>
+              <input type="text" [(ngModel)]="userForm.role" name="role" class="form-control" placeholder="ex. admin, prestataire" />
+            </label>
+
+            <div class="md:col-span-2 flex gap-3 justify-end pt-2">
+              <button type="button" class="secondary-btn" (click)="cancelEditUser()">Annuler</button>
+              <button type="submit" class="primary-btn" [disabled]="savingUser">
+                {{ savingUser ? 'Enregistrement…' : 'Enregistrer' }}
+              </button>
+            </div>
+          </form>
+
+          <p *ngIf="userUpdateMessage && userUpdateState === 'success'" class="text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-2xl px-3 py-2">
+            {{ userUpdateMessage }}
+          </p>
+          <p *ngIf="userUpdateMessage && userUpdateState === 'error'" class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-3 py-2">
+            {{ userUpdateMessage }}
+          </p>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'services'" class="glass-panel overflow-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Catégorie</th>
+              <th>Propriétaire</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let service of filteredServices">
+              <td>
+                <div class="flex flex-col">
+                  <span class="font-semibold">{{ service.title }}</span>
+                  <span class="text-xs text-slate-500">{{ service.city || '—' }}</span>
+                </div>
+              </td>
+              <td>{{ service.category || '—' }}</td>
+              <td>{{ displayUserName(service.ownerId) }}</td>
+              <td>
+                <span class="status-pill" [class.status-pill--success]="service.isActive !== false" [class.status-pill--danger]="service.isActive === false">
+                  {{ service.isActive === false ? 'Désactivé' : 'Actif' }}
+                </span>
+              </td>
+              <td class="flex flex-wrap gap-2">
+                <button type="button"
+                        class="icon-btn"
+                        (click)="toggleService(service)"
+                        [disabled]="updatingServiceId === service.id"
+                        [title]="service.isActive === false ? 'Activer' : 'Suspendre'">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+                  </svg>
+                </button>
+                <button type="button"
+                        class="icon-btn danger"
+                        (click)="deleteService(service)"
+                        [disabled]="deletingServiceId === service.id"
+                        title="Supprimer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-1 4v6m-4-6v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!filteredServices.length">
+              <td colspan="5" class="text-center text-slate-500 py-6">Aucun service ne correspond au filtre.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="activeTab === 'bookings'" class="glass-panel overflow-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Prestataire</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let booking of filteredBookings">
+              <td>{{ booking.serviceTitle }}</td>
+              <td>{{ displayUserName(booking.providerId) }}</td>
+              <td>{{ displayUserName(booking.clientId) }}</td>
+              <td>{{ booking.startTime | date:'dd/MM/yyyy • HH:mm':'':'fr-FR' }}</td>
+              <td>
+                <span class="status-pill"
+                      [class.status-pill--success]="booking.status === 'confirmed'"
+                      [class.status-pill--warn]="booking.status === 'pending'"
+                      [class.status-pill--danger]="booking.status === 'cancelled'">
+                  {{ booking.status }}
+                </span>
+              </td>
+              <td class="flex flex-wrap gap-2">
+                <button type="button"
+                        class="icon-btn"
+                        (click)="updateBookingStatus(booking, 'confirmed')"
+                        [disabled]="updatingBookingId === booking.id"
+                        title="Confirmer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" />
+                  </svg>
+                </button>
+                <button type="button"
+                        class="icon-btn"
+                        (click)="updateBookingStatus(booking, 'pending')"
+                        [disabled]="updatingBookingId === booking.id"
+                        title="Mettre en attente">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2" />
+                  </svg>
+                </button>
+                <button type="button"
+                        class="icon-btn danger"
+                        (click)="updateBookingStatus(booking, 'cancelled')"
+                        [disabled]="updatingBookingId === booking.id"
+                        title="Annuler">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <button type="button"
+                        class="icon-btn danger"
+                        (click)="deleteBooking(booking)"
+                        [disabled]="deletingBookingId === booking.id"
+                        title="Supprimer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-1 4v6m-4-6v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!filteredBookings.length">
+              <td colspan="6" class="text-center text-slate-500 py-6">Aucun rendez-vous trouvé.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="activeTab === 'reservations'" class="grid gap-4 md:grid-cols-2">
+        <div class="glass-panel overflow-auto">
+          <h3 class="panel-title">À venir ({{ upcomingReservations.length }})</h3>
+          <ul class="space-y-3">
+            <li *ngFor="let booking of upcomingReservations" class="reservation-row">
+              <div>
+                <p class="font-semibold">{{ booking.serviceTitle }}</p>
+                <p class="text-xs text-slate-500">
+                  {{ booking.startTime | date:'EEEE d MMMM • HH:mm':'':'fr-FR' }}
+                </p>
+              </div>
+              <div class="text-xs text-slate-600">
+                <p>Prestataire : {{ displayUserName(booking.providerId) }}</p>
+                <p>Client : {{ displayUserName(booking.clientId) }}</p>
+              </div>
+            </li>
+            <li *ngIf="!upcomingReservations.length" class="text-slate-500 text-sm text-center py-4">
+              Aucune réservation future.
+            </li>
+          </ul>
+        </div>
+
+        <div class="glass-panel overflow-auto">
+          <h3 class="panel-title">Historique ({{ pastReservations.length }})</h3>
+          <ul class="space-y-3">
+            <li *ngFor="let booking of pastReservations" class="reservation-row">
+              <div>
+                <p class="font-semibold">{{ booking.serviceTitle }}</p>
+                <p class="text-xs text-slate-500">
+                  {{ booking.startTime | date:'EEEE d MMMM • HH:mm':'':'fr-FR' }}
+                </p>
+              </div>
+              <div class="text-xs text-slate-600">
+                <p>Prestataire : {{ displayUserName(booking.providerId) }}</p>
+                <p>Client : {{ displayUserName(booking.clientId) }}</p>
+              </div>
+            </li>
+            <li *ngIf="!pastReservations.length" class="text-slate-500 text-sm text-center py-4">
+              Pas de réservation passée.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

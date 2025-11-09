@@ -1,0 +1,43 @@
+<section class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-lg">
+    <div class="bg-white rounded-3xl shadow-2xl border border-orange-100 p-10 space-y-6 text-slate-900">
+      <div class="space-y-2 text-center">
+        <p class="text-xs uppercase tracking-[0.5em] text-orange-500">Console</p>
+        <h1 class="text-3xl font-semibold">Administration Woya</h1>
+        <p class="text-sm text-slate-500">Accès réservé aux administrateurs autorisés.</p>
+      </div>
+
+      <form class="space-y-4" (ngSubmit)="submit()">
+        <label class="block space-y-1">
+          <span class="text-xs uppercase tracking-widest text-slate-500">Email</span>
+          <input type="email"
+                 required
+                 [(ngModel)]="form.email"
+                 name="email"
+                 class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 placeholder-slate-400 bg-slate-50"
+                 placeholder="admin@woya.app" />
+        </label>
+
+        <label class="block space-y-1">
+          <span class="text-xs uppercase tracking-widest text-slate-500">Mot de passe</span>
+          <input type="password"
+                 required
+                 [(ngModel)]="form.password"
+                 name="password"
+                 class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 placeholder-slate-400 bg-slate-50"
+                 placeholder="••••••••" />
+        </label>
+
+        <button type="submit"
+                [disabled]="loading"
+                class="w-full rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 py-3 font-semibold text-white shadow-lg shadow-orange-500/30 disabled:opacity-60 disabled:cursor-not-allowed">
+          {{ loading ? 'Connexion…' : 'Se connecter' }}
+        </button>
+      </form>
+
+      <p *ngIf="error" class="text-sm text-red-600 text-center bg-red-50 border border-red-100 rounded-2xl px-3 py-2">
+        {{ error }}
+      </p>
+    </div>
+  </div>
+</section>
