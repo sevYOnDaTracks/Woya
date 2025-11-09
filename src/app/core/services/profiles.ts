@@ -29,6 +29,7 @@ export interface AdminUserRecord {
   profession?: string;
   role?: string;
   photoURL?: string;
+  isActive?: boolean;
   createdAt?: number;
   updatedAt?: number;
 }
@@ -174,6 +175,8 @@ export class ProfilesService {
       'city',
       'profession',
       'role',
+      'photoURL',
+      'isActive',
     ];
     keys.forEach(key => {
       if (payload[key] !== undefined) {
@@ -351,6 +354,7 @@ export class ProfilesService {
       profession: raw?.profession,
       role: raw?.role,
       photoURL: raw?.photoURL,
+      isActive: raw?.isActive !== false,
       createdAt: this.toMillis(raw?.createdAt),
       updatedAt: this.toMillis(raw?.updatedAt),
     };

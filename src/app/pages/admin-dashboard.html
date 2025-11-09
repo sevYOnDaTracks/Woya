@@ -97,6 +97,7 @@
                 <th>Email</th>
                 <th>Ville</th>
                 <th>Profession</th>
+                <th>Statut</th>
                 <th class="w-48">Actions</th>
               </tr>
             </thead>
@@ -116,11 +117,27 @@
                 <td>{{ user.email || '—' }}</td>
                 <td>{{ user.city || '—' }}</td>
                 <td>{{ user.profession || '—' }}</td>
+                <td>
+                  <span class="status-pill"
+                        [class.status-pill--success]="user.isActive !== false"
+                        [class.status-pill--danger]="user.isActive === false">
+                    {{ user.isActive === false ? 'Désactivé' : 'Actif' }}
+                  </span>
+                </td>
                 <td class="flex flex-wrap gap-2">
-                <button type="button"
-                        class="icon-btn"
-                        (click)="startEditUser(user)"
-                        title="Modifier">
+                  <button type="button"
+                          class="icon-btn warn"
+                          (click)="toggleUserStatus(user)"
+                          [disabled]="updatingUserId === user.id"
+                          [title]="user.isActive === false ? 'Réactiver' : 'Suspendre'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 6h.01M5.22 19.78a10 10 0 1 1 13.56 0" />
+                    </svg>
+                  </button>
+                  <button type="button"
+                          class="icon-btn"
+                          (click)="startEditUser(user)"
+                          title="Modifier">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.728 5.322 18.68 8.274m-2.952-2.952 1.414-1.414a2 2 0 0 1 2.828 2.828l-9.9 9.9a2 2 0 0 1-.878.506l-3.338.834.834-3.338a2 2 0 0 1 .506-.878l9.9-9.9Z" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 21h14" />

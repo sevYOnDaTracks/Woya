@@ -37,6 +37,7 @@ export default class AdminDashboard implements OnInit {
   updatingBookingId: string | null = null;
   deletingBookingId: string | null = null;
   selectedUserId: string | null = null;
+  updatingUserId: string | null = null;
   userForm = this.createEmptyUserForm();
   savingUser = false;
   userUpdateMessage = '';
@@ -180,6 +181,18 @@ export default class AdminDashboard implements OnInit {
     }
   }
 
+  async toggleUserStatus(user: AdminUserRecord) {
+    if (!user?.id) return;
+    this.updatingUserId = user.id;
+    const nextState = user.isActive === false;
+    try {
+      await this.adminData.updateUser(user.id, { isActive: nextState });
+      user.isActive = nextState;
+    } finally {
+      this.updatingUserId = null;
+    }
+  }
+
   async updateBookingStatus(booking: ServiceBooking, status: BookingStatus) {
     if (!booking?.id) return;
     this.updatingBookingId = booking.id;
@@ -221,6 +234,7 @@ export default class AdminDashboard implements OnInit {
       city: user.city ?? '',
       profession: user.profession ?? '',
       role: user.role ?? '',
+      isActive: user.isActive !== false,
     };
   }
 
@@ -296,6 +310,7 @@ export default class AdminDashboard implements OnInit {
       city: '',
       profession: '',
       role: '',
+      isActive: true,
     };
   }
 

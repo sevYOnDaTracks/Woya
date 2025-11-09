@@ -434,6 +434,7 @@ export default class Register implements OnInit, OnDestroy {
       coverURL: '',
       photoURL: user.photoURL ?? '',
       provider: 'google',
+      isActive: existing?.['isActive'] ?? true,
       searchKeywords: this.buildSearchKeywords({
         firstname,
         lastname,
