@@ -181,8 +181,8 @@ export class Landing implements OnInit, OnDestroy {
 
   get heroSearchPlaceholder() {
     return this.searchMode === 'services'
-      ? 'Ex: coiffure à domicile, baby-sitting, livraison...'
-      : 'Nom, pseudo ou métier (ex: Mariam, Plombier)';
+      ? 'Ex: coiffure, jardinage ...'
+      : 'Ex: nom ou métier ...';
   }
 
   get hasSearchTerm() {
