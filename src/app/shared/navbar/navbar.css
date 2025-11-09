@@ -147,3 +147,27 @@
 .mobile-nav-link--cta {
   @apply bg-[#FF7A00] text-white rounded-2xl px-4 py-2 justify-center;
 }
+
+.menu-section__header {
+  @apply w-full flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-gray-400 px-4 py-1 cursor-pointer hover:text-[#FF7A00] transition;
+}
+
+.menu-section__body {
+  @apply space-y-1;
+}
+
+.mobile-nav-header {
+  @apply flex items-center justify-between w-full text-left text-xs uppercase tracking-[0.4em] text-gray-400 gap-3 py-2;
+}
+
+.mobile-nav-list {
+  @apply flex flex-col gap-2 mt-2;
+}
+
+.chevron {
+  @apply w-4 h-4 text-gray-400 transition-transform duration-200;
+}
+
+.chevron--open {
+  @apply rotate-90;
+}

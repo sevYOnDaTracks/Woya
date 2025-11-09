@@ -18,6 +18,8 @@ import {
 import { firebaseServices } from '../../app.config';
 import { BookingStatus } from '../../core/models/booking.model';
 
+type MenuSectionKey = 'navigation' | 'client' | 'profile' | 'provider';
+
 @Component({
   selector: 'app-navbar',
   imports: [RouterLink, CommonModule, RouterLinkActive],
@@ -47,6 +49,18 @@ export class Navbar implements OnInit, OnDestroy {
   notifications: NavbarNotification[] = [];
   notificationMenuOpen = false;
   notificationBadgeCount = 0;
+  userMenuSections: Record<MenuSectionKey, boolean> = {
+    navigation: true,
+    client: true,
+    profile: true,
+    provider: true,
+  };
+  mobileMenuSections: Record<MenuSectionKey, boolean> = {
+    navigation: true,
+    client: true,
+    profile: true,
+    provider: true,
+  };
   private reviewNotifications: NavbarNotification[] = [];
   private bookingNotifications: NavbarNotification[] = [];
   private providerSnapshotReady = false;
@@ -205,6 +219,14 @@ export class Navbar implements OnInit, OnDestroy {
       this.loadRecentReviews();
       this.markNotificationsAsSeen();
     }
+  }
+
+  toggleUserSection(section: MenuSectionKey) {
+    this.userMenuSections[section] = !this.userMenuSections[section];
+  }
+
+  toggleMobileSection(section: MenuSectionKey) {
+    this.mobileMenuSections[section] = !this.mobileMenuSections[section];
   }
 
   closeNotificationMenu() {
