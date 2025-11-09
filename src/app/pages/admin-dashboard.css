@@ -138,3 +138,50 @@ section {
 .chip.chip--removable button {
   @apply text-slate-400 hover:text-red-500;
 }
+
+@media (max-width: 768px) {
+  header {
+    @apply flex-col items-start gap-4;
+  }
+
+  header > div:last-child {
+    @apply w-full flex-col items-stretch;
+  }
+
+  .stat-card {
+    @apply p-3;
+  }
+
+  .stat-value {
+    @apply text-2xl;
+  }
+
+  .admin-tab {
+    @apply flex-1 text-center text-xs;
+  }
+
+  .glass-panel {
+    @apply p-3;
+  }
+
+  .filters-panel {
+    @apply flex-col items-stretch;
+  }
+
+  .filters-panel__hint {
+    @apply text-center w-full;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    @apply px-2 py-2 text-xs;
+  }
+
+  .icon-btn {
+    @apply w-8 h-8;
+  }
+
+  .chips {
+    @apply gap-1;
+  }
+}

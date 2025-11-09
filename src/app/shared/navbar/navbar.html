@@ -80,7 +80,7 @@
       </svg>
     </a>
 
-    <a routerLink="/prestataires"
+  <!--  <a routerLink="/prestataires"
        routerLinkActive="active"
        aria-label="Prestataires"
        title="Prestataires"
@@ -89,7 +89,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" />
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-5 0-7 3-7 5v1h14v-1c0-2-2-5-7-5Z" />
       </svg>
-    </a>
+    </a> --> 
 
     <!-- Si NON connecté -->
     <a *ngIf="!(auth.user$ | async)"
@@ -110,7 +110,7 @@
 
     <!-- Si connecté -->
     <ng-container *ngIf="auth.user$ | async as user">
-      <a routerLink="/mes-services"
+    <!--  <a routerLink="/mes-services"
          routerLinkActive="active"
          aria-label="Mes services"
          title="Mes services"
@@ -120,7 +120,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 9h16a1 1 0 0 1 1 1v8.5A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5V10a1 1 0 0 1 1-1Z" />
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h18" />
       </svg>
-      </a>
+      </a> --> 
 
       <a routerLink="/favoris"
          routerLinkActive="active"
@@ -240,7 +240,7 @@
 
         <div *ngIf="userMenuOpen"
              class="absolute right-0 mt-3 w-64 bg-white rounded-2xl border border-[#FFE0BF] shadow-lg py-3 space-y-4">
-          <div class="menu-section">
+         <!-- <div class="menu-section">
             <button type="button"
                     class="menu-section__header"
                     (click)="toggleUserSection('navigation')"
@@ -254,7 +254,7 @@
               </svg>
             </button>
             <div class="menu-section__body" *ngIf="userMenuSections.navigation">
-              <a routerLink="/"
+              <!-- <a routerLink="/"
                  routerLinkActive="active"
                  [routerLinkActiveOptions]="{ exact: true }"
                  (click)="closeUserMenu()"
@@ -265,7 +265,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15" />
                 </svg>
                 <span>Site internet</span>
-              </a>
+              </a> 
               <a routerLink="/mon-espace"
                  routerLinkActive="active"
                  (click)="closeUserMenu()"
@@ -279,7 +279,7 @@
                 <span>Mon espace</span>
               </a>
             </div>
-          </div>
+          </div> -->
 
           <div class="menu-section">
             <button type="button"
