@@ -19,7 +19,7 @@
 }
 
 .dashboard__appointment {
-  @apply bg-white rounded-3xl border border-[#FFE0BF] p-6 shadow-sm space-y-4;
+  @apply bg-white rounded-3xl border border-[#FFE0BF] p-6 shadow-sm space-y-4 w-full md:w-[25%];
 }
 
 .dashboard__appointment-header {
@@ -100,4 +100,8 @@
 
 .dashboard-card--accent .dashboard-card__body p {
   @apply text-white/80;
+}
+
+.badge-new--confirmed {
+  @apply px-2 py-0.5 text-[10px] rounded-full uppercase tracking-[0.35em] font-semibold bg-[#DCFCE7] text-[#15803D];
 }
