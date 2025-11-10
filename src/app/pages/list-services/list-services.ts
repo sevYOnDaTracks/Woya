@@ -10,6 +10,8 @@ import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
 import { formatServicePrice } from '../../core/utils/price';
 import { TimeAgoPipe } from '../../shared/time-ago.pipe';
+import { CategoriesService } from '../../core/services/categories';
+import { Category } from '../../core/models/category.model';
 
 @Component({
   selector: 'app-list-services',
@@ -28,28 +30,19 @@ export default class ListServices implements OnInit, AfterViewInit {
 
   visibleCount = 4;
 
-  q: string = '';
   category: string = 'Toutes';
-  minPrice: number | null = null;
-  maxPrice: number | null = null;
-  priceBoundsReady = false;
+  categoryOptions: string[] = ['Toutes'];
+  titleSuggestions: string[] = [];
+  serviceTitle = '';
+  readonly titleListId = 'service-title-suggestions';
+  private categories: Category[] = [];
+
   pendingCount = 0;
   userLocation: { lat: number; lng: number } | null = null;
   locating = false;
   locationError = '';
   limitToCoverage = false;
 
-  categories = [
-    'Toutes',
-    'Jardinage',
-    'Ménage & Aide à domicile',
-    'Cours particuliers',
-    'Transport & Déménagement',
-    'Informatique',
-    'Bricolage / Réparation',
-    'Beauté & Bien-être',
-    'Garde d’enfants',
-  ];
 
   ownerProfiles = new Map<string, any>();
 
@@ -59,9 +52,15 @@ export default class ListServices implements OnInit, AfterViewInit {
     private profiles: ProfilesService,
     private messaging: MessagingService,
     private auth: AuthStore,
+    private categoriesApi: CategoriesService,
   ) {}
 
   async ngOnInit() {
+    await Promise.all([this.loadServices(), this.loadCategories()]);
+    this.loading = false;
+  }
+
+  private async loadServices() {
     this.services = await this.api.list();
     this.services = this.services.map(s => {
       if ((s.createdAt as any)?.seconds) {
@@ -69,11 +68,20 @@ export default class ListServices implements OnInit, AfterViewInit {
       }
       return s;
     });
-
     await this.hydrateOwners(this.services);
-    this.setupBudgetBounds();
     this.applyCurrentFilters();
-    this.loading = false;
+  }
+
+  private async loadCategories() {
+    try {
+      const records = await this.categoriesApi.listAll();
+      this.categories = records.filter(cat => cat.isActive !== false);
+      this.categoryOptions = ['Toutes', ...this.categories.map(cat => cat.name)];
+    } catch (error) {
+      console.error('Impossible de charger les catégories', error);
+    } finally {
+      this.refreshTitleSuggestions();
+    }
   }
 
   ngAfterViewInit() {
@@ -95,7 +103,7 @@ export default class ListServices implements OnInit, AfterViewInit {
   }
 
   previewFilters() {
-    this.pendingCount = this.computeFilteredServices().length;
+    this.applyCurrentFilters();
   }
 
   async loadMore() {
@@ -169,7 +177,11 @@ export default class ListServices implements OnInit, AfterViewInit {
     }
   }
 
-  onFilterInputChange() {
+  onCategoryChange() {
+    this.refreshTitleSuggestions();
+  }
+
+  onServiceTitleChange() {
     this.previewFilters();
   }
 
@@ -178,26 +190,6 @@ export default class ListServices implements OnInit, AfterViewInit {
       this.limitToCoverage = false;
     }
     this.previewFilters();
-  }
-
-  onBudgetChange() {
-    if (this.minPrice !== null && this.minPrice < 0) this.minPrice = 0;
-    if (this.maxPrice !== null && this.maxPrice < 0) this.maxPrice = 0;
-    if (this.minPrice !== null && this.maxPrice !== null && this.minPrice > this.maxPrice) {
-      this.maxPrice = this.minPrice;
-    }
-    this.previewFilters();
-  }
-
-  private withinBudget(service: WoyaService): boolean {
-    const price = typeof service.price === 'number' ? service.price : null;
-    if (this.minPrice !== null && (price === null || price < this.minPrice)) {
-      return false;
-    }
-    if (this.maxPrice !== null && (price === null || price > this.maxPrice)) {
-      return false;
-    }
-    return true;
   }
 
   detectLocation() {
@@ -238,32 +230,20 @@ export default class ListServices implements OnInit, AfterViewInit {
     return distance <= service.coverageKm;
   }
 
-  private setupBudgetBounds() {
-    this.priceBoundsReady = this.services.some(s => typeof s.price === 'number');
-    if (!this.priceBoundsReady) {
-      this.minPrice = null;
-      this.maxPrice = null;
-    }
-    this.previewFilters();
-  }
-
   private computeFilteredServices(): WoyaService[] {
-    const q = this.q.toLowerCase();
+    const titleTerm = this.serviceTitle.trim().toLowerCase();
 
     return this.services.filter(s => {
       if (s.isActive === false) {
         return false;
       }
-      const matchesText = [s.title, s.description, s.city, s.category]
-        .join(' ')
-        .toLowerCase()
-        .includes(q);
 
       const matchesCategory = this.category === 'Toutes' || s.category === this.category;
-      const matchesBudget = this.withinBudget(s);
       const matchesCoverage = this.matchesCoverage(s);
+      const matchesTitle =
+        !titleTerm || (s.title ?? '').toLowerCase().includes(titleTerm);
 
-      return matchesText && matchesCategory && matchesBudget && matchesCoverage;
+      return matchesCategory && matchesCoverage && matchesTitle;
     });
   }
 
@@ -331,5 +311,34 @@ export default class ListServices implements OnInit, AfterViewInit {
 
   formatPrice(service: WoyaService) {
     return formatServicePrice(service);
+  }
+
+  private refreshTitleSuggestions() {
+    let titles: string[] = [];
+    if (this.category === 'Toutes') {
+      titles = this.categories.flatMap(cat => cat.serviceTitles ?? []);
+    } else {
+      const record = this.categories.find(cat => cat.name === this.category);
+      titles = record?.serviceTitles ?? [];
+    }
+
+    const uniqueTitles = Array.from(
+      new Set(
+        titles
+          .filter((title): title is string => !!title && title.trim().length > 0)
+          .map(title => title.trim()),
+      ),
+    ).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+    this.titleSuggestions = uniqueTitles;
+
+    if (
+      this.serviceTitle &&
+      !uniqueTitles.some(title => title.toLowerCase() === this.serviceTitle.trim().toLowerCase())
+    ) {
+      this.serviceTitle = '';
+    }
+
+    this.previewFilters();
   }
 }
