@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';  // ✅ ICI
 import { firebaseServices } from '../../../app.config';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, User } from 'firebase/auth';
-import { doc, setDoc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, getDocs, getDoc, limit } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthStore } from '../../../core/store/auth.store';
 import { Subscription } from 'rxjs';
@@ -47,10 +47,12 @@ export default class Register implements OnInit, OnDestroy {
   };
   emailStatus: 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error' = 'idle';
   phoneStatus: 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error' = 'idle';
+  pseudoStatus: 'idle' | 'checking' | 'available' | 'taken' | 'error' = 'idle';
   isLoggedIn = false;
   private authSub?: Subscription;
   private emailCheckTimeout?: ReturnType<typeof setTimeout>;
   private phoneCheckTimeout?: ReturnType<typeof setTimeout>;
+  private pseudoCheckTimeout?: ReturnType<typeof setTimeout>;
   showProfilePrompt = false;
   profilePrompt = {
     firstname: '',
@@ -59,7 +61,9 @@ export default class Register implements OnInit, OnDestroy {
     phone: '',
   };
   profilePromptError = '';
+  profilePromptPseudoStatus: 'idle' | 'checking' | 'available' | 'taken' | 'error' = 'idle';
   private pendingSocialUser: User | null = null;
+  private profilePromptPseudoTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(private router: Router, private authStore: AuthStore) {}
 
@@ -79,6 +83,12 @@ export default class Register implements OnInit, OnDestroy {
     }
     if (this.phoneCheckTimeout) {
       clearTimeout(this.phoneCheckTimeout);
+    }
+    if (this.pseudoCheckTimeout) {
+      clearTimeout(this.pseudoCheckTimeout);
+    }
+    if (this.profilePromptPseudoTimeout) {
+      clearTimeout(this.profilePromptPseudoTimeout);
     }
   }
 
@@ -116,6 +126,12 @@ export default class Register implements OnInit, OnDestroy {
       return;
     }
 
+    const trimmedPseudo = this.form.pseudo.trim();
+    if (!trimmedPseudo) {
+      this.error = 'Merci de choisir un pseudo.';
+      return;
+    }
+
     this.loading = true;
 
     try {
@@ -123,9 +139,11 @@ export default class Register implements OnInit, OnDestroy {
       const db = firebaseServices.db;
       const storage = getStorage();
       this.form.email = this.form.email.trim().toLowerCase();
+      this.form.pseudo = trimmedPseudo;
 
       await this.ensureUniqueEmail(db, this.form.email);
       await this.ensureUniquePhone(db, phone);
+      await this.ensureUniquePseudo(db, trimmedPseudo);
 
       const cred = await createUserWithEmailAndPassword(auth, this.form.email, this.form.password);
 
@@ -136,9 +154,12 @@ export default class Register implements OnInit, OnDestroy {
         photoURL = await getDownloadURL(refImg);
       }
 
+      const pseudoLower = trimmedPseudo.toLowerCase();
+
       await setDoc(doc(db, 'users', cred.user.uid), {
         ...this.form,
-        pseudo: this.form.pseudo.trim(),
+        pseudo: trimmedPseudo,
+        pseudoLowercase: pseudoLower,
         profession: this.form.profession.trim(),
         phone,
         city: this.form.city,
@@ -163,6 +184,9 @@ export default class Register implements OnInit, OnDestroy {
       } else if (code === 'phone-exists') {
         this.phoneStatus = 'taken';
         this.error = "Ce numéro de téléphone est déjà utilisé.";
+      } else if (code === 'pseudo-exists') {
+        this.pseudoStatus = 'taken';
+        this.error = 'Ce pseudo est déjà utilisé.';
       } else if (code === 'auth/weak-password') {
         this.error = "Le mot de passe est trop faible.";
       } else {
@@ -189,6 +213,15 @@ export default class Register implements OnInit, OnDestroy {
     const snap = await getDocs(q);
     if (!snap.empty) {
       throw new Error('phone-exists');
+    }
+  }
+
+  private async ensureUniquePseudo(db: any, pseudo: string, excludeUid?: string) {
+    const available = await this.checkPseudoAvailability(pseudo, excludeUid);
+    if (!available) {
+      const error: any = new Error('pseudo-exists');
+      error.code = 'pseudo-exists';
+      throw error;
     }
   }
 
@@ -242,6 +275,50 @@ export default class Register implements OnInit, OnDestroy {
     this.phoneCheckTimeout = setTimeout(() => this.checkPhoneAvailability(phone), 400);
   }
 
+  onPseudoChange(value: string) {
+    this.form.pseudo = value;
+    if (this.pseudoCheckTimeout) {
+      clearTimeout(this.pseudoCheckTimeout);
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      this.pseudoStatus = 'idle';
+      return;
+    }
+    this.pseudoStatus = 'checking';
+    this.pseudoCheckTimeout = setTimeout(async () => {
+      try {
+        const available = await this.checkPseudoAvailability(trimmed);
+        this.pseudoStatus = available ? 'available' : 'taken';
+      } catch (error) {
+        console.error('Unable to check pseudo availability', error);
+        this.pseudoStatus = 'error';
+      }
+    }, 350);
+  }
+
+  onProfilePromptPseudoChange(value: string) {
+    this.profilePrompt.pseudo = value;
+    if (this.profilePromptPseudoTimeout) {
+      clearTimeout(this.profilePromptPseudoTimeout);
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      this.profilePromptPseudoStatus = 'idle';
+      return;
+    }
+    this.profilePromptPseudoStatus = 'checking';
+    this.profilePromptPseudoTimeout = setTimeout(async () => {
+      try {
+        const available = await this.checkPseudoAvailability(trimmed);
+        this.profilePromptPseudoStatus = available ? 'available' : 'taken';
+      } catch (error) {
+        console.error('Unable to check pseudo availability', error);
+        this.profilePromptPseudoStatus = 'error';
+      }
+    }, 350);
+  }
+
   private async checkEmailAvailability(email: string) {
     if (this.form.email.trim().toLowerCase() !== email) {
       return;
@@ -274,6 +351,23 @@ export default class Register implements OnInit, OnDestroy {
       const message = (err as Error).message;
       this.phoneStatus = message === 'phone-exists' ? 'taken' : 'error';
     }
+  }
+
+  private async checkPseudoAvailability(pseudo: string, excludeUid?: string) {
+    const normalized = pseudo.trim().toLowerCase();
+    if (!normalized) {
+      return false;
+    }
+    const usersCol = collection(firebaseServices.db, 'users');
+    const qPseudo = query(usersCol, where('pseudoLowercase', '==', normalized), limit(1));
+    const snap = await getDocs(qPseudo);
+    if (snap.empty) {
+      return true;
+    }
+    if (excludeUid && snap.docs[0].id === excludeUid) {
+      return true;
+    }
+    return false;
   }
 
   private updatePasswordCriteria(password: string) {
@@ -359,6 +453,10 @@ export default class Register implements OnInit, OnDestroy {
       this.profilePromptError = 'Merci de renseigner prénom, nom et pseudo.';
       return;
     }
+    if (this.profilePromptPseudoStatus === 'taken') {
+      this.profilePromptError = 'Ce pseudo est déjà utilisé.';
+      return;
+    }
     this.profilePromptError = '';
     this.loading = true;
     try {
@@ -402,6 +500,11 @@ export default class Register implements OnInit, OnDestroy {
       pseudo: this.form.pseudo || '',
       phone: this.form.phone || '',
     };
+    if (this.profilePrompt.pseudo) {
+      this.onProfilePromptPseudoChange(this.profilePrompt.pseudo);
+    } else {
+      this.profilePromptPseudoStatus = 'idle';
+    }
   }
 
   private async needsProfileCompletion(user: User) {
@@ -419,13 +522,19 @@ export default class Register implements OnInit, OnDestroy {
     }
     const firstname = overrides?.firstname ?? (this.form.firstname || '');
     const lastname = overrides?.lastname ?? (this.form.lastname || '');
-    const pseudo = overrides?.pseudo ?? (this.form.pseudo || user.displayName || '');
+    const pseudoRaw = overrides?.pseudo ?? (this.form.pseudo || user.displayName || '');
+    const pseudoTrimmed = pseudoRaw.trim();
+    const normalizedPseudo = pseudoTrimmed.toLowerCase();
+    if (pseudoTrimmed) {
+      await this.ensureUniquePseudo(db, pseudoTrimmed, user.uid);
+    }
     const email = (this.form.email || user.email || '').toLowerCase();
     const existing = snap.data() as Record<string, any> | undefined;
     const payload = {
       firstname,
       lastname,
-      pseudo,
+      pseudo: pseudoTrimmed,
+      pseudoLowercase: normalizedPseudo,
       email,
       profession: this.form.profession,
       phone: overrides?.phone || (this.form.phone ? this.buildFullPhoneNumber() : ''),
@@ -438,7 +547,7 @@ export default class Register implements OnInit, OnDestroy {
       searchKeywords: this.buildSearchKeywords({
         firstname,
         lastname,
-        pseudo,
+        pseudo: pseudoTrimmed,
       }),
       createdAt: snap.exists() ? this.toMillis(existing?.['createdAt']) ?? Date.now() : Date.now(),
       updatedAt: Date.now(),

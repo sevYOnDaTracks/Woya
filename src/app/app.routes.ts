@@ -9,13 +9,12 @@ import MyServices from './pages/my-services/my-services';
 import MessagesInbox from './pages/messages/messages';
 import SearchUsers from './pages/search-users';
 import PublicProfile from './pages/public-profile';
-import ProviderBookings from './pages/provider-bookings';
-import ClientBookings from './pages/client-bookings';
 import GlobalSearch from './pages/global-search';
 import ForgotPassword from './pages/auth/forgot-password';
 import FavoritesPage from './pages/favorites';
 import NotificationsPage from './pages/messages/notifications';
 import DashboardPage from './pages/dashboard';
+import AgendaPage from './pages/agenda';
 import { requireAuthGuard } from './core/store/auth.guard';
 import AdminLogin from './pages/admin-login';
 import AdminDashboard from './pages/admin-dashboard';
@@ -35,7 +34,9 @@ export const routes: Routes = [
     { path: 'mot-de-passe-oublie', component: ForgotPassword },
     { path: 'mon-espace', component: DashboardPage, canActivate: [requireAuthGuard] },
     { path: 'mes-services', component: MyServices, canActivate: [requireAuthGuard] },
-    { path: 'mon-compte', component: UserInfo, canActivate: [requireAuthGuard] },
+    { path: 'agenda', component: AgendaPage, canActivate: [requireAuthGuard] },
+    { path: 'mon-compte', redirectTo: 'mon-compte/photos', pathMatch: 'full' },
+    { path: 'mon-compte/:section', component: UserInfo, canActivate: [requireAuthGuard] },
     { path: 'messagerie', component: MessagesInbox, canActivate: [requireAuthGuard] },
     {
         path: 'messagerie/:id',
@@ -44,8 +45,8 @@ export const routes: Routes = [
                 import('./pages/messages/conversation').then(c => c.default)
     },
     { path: 'notifications', component: NotificationsPage, canActivate: [requireAuthGuard] },
-    { path: 'mes-rendez-vous', component: ProviderBookings, canActivate: [requireAuthGuard] },
-    { path: 'mes-reservations', component: ClientBookings, canActivate: [requireAuthGuard] },
+    { path: 'mes-rendez-vous', redirectTo: 'agenda?tab=provider', pathMatch: 'full' },
+    { path: 'mes-reservations', redirectTo: 'agenda?tab=client', pathMatch: 'full' },
     { path: 'favoris', component: FavoritesPage, canActivate: [requireAuthGuard] },
     { path: 'recherche', component: GlobalSearch },
     {

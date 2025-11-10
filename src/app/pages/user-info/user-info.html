@@ -18,178 +18,323 @@
     <ng-container *ngIf="isLoggedIn; else offline">
       <form (ngSubmit)="save()" #accountForm="ngForm" class="space-y-8">
 
-        <div class="rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2] p-6 space-y-4">
-          <div>
-            <p class="text-lg font-semibold text-[#FF7A00]">Photo de couverture</p>
-            <p class="text-sm text-gray-500">Ajoute une image large pour personnaliser ton profil public.</p>
+        <nav class="account-nav" aria-label="Sections du compte">
+          <ul class="account-nav__list">
+            <li>
+              <a [routerLink]="['/mon-compte', 'photos']"
+                 class="account-nav__item"
+                 routerLinkActive="account-nav__item--active"
+                 [attr.aria-current]="activeSection === 'photos' ? 'page' : null">
+                <span class="account-nav__title">Photos & couverture</span>
+                <span class="account-nav__subtitle">Personnalise ton identité visuelle</span>
+              </a>
+            </li>
+            <li>
+              <a [routerLink]="['/mon-compte', 'infos']"
+                 class="account-nav__item"
+                 routerLinkActive="account-nav__item--active"
+                 [attr.aria-current]="activeSection === 'infos' ? 'page' : null">
+                <span class="account-nav__title">Informations personnelles</span>
+                <span class="account-nav__subtitle">Nom, coordonnées et bio</span>
+              </a>
+            </li>
+            <li>
+              <a [routerLink]="['/mon-compte', 'galerie']"
+                 class="account-nav__item"
+                 routerLinkActive="account-nav__item--active"
+                 [attr.aria-current]="activeSection === 'galerie' ? 'page' : null">
+                <span class="account-nav__title">Galerie personnelle</span>
+                <span class="account-nav__subtitle">Mets en avant tes réalisations</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <section id="section-media"
+                 class="account-section"
+                 tabindex="-1"
+                 *ngIf="activeSection === 'photos'">
+          <div class="account-section__header">
+            <p class="account-section__eyebrow">Identité visuelle</p>
+            <h2>Photo de profil & couverture</h2>
+            <p>Personnalise ce que voient les clients avant de réserver.</p>
           </div>
-          <div class="relative h-48 rounded-2xl overflow-hidden border border-white/70 bg-gradient-to-r from-orange-200 to-emerald-200">
-            <img *ngIf="coverPreview; else coverFallback"
-                 [src]="coverPreview"
-                 alt="Couverture"
-                 class="w-full h-full object-cover" />
-            <ng-template #coverFallback>
-             <!-- <div class="w-full h-full flex items-center justify-center text-[#FF7A00] font-semibold">
-                Aucune couverture ...
-              </div>-->
-            </ng-template>
-            <div class="absolute inset-x-3 bottom-3 flex flex-col sm:flex-row sm:flex-wrap gap-2">
-              <label for="coverInput"
-                     class="cursor-pointer px-4 py-2 rounded-2xl text-xs font-semibold text-[#FF7A00] bg-white/90 hover:bg-white transition text-center">
-                Choisir une image
-              </label>
-              <button type="button"
-                      (click)="clearCoverSelection()"
-                      class="px-4 py-2 rounded-2xl text-xs font-semibold text-gray-600 bg-white/80 hover:bg-white transition">
-                Réinitialiser
-              </button>
-              <button *ngIf="coverPreview"
-                      type="button"
-                      (click)="removeCoverPhoto()"
-                      class="px-4 py-2 rounded-2xl text-xs font-semibold text-red-500 bg-white/80 hover:bg-white transition border border-red-200">
-                Supprimer
-              </button>
+          <div class="account-media-grid">
+            <div class="rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2] p-6 space-y-4">
+              <div>
+                <p class="text-lg font-semibold text-[#FF7A00]">Photo de couverture</p>
+                <p class="text-sm text-gray-500">Ajoute une image large pour personnaliser ton profil public.</p>
+              </div>
+              <div class="relative h-48 rounded-2xl overflow-hidden border border-white/70 bg-gradient-to-r from-orange-200 to-emerald-200">
+                <img *ngIf="coverPreview; else coverFallback"
+                     [src]="coverPreview"
+                     alt="Couverture"
+                     class="w-full h-full object-cover" />
+                <ng-template #coverFallback>
+                </ng-template>
+                <div class="absolute inset-x-3 bottom-3 flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                  <label for="coverInput"
+                         class="cursor-pointer px-4 py-2 rounded-2xl text-xs font-semibold text-[#FF7A00] bg-white/90 hover:bg-white transition text-center">
+                    Choisir une image
+                  </label>
+                  <button type="button"
+                          (click)="clearCoverSelection()"
+                          class="px-4 py-2 rounded-2xl text-xs font-semibold text-gray-600 bg-white/80 hover:bg-white transition">
+                    Réinitialiser
+                  </button>
+                  <button *ngIf="coverPreview"
+                          type="button"
+                          (click)="removeCoverPhoto()"
+                          class="px-4 py-2 rounded-2xl text-xs font-semibold text-red-500 bg-white/80 hover:bg-white transition border border-red-200">
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+              <input id="coverInput" type="file" accept="image/*" class="hidden" (change)="onSelectCover($event)" />
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center gap-6 rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2] p-6">
+              <div class="relative w-28 h-28">
+                <img [src]="photoPreview || 'assets/icone.png'"
+                     alt="Photo de profil"
+                     class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md bg-gray-100" />
+              </div>
+              <div class="text-center md:text-left flex-1">
+                <p class="text-lg font-semibold text-[#FF7A00]">Photo de profil</p>
+                <p class="text-sm text-gray-500 mb-4">Choisissez une image carrée (JPG ou PNG) pour rester identifiable sur la plateforme.</p>
+
+                <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                  <label for="avatarInput"
+                         class="cursor-pointer px-4 py-2 rounded-2xl text-sm font-semibold text-white bg-[#FF7A00] hover:bg-[#e66d00] transition">
+                    Changer de photo
+                  </label>
+                  <button type="button"
+                          (click)="clearPhotoSelection()"
+                          class="px-4 py-2 rounded-2xl border text-sm font-semibold text-gray-600 hover:bg-white">
+                    Réinitialiser
+                  </button>
+                  <button type="button"
+                          (click)="removeProfilePhoto()"
+                          class="px-4 py-2 rounded-2xl border border-red-200 text-sm font-semibold text-red-500 hover:bg-red-50">
+                    Supprimer
+                  </button>
+                </div>
+                <input id="avatarInput" type="file" accept="image/*" class="hidden" (change)="onSelectPhoto($event)" />
+              </div>
             </div>
           </div>
-          <input id="coverInput" type="file" accept="image/*" class="hidden" (change)="onSelectCover($event)" />
-        </div>
+        </section>
 
-        <div class="flex flex-col md:flex-row items-center gap-6 rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2] p-6">
-          <div class="relative w-28 h-28">
-            <img [src]="photoPreview || 'assets/icone.png'"
-                 alt="Photo de profil"
-                 class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md bg-gray-100" />
+        <section id="section-personal"
+                 class="account-section"
+                 tabindex="-1"
+                 *ngIf="activeSection === 'infos'">
+          <div class="account-section__header">
+            <p class="account-section__eyebrow">Mes informations</p>
+            <h2>Informations personnelles</h2>
+            <p>Garde tes coordonnées à jour pour faciliter les échanges avec tes clients.</p>
           </div>
-          <div class="text-center md:text-left flex-1">
-            <p class="text-lg font-semibold text-[#FF7A00]">Photo de profil</p>
-            <p class="text-sm text-gray-500 mb-4">Choisissez une image carrée (JPG ou PNG) pour rester identifiable sur la plateforme.</p>
-
-            <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
-              <label for="avatarInput"
-                     class="cursor-pointer px-4 py-2 rounded-2xl text-sm font-semibold text-white bg-[#FF7A00] hover:bg-[#e66d00] transition">
-                Changer de photo
-              </label>
-              <button type="button"
-                      (click)="clearPhotoSelection()"
-                      class="px-4 py-2 rounded-2xl border text-sm font-semibold text-gray-600 hover:bg-white">
-                Réinitialiser
-              </button>
-              <button type="button"
-                      (click)="removeProfilePhoto()"
-                      class="px-4 py-2 rounded-2xl border border-red-200 text-sm font-semibold text-red-500 hover:bg-red-50">
-                Supprimer
-              </button>
-            </div>
-            <input id="avatarInput" type="file" accept="image/*" class="hidden" (change)="onSelectPhoto($event)" />
-          </div>
-        </div>
-
-        <div>
-          <label class="field-label" for="pseudo">Pseudo</label>
-          <input id="pseudo" name="pseudo" [(ngModel)]="form.pseudo" required maxlength="40"
-                 class="field-input" placeholder="Ton identifiant visible (ex: SuperVoisin)" />
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-5">
-          <div>
-            <label class="field-label" for="lastname">Nom</label>
-            <input id="lastname" name="lastname" [(ngModel)]="form.lastname" required maxlength="60"
-                   class="field-input" placeholder="Votre nom" />
-          </div>
-          <div>
-            <label class="field-label" for="firstname">Prénom</label>
-            <input id="firstname" name="firstname" [(ngModel)]="form.firstname" required maxlength="60"
-                   class="field-input" placeholder="Votre prénom" />
-          </div>
-        </div>
-
-        <div>
-          <label class="field-label" for="profession">Profession</label>
-          <input id="profession" name="profession" [(ngModel)]="form.profession" maxlength="60"
-                 class="field-input" placeholder="Ex: Plombier, Designer UX…" />
-        </div>
-
-        
-
-        <div class="grid md:grid-cols-2 gap-5">
-          <div>
-            <label class="field-label" for="phone">Téléphone</label>
-            <input id="phone" name="phone" [(ngModel)]="form.phone" maxlength="30"
-                   class="field-input" placeholder="+225 0700000000" />
-          </div>
-          <div>
-            <label class="field-label" for="birthdate">Date de naissance</label>
-            <input id="birthdate" name="birthdate" [(ngModel)]="form.birthdate" type="date"
-                   class="field-input" />
-          </div>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-5">
-          <div>
-            <label class="field-label" for="city">Ville</label>
-            <input id="city" name="city" [(ngModel)]="form.city" maxlength="80"
-                   class="field-input" placeholder="Abidjan, Paris..." />
-          </div>
-          <div>
-            <label class="field-label" for="address">Adresse complète</label>
-            <input id="address" name="address" [(ngModel)]="form.address" maxlength="120"
-                   class="field-input" placeholder="Lot 123, Cocody Angré" />
-          </div>
-        </div>
-
-        <div>
-          <label class="field-label" for="bio">Biographie</label>
-          <textarea id="bio" name="bio" [(ngModel)]="form.bio" rows="4" maxlength="300"
-                    class="field-input resize-none" placeholder="Décrivez-vous en quelques lignes..."></textarea>
-        </div>
-
-        <div class="bg-[#FFF9F2] border border-[#FFE0BF] rounded-2xl p-4 text-sm text-gray-600">
-          <p><span class="font-semibold text-[#FF7A00]">Email :</span> {{ user?.email || 'Non renseigné' }}</p>
-          <p class="text-xs text-gray-400 mt-1">Pour modifier votre email, contactez l'assistance.</p>
-        </div>
-
-        <section class="rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2]/60 p-6 space-y-4">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div class="account-section__body space-y-6">
             <div>
-              <p class="text-lg font-semibold text-[#FF7A00]">Galerie personnelle</p>
-              <p class="text-sm text-gray-500">Ces images apparaîtront sur ton profil public.</p>
+              <label class="field-label" for="pseudo">Pseudo</label>
+              <input id="pseudo"
+                     name="pseudo"
+                     [(ngModel)]="form.pseudo"
+                     (ngModelChange)="onPseudoChange($event)"
+                     required
+                     maxlength="40"
+                     class="field-input"
+                     placeholder="Ton identifiant visible (ex: SuperVoisin)" />
+              <p *ngIf="pseudoStatus !== 'idle'"
+                 class="text-xs mt-1"
+                 [ngClass]="{
+                   'text-gray-500': pseudoStatus === 'checking',
+                   'text-green-600': pseudoStatus === 'available',
+                   'text-red-600': pseudoStatus === 'taken',
+                   'text-orange-600': pseudoStatus === 'error'
+                 }">
+                <ng-container [ngSwitch]="pseudoStatus">
+                  <span *ngSwitchCase="'checking'">Vérification du pseudo…</span>
+                  <span *ngSwitchCase="'available'">Pseudo disponible.</span>
+                  <span *ngSwitchCase="'taken'">Ce pseudo est déjà utilisé.</span>
+                  <span *ngSwitchCase="'error'">Impossible de vérifier le pseudo.</span>
+                </ng-container>
+              </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-5">
+              <div>
+                <label class="field-label" for="lastname">Nom</label>
+                <input id="lastname" name="lastname" [(ngModel)]="form.lastname" required maxlength="60"
+                       class="field-input" placeholder="Votre nom" />
+              </div>
+              <div>
+                <label class="field-label" for="firstname">Prénom</label>
+                <input id="firstname" name="firstname" [(ngModel)]="form.firstname" required maxlength="60"
+                       class="field-input" placeholder="Votre prénom" />
+              </div>
+            </div>
+
+            <div>
+              <label class="field-label" for="profession">Profession</label>
+              <input id="profession" name="profession" [(ngModel)]="form.profession" maxlength="60"
+                     class="field-input" placeholder="Ex: Plombier, Designer UX…" />
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-5">
+              <div>
+                <label class="field-label" for="phone">Téléphone</label>
+                <input id="phone" name="phone" [(ngModel)]="form.phone" maxlength="30"
+                       class="field-input" placeholder="+225 0700000000" />
+              </div>
+              <div>
+                <label class="field-label" for="birthdate">Date de naissance</label>
+                <input id="birthdate" name="birthdate" [(ngModel)]="form.birthdate" type="date"
+                       class="field-input" />
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-5">
+              <div>
+                <label class="field-label" for="city">Ville</label>
+                <input id="city" name="city" [(ngModel)]="form.city" maxlength="80"
+                       class="field-input" placeholder="Abidjan, Paris..." />
+              </div>
+              <div>
+                <label class="field-label" for="address">Adresse complète</label>
+                <input id="address" name="address" [(ngModel)]="form.address" maxlength="120"
+                       class="field-input" placeholder="Lot 123, Cocody Angré" />
+              </div>
+            </div>
+
+            <div>
+              <label class="field-label" for="bio">Biographie</label>
+              <textarea id="bio" name="bio" [(ngModel)]="form.bio" rows="4" maxlength="300"
+                        class="field-input resize-none" placeholder="Décrivez-vous en quelques lignes..."></textarea>
+            </div>
+
+            <div class="bg-[#FFF9F2] border border-[#FFE0BF] rounded-2xl p-4 text-sm text-gray-600">
+              <p><span class="font-semibold text-[#FF7A00]">Email :</span> {{ user?.email || 'Non renseigné' }}</p>
+              <p class="text-xs text-gray-400 mt-1">Pour modifier votre email, contactez l'assistance.</p>
             </div>
           </div>
-          <div *ngIf="galleryError" class="text-sm text-red-600 bg-white rounded-xl px-4 py-2">
-            {{ galleryError }}
+        </section>
+
+        <section id="section-gallery"
+                 class="account-section"
+                 tabindex="-1"
+                 *ngIf="activeSection === 'galerie'">
+          <div class="account-section__header">
+            <p class="account-section__eyebrow">Galerie</p>
+            <h2>Galeries personnelles</h2>
+            <p>Créer plusieurs galeries (5 photos max chacune) pour mettre en avant tes prestations.</p>
           </div>
-          <div *ngIf="galleryLoading" class="text-sm text-gray-500">Chargement des images…</div>
-          <div *ngIf="!galleryLoading && !gallery.length" class="text-sm text-gray-500">
-            Aucune image pour le moment.
-          </div>
-          <div *ngIf="gallery.length" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div *ngFor="let item of gallery" class="relative rounded-2xl border border-white bg-white shadow-sm overflow-hidden">
-              <img [src]="item.url" class="w-full h-32 object-cover" alt="Galerie utilisateur" />
-              <div class="p-3 text-xs text-gray-600">{{ item.caption || 'Sans description' }}</div>
+          <div class="account-section__body space-y-6">
+            <div class="gallery-create-card">
+              <div class="gallery-create-fields">
+                <div>
+                  <label class="field-label" for="galleryTitle">Nom de la galerie</label>
+                  <input id="galleryTitle"
+                         name="galleryTitle"
+                         [(ngModel)]="newGalleryTitle"
+                         class="field-input"
+                         placeholder="Ex: Mariages, Avant / Après" />
+                </div>
+                <div>
+                  <label class="field-label" for="galleryDescription">Description</label>
+                  <textarea id="galleryDescription"
+                            name="galleryDescription"
+                            [(ngModel)]="newGalleryDescription"
+                            rows="2"
+                            class="field-input resize-none"
+                            placeholder="Présente ce que les clients verront dans cette galerie"></textarea>
+                </div>
+              </div>
               <button type="button"
-                      (click)="deleteGalleryItem(item)"
-                      class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white text-xs font-bold">
-                ×
+                      (click)="createGallery()"
+                      [disabled]="creatingGallery || !newGalleryTitle.trim()"
+                      class="gallery-create-btn">
+                {{ creatingGallery ? 'Création...' : 'Créer une galerie' }}
               </button>
             </div>
-          </div>
-          <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-end border-t border-dashed border-[#FFE0BF] pt-4">
-            <div class="flex-1">
-              <label class="field-label" for="galleryCaption">Description</label>
-              <input id="galleryCaption" [(ngModel)]="newGalleryCaption" name="galleryCaption"
-                     class="field-input" placeholder="Ex: Stand sur le marché, résultat coiffure…" />
+
+            <div *ngIf="galleryError" class="text-sm text-red-600 bg-white rounded-xl px-4 py-2">
+              {{ galleryError }}
             </div>
-            <div class="flex flex-col gap-2">
-              <label class="text-xs font-semibold text-gray-500">Image</label>
-              <input type="file" accept="image/*" (change)="onSelectGalleryFile($event)"
-                     class="block text-xs text-gray-600" />
+            <div *ngIf="galleryLoading" class="text-sm text-gray-500">
+              Chargement des galeries…
             </div>
-            <button type="button"
-                    (click)="uploadGalleryItem()"
-                    [disabled]="uploadingGallery || !newGalleryFile"
-                    class="px-5 py-2 rounded-2xl text-sm font-semibold text-white bg-[#FF7A00] hover:bg-[#e66d00] disabled:opacity-50">
-              {{ uploadingGallery ? 'Ajout en cours…' : 'Ajouter' }}
-            </button>
+            <p *ngIf="!galleryLoading && !galleries.length" class="text-sm text-gray-500">
+              Aucune galerie pour le moment. Crée ta première pour inspirer tes futurs clients.
+            </p>
+
+            <div class="gallery-grid" *ngIf="!galleryLoading && galleries.length">
+              <article *ngFor="let gallery of galleries" class="gallery-card">
+                <header class="gallery-card__header">
+                  <div>
+                    <h3>{{ gallery.title || 'Galerie sans titre' }}</h3>
+                    <p class="gallery-card__description" *ngIf="gallery.description">
+                      {{ gallery.description }}
+                    </p>
+                  </div>
+                  <div class="gallery-card__actions">
+                    <span class="gallery-card__counter">{{ gallery.photos.length }}/{{ maxPhotosPerGallery }} photos</span>
+                    <button type="button"
+                            class="gallery-card__delete"
+                            (click)="deleteGallery(gallery.id)">
+                      Supprimer la galerie
+                    </button>
+                  </div>
+                </header>
+
+                <div class="gallery-card__photos" *ngIf="gallery.photos.length; else emptyGallery">
+                  <figure *ngFor="let photo of gallery.photos" class="gallery-photo">
+                    <img [src]="photo.url" alt="Photo galerie" class="gallery-photo__image" />
+                    <figcaption class="gallery-photo__caption">
+                      {{ photo.caption || 'Sans description' }}
+                    </figcaption>
+                    <button type="button"
+                            class="gallery-photo__delete"
+                            (click)="removeGalleryPhoto(gallery.id, photo.id)">
+                      ✕
+                    </button>
+                  </figure>
+                </div>
+                <ng-template #emptyGallery>
+                  <p class="text-sm text-gray-400">Aucune photo dans cette galerie pour l’instant.</p>
+                </ng-template>
+
+                <div class="gallery-upload" *ngIf="gallery.photos.length < maxPhotosPerGallery">
+                  <div class="gallery-upload__fields">
+                    <div>
+                      <label class="field-label" [for]="'caption-' + gallery.id">Légende</label>
+                      <input [id]="'caption-' + gallery.id"
+                             [name]="'caption-' + gallery.id"
+                             class="field-input"
+                             placeholder="Ex: Résultat avant/après"
+                             [(ngModel)]="galleryUploadState(gallery.id).caption" />
+                    </div>
+                    <div>
+                      <label class="field-label">Image</label>
+                      <input type="file"
+                             accept="image/*"
+                             (change)="onSelectGalleryFile(gallery.id, $event)"
+                             class="block text-xs text-gray-600" />
+                    </div>
+                  </div>
+                  <button type="button"
+                          class="gallery-upload__btn"
+                          (click)="uploadGalleryPhoto(gallery.id)"
+                          [disabled]="galleryUploadState(gallery.id).uploading || !galleryUploadState(gallery.id).file">
+                    {{ galleryUploadState(gallery.id).uploading ? 'Ajout en cours...' : 'Ajouter une photo' }}
+                  </button>
+                </div>
+                <p *ngIf="gallery.photos.length >= maxPhotosPerGallery"
+                   class="text-xs text-gray-500">
+                  Cette galerie a atteint la limite de {{ maxPhotosPerGallery }} photos.
+                </p>
+              </article>
+            </div>
           </div>
         </section>
 

@@ -2,10 +2,21 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { firebaseServices } from '../../app.config';
 import { AuthStore } from './auth.store';
+import { LoadingIndicatorService } from '../services/loading-indicator.service';
 
-export const requireAuthGuard: CanActivateFn = (_route, state) => {
+export const requireAuthGuard: CanActivateFn = async (_route, state) => {
   const auth = inject(AuthStore);
   const router = inject(Router);
+  const loading = inject(LoadingIndicatorService);
+
+  if (!auth.isInitialAuthResolved()) {
+    loading.show();
+    try {
+      await auth.waitForInitialAuth();
+    } finally {
+      loading.hide();
+    }
+  }
 
   const user = auth.user$.value || firebaseServices.auth.currentUser;
   if (user) {

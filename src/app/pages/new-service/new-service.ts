@@ -9,7 +9,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Services } from '../../core/services/services';
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
-import { ServiceAvailability, WoyaService } from '../../core/models/service.model';
+import { BillingMode, ServiceAvailability, WoyaService } from '../../core/models/service.model';
 import { CITY_OPTIONS, CityOption } from '../../core/models/cities';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CategoriesService } from '../../core/services/categories';
@@ -185,6 +185,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     category: '',
     city: '',
     price: null as number | null,
+    billingMode: 'per_service' as BillingMode,
     contact: '',
     isActive: true,
   };
@@ -347,6 +348,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       ...this.form,
       description: sanitizedDescription,
       contact: contactPhone,
+      billingMode: this.form.billingMode ?? 'per_service',
       coverUrl: normalizedCover,
       extraImages: normalizedExtra,
       ownerId: currentUser.uid,
@@ -486,6 +488,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
       category: service.category,
       city: service.city,
       price: service.price ?? null,
+      billingMode: (service.billingMode ?? 'per_service') as BillingMode,
       contact: service.contact,
       isActive: service.isActive !== false,
     };
@@ -721,7 +724,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     return !!this.findCategoryOption(this.form.category);
   }
 
-  private resolveContactPhone(currentUser: { phoneNumber?: string } | null) {
+  private resolveContactPhone(currentUser: any) {
     const storeUser = this.auth.user$.value;
     const storePhone = typeof storeUser?.phone === 'string' ? storeUser.phone : '';
     const firebasePhone = typeof currentUser?.phoneNumber === 'string' ? currentUser.phoneNumber : '';

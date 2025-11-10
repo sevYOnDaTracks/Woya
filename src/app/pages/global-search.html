@@ -1,19 +1,44 @@
 <section class="global-search-mobile md:hidden">
-  <div class="global-search-mobile__field">
-    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-[#FF7A00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
-    </svg>
-    <input type="text"
-           [value]="term"
-           (input)="onMobileSearchInput($event.target.value)"
-           (keydown.enter)="submitMobileSearch()"
-           placeholder="Rechercher un service ou un prestataire"
-           class="global-search-mobile__input" />
-    <button type="button"
-            (click)="submitMobileSearch()"
-            class="global-search-mobile__submit">
-      Rechercher
-    </button>
+  <div class="global-search-mobile__wrapper">
+    <div class="global-search-mobile__field">
+      <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-[#FF7A00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+      </svg>
+      <input type="text"
+             [value]="term"
+             (input)="onMobileSearchInput($event.target.value)"
+             (focus)="onMobileSearchFocus()"
+             (blur)="onMobileSearchBlur()"
+             (keydown.enter)="submitMobileSearch()"
+             placeholder="Un service ou un prestataire ?"
+             class="global-search-mobile__input" />
+      <button type="button"
+              (click)="submitMobileSearch()"
+              class="global-search-mobile__submit">
+        Rechercher
+      </button>
+    </div>
+
+    <div class="global-search-mobile__dropdown" *ngIf="suggestionsOpen">
+      <div *ngIf="suggestionsLoading" class="global-search-mobile__state">
+        Suggestions en cours...
+      </div>
+      <button type="button"
+              *ngFor="let suggestion of suggestions"
+              class="global-search-mobile__suggestion"
+              (click)="selectSuggestion(suggestion)">
+        <img [src]="suggestion.avatar || 'assets/icone.png'"
+             alt=""
+             class="global-search-mobile__suggestion-avatar">
+        <div class="global-search-mobile__suggestion-body">
+          <p class="global-search-mobile__suggestion-title">{{ suggestion.label }}</p>
+          <p class="global-search-mobile__suggestion-subtitle">{{ suggestion.description }}</p>
+        </div>
+        <span class="global-search-mobile__suggestion-tag">
+          {{ suggestion.kind === 'user' ? 'Profil' : 'Service' }}
+        </span>
+      </button>
+    </div>
   </div>
 </section>
 

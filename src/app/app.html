@@ -2,11 +2,11 @@
   <div class="min-h-screen bg-[#FFF7EB] flex flex-col">
     <app-navbar></app-navbar>
 
-    <main class="pt-20 flex-1 flex flex-col">
+    <main class="pt-20 flex-1 flex flex-col pb-24 md:pb-0">
       <router-outlet></router-outlet>
     </main>
 
-    <app-footer></app-footer>
+    <app-footer class="pb-24 md:pb-0"></app-footer>
     <app-chat-fab></app-chat-fab>
     <app-booking-alerts></app-booking-alerts>
   </div>
@@ -20,3 +20,5 @@
     </main>
   </div>
 </ng-template>
+
+<app-loading-overlay></app-loading-overlay>

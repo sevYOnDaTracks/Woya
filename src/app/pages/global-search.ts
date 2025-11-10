@@ -7,6 +7,17 @@ import { ProfilesService } from '../core/services/profiles';
 import { WoyaService } from '../core/models/service.model';
 import { CITY_OPTIONS, CityOption } from '../core/models/cities';
 
+type SearchSuggestionKind = 'service' | 'user';
+
+interface SearchSuggestion {
+  id: string;
+  label: string;
+  description: string;
+  avatar?: string | null;
+  route: any[];
+  kind: SearchSuggestionKind;
+}
+
 @Component({
   selector: 'app-global-search',
   standalone: true,
@@ -23,6 +34,13 @@ export default class GlobalSearch implements OnInit, OnDestroy {
   servicesResults: WoyaService[] = [];
   userResults: any[] = [];
   private sub?: Subscription;
+  suggestions: SearchSuggestion[] = [];
+  suggestionsOpen = false;
+  suggestionsLoading = false;
+  private suggestionDebounce?: any;
+  private autoSearchDebounce?: any;
+  private suggestionRequestId = 0;
+  private readonly mobileSearchMin = 2;
 
   constructor(
     private route: ActivatedRoute,
@@ -41,6 +59,12 @@ export default class GlobalSearch implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
+    if (this.suggestionDebounce) {
+      clearTimeout(this.suggestionDebounce);
+    }
+    if (this.autoSearchDebounce) {
+      clearTimeout(this.autoSearchDebounce);
+    }
   }
 
   async search() {
@@ -71,16 +95,38 @@ export default class GlobalSearch implements OnInit, OnDestroy {
 
   onMobileSearchInput(value: string) {
     this.term = value;
+    this.scheduleAutoSearch();
+    this.scheduleSuggestionFetch();
+  }
+
+  onMobileSearchFocus() {
+    if (this.suggestions.length) {
+      this.suggestionsOpen = true;
+    }
+  }
+
+  onMobileSearchBlur() {
+    setTimeout(() => this.closeSuggestions(), 150);
   }
 
   submitMobileSearch() {
-    const query = this.term.trim();
-    if (!query) return;
-    const params: any = { term: query };
-    if (this.cityFilter) {
-      params.city = this.cityFilter;
+    this.navigateWithTerm(this.term);
+    this.closeSuggestions();
+  }
+
+  selectSuggestion(suggestion: SearchSuggestion) {
+    this.router.navigate(suggestion.route);
+    this.suggestions = [];
+    this.closeSuggestions();
+  }
+
+  closeSuggestions() {
+    this.suggestionsOpen = false;
+    this.suggestionsLoading = false;
+    if (this.suggestionDebounce) {
+      clearTimeout(this.suggestionDebounce);
+      this.suggestionDebounce = undefined;
     }
-    this.router.navigate(['/recherche'], { queryParams: params });
   }
 
   private applyCityFilterOnServices(services: WoyaService[]) {
@@ -113,5 +159,94 @@ export default class GlobalSearch implements OnInit, OnDestroy {
       if (option.name.toLowerCase() === lower) return true;
       return (option.aliases ?? []).some(alias => alias.toLowerCase() === lower);
     });
+  }
+
+  private scheduleAutoSearch() {
+    if (this.autoSearchDebounce) {
+      clearTimeout(this.autoSearchDebounce);
+    }
+    this.autoSearchDebounce = setTimeout(() => {
+      this.navigateWithTerm(this.term);
+    }, 400);
+  }
+
+  private navigateWithTerm(raw: string) {
+    const trimmed = raw.trim();
+    const currentTerm = this.route.snapshot.queryParamMap.get('term') ?? '';
+    if (trimmed === currentTerm) {
+      if (!trimmed) {
+        this.servicesResults = [];
+        this.userResults = [];
+      }
+      return;
+    }
+    const queryParams: Record<string, string | null> = { term: trimmed || null };
+    if (this.cityFilter) {
+      queryParams['city'] = this.cityFilter;
+    }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private scheduleSuggestionFetch() {
+    if (this.suggestionDebounce) {
+      clearTimeout(this.suggestionDebounce);
+    }
+    const trimmed = this.term.trim();
+    if (trimmed.length < this.mobileSearchMin) {
+      this.suggestions = [];
+      this.suggestionsOpen = false;
+      this.suggestionsLoading = false;
+      this.suggestionRequestId++;
+      return;
+    }
+    this.suggestionDebounce = setTimeout(() => this.fetchMobileSuggestions(trimmed), 250);
+  }
+
+  private async fetchMobileSuggestions(term: string) {
+    const requestId = ++this.suggestionRequestId;
+    this.suggestionsLoading = true;
+    this.suggestionsOpen = true;
+    try {
+      const [services, users] = await Promise.all([
+        this.servicesApi.searchServices(term, 5),
+        this.profiles.searchProfiles(term).then(list => list.slice(0, 5)),
+      ]);
+      if (requestId !== this.suggestionRequestId) {
+        return;
+      }
+      this.suggestions = [
+        ...users.map(user => ({
+          id: user.id,
+          label: this.displayUserName(user),
+          description: user.profession || user.city || 'Prestataire',
+          avatar: user.photoURL,
+          route: ['/prestataires', user.id],
+          kind: 'user' as const,
+        })),
+        ...services.map(service => ({
+          id: service.id!,
+          label: service.title,
+          description: `${service.category} • ${service.city || 'Ville non renseignée'}`,
+          avatar: service.coverUrl,
+          route: ['/services', service.id!],
+          kind: 'service' as const,
+        })),
+      ].slice(0, 6);
+      this.suggestionsOpen = true;
+    } catch (error) {
+      console.error('Unable to fetch search suggestions', error);
+    } finally {
+      if (requestId === this.suggestionRequestId) {
+        this.suggestionsLoading = false;
+        if (!this.suggestions.length) {
+          this.suggestionsOpen = false;
+        }
+      }
+    }
   }
 }

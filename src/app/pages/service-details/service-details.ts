@@ -9,6 +9,7 @@ import { MessagingService } from '../../core/services/messaging';
 import { BookingsService } from '../../core/services/bookings';
 import { ServiceBooking } from '../../core/models/booking.model';
 import { EmailService } from '../../core/services/email';
+import { formatServicePrice } from '../../core/utils/price';
 
 interface DateOption {
   date: Date;
@@ -385,5 +386,9 @@ L'équipe Woya!
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  formatPrice(service: WoyaService | null | undefined) {
+    return formatServicePrice(service || this.service);
   }
 }

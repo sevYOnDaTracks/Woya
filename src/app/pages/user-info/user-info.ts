@@ -1,14 +1,17 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { doc, setDoc } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
-import { ProfilesService, GalleryItem } from '../../core/services/profiles';
+import { ProfilesService, GalleryAlbum } from '../../core/services/profiles';
+import { LoadingIndicatorService } from '../../core/services/loading-indicator.service';
+
+type AccountSection = 'photos' | 'infos' | 'galerie';
 
 interface UserInfoForm {
   firstname: string;
@@ -22,10 +25,16 @@ interface UserInfoForm {
   bio: string;
 }
 
+interface GalleryUploadState {
+  caption: string;
+  file: File | null;
+  uploading: boolean;
+}
+
 @Component({
   selector: 'app-user-info',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './user-info.html',
   styleUrl: './user-info.css',
 })
@@ -50,21 +59,30 @@ export default class UserInfo implements OnInit, OnDestroy {
   photoFile: File | null = null;
   coverPreview: string | null = null;
   coverFile: File | null = null;
-  gallery: GalleryItem[] = [];
+  galleries: GalleryAlbum[] = [];
   galleryLoading = false;
   galleryError = '';
-  uploadingGallery = false;
-  newGalleryCaption = '';
-  newGalleryFile: File | null = null;
+  newGalleryTitle = '';
+  newGalleryDescription = '';
+  creatingGallery = false;
+  galleryUploads: Record<string, GalleryUploadState> = {};
+  maxPhotosPerGallery = 5;
+  pseudoStatus: 'idle' | 'checking' | 'available' | 'taken' | 'error' = 'idle';
+  activeSection: AccountSection = 'photos';
 
   private sub?: Subscription;
+  private sectionSub?: Subscription;
+  private pseudoCheckTimeout?: ReturnType<typeof setTimeout>;
+  private originalPseudo = '';
   user: any = null;
 
   constructor(
     private auth: AuthStore,
     private router: Router,
+    private route: ActivatedRoute,
     private location: Location,
     private profiles: ProfilesService,
+    private loadingIndicator: LoadingIndicatorService,
   ) {}
 
   ngOnInit() {
@@ -72,13 +90,26 @@ export default class UserInfo implements OnInit, OnDestroy {
       this.user = user;
       if (user) {
         this.populateForm(user);
-        this.loadGallery();
+        this.loadGalleries();
+      }
+    });
+
+    this.sectionSub = this.route.paramMap.subscribe(params => {
+      const raw = params.get('section');
+      const normalized = this.normalizeSection(raw);
+      this.activeSection = normalized;
+      if (raw !== normalized) {
+        this.router.navigate(['/mon-compte', normalized], { replaceUrl: true });
       }
     });
   }
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
+    this.sectionSub?.unsubscribe();
+    if (this.pseudoCheckTimeout) {
+      clearTimeout(this.pseudoCheckTimeout);
+    }
   }
 
   get isLoggedIn() {
@@ -99,8 +130,11 @@ export default class UserInfo implements OnInit, OnDestroy {
     };
     this.photoPreview = user.photoURL || null;
     this.coverPreview = user.coverURL || null;
-    this.newGalleryCaption = '';
-    this.newGalleryFile = null;
+    this.newGalleryTitle = '';
+    this.newGalleryDescription = '';
+    this.galleryUploads = {};
+    this.originalPseudo = user.pseudo || '';
+    this.pseudoStatus = 'idle';
   }
 
   resetForm() {
@@ -122,10 +156,29 @@ export default class UserInfo implements OnInit, OnDestroy {
     this.error = '';
     this.success = '';
 
+    const trimmedPseudo = this.form.pseudo.trim();
+    if (!trimmedPseudo) {
+      this.error = 'Merci de choisir un pseudo.';
+      this.loading = false;
+      return;
+    }
+    const normalizedPseudo = trimmedPseudo.toLowerCase();
+    const originalNormalized = (this.originalPseudo || '').trim().toLowerCase();
+    if (normalizedPseudo !== originalNormalized) {
+      const available = await this.profiles.isPseudoAvailable(trimmedPseudo, this.user.uid);
+      if (!available) {
+        this.error = 'Ce pseudo est déjà utilisé.';
+        this.loading = false;
+        return;
+      }
+    }
+    this.form.pseudo = trimmedPseudo;
+
     const payload: any = {
       firstname: this.form.firstname.trim(),
       lastname: this.form.lastname.trim(),
-      pseudo: this.form.pseudo.trim(),
+      pseudo: trimmedPseudo,
+      pseudoLowercase: normalizedPseudo,
       profession: this.form.profession.trim(),
       birthdate: this.form.birthdate || null,
       phone: this.form.phone.trim(),
@@ -161,6 +214,8 @@ export default class UserInfo implements OnInit, OnDestroy {
 
       this.auth.user$.next({ ...this.user, ...payload });
       this.success = 'Informations mises à jour avec succès.';
+      this.originalPseudo = trimmedPseudo;
+      this.pseudoStatus = 'available';
     } catch (err) {
       this.error = "Impossible d'enregistrer les modifications pour le moment.";
     } finally {
@@ -178,6 +233,18 @@ export default class UserInfo implements OnInit, OnDestroy {
       this.location.back();
     } else {
       this.router.navigate(['/services']);
+    }
+  }
+
+  private normalizeSection(value: string | null): AccountSection {
+    switch (value) {
+      case 'infos':
+        return 'infos';
+      case 'galerie':
+        return 'galerie';
+      case 'photos':
+      default:
+        return 'photos';
     }
   }
 
@@ -205,6 +272,34 @@ export default class UserInfo implements OnInit, OnDestroy {
   clearPhotoSelection() {
     this.photoFile = null;
     this.photoPreview = this.user?.photoURL || null;
+  }
+
+  onPseudoChange(value: string) {
+    this.form.pseudo = value;
+    if (this.pseudoCheckTimeout) {
+      clearTimeout(this.pseudoCheckTimeout);
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      this.pseudoStatus = 'idle';
+      return;
+    }
+    const normalized = trimmed.toLowerCase();
+    const originalNormalized = (this.originalPseudo || '').trim().toLowerCase();
+    if (normalized === originalNormalized) {
+      this.pseudoStatus = 'available';
+      return;
+    }
+    this.pseudoStatus = 'checking';
+    this.pseudoCheckTimeout = setTimeout(async () => {
+      try {
+        const available = await this.profiles.isPseudoAvailable(trimmed, this.user?.uid);
+        this.pseudoStatus = available ? 'available' : 'taken';
+      } catch (error) {
+        console.error('Unable to check pseudo availability', error);
+        this.pseudoStatus = 'error';
+      }
+    }, 350);
   }
 
   async removeProfilePhoto() {
@@ -279,25 +374,51 @@ export default class UserInfo implements OnInit, OnDestroy {
     }
   }
 
-  async loadGallery() {
+  async loadGalleries() {
     if (!this.user) return;
     this.galleryLoading = true;
     this.galleryError = '';
+    this.loadingIndicator.show();
     try {
-      this.gallery = await this.profiles.getGallery(this.user.uid);
+      this.galleries = await this.profiles.getGalleries(this.user.uid);
     } catch (error) {
-      this.galleryError = 'Impossible de charger la galerie.';
+      this.galleryError = 'Impossible de charger les galeries.';
     } finally {
       this.galleryLoading = false;
+      this.loadingIndicator.hide();
     }
   }
 
-  onSelectGalleryFile(event: Event) {
+  async createGallery() {
+    if (!this.user) return;
+    const title = this.newGalleryTitle.trim();
+    if (!title) {
+      this.galleryError = 'Choisis un nom pour ta galerie.';
+      return;
+    }
+    this.galleryError = '';
+    this.creatingGallery = true;
+    this.loadingIndicator.show();
+    try {
+      await this.profiles.createGallery(this.user.uid, title, this.newGalleryDescription.trim());
+      this.newGalleryTitle = '';
+      this.newGalleryDescription = '';
+      await this.loadGalleries();
+    } catch (error) {
+      this.galleryError = 'Impossible de créer cette galerie.';
+    } finally {
+      this.creatingGallery = false;
+      this.loadingIndicator.hide();
+    }
+  }
+
+  onSelectGalleryFile(galleryId: string, event: Event) {
+    const state = this.ensureGalleryUploadState(galleryId);
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
     const message = 'La galerie n’accepte que des images (PNG, JPG, WebP, etc.).';
     if (file && !this.isImageFile(file)) {
-      this.newGalleryFile = null;
+      state.file = null;
       this.galleryError = message;
       input.value = '';
       return;
@@ -305,33 +426,69 @@ export default class UserInfo implements OnInit, OnDestroy {
     if (this.galleryError === message) {
       this.galleryError = '';
     }
-    this.newGalleryFile = file;
+    state.file = file;
   }
 
-  async uploadGalleryItem() {
-    if (!this.user || !this.newGalleryFile) return;
-    this.uploadingGallery = true;
-    this.galleryError = '';
-    try {
-      await this.profiles.addGalleryItem(this.user.uid, this.newGalleryFile, this.newGalleryCaption.trim());
-      this.newGalleryCaption = '';
-      this.newGalleryFile = null;
-      await this.loadGallery();
-    } catch (error) {
-      this.galleryError = 'Impossible d\'ajouter cette image.';
-    } finally {
-      this.uploadingGallery = false;
-    }
-  }
-
-  async deleteGalleryItem(item: GalleryItem) {
+  async uploadGalleryPhoto(galleryId: string) {
     if (!this.user) return;
-    try {
-      await this.profiles.removeGalleryItem(this.user.uid, item);
-      this.gallery = this.gallery.filter(g => g.id !== item.id);
-    } catch (error) {
-      this.galleryError = 'Suppression impossible pour le moment.';
+    const state = this.ensureGalleryUploadState(galleryId);
+    if (!state.file) {
+      this.galleryError = 'Choisis une image avant de l\'ajouter.';
+      return;
     }
+    this.galleryError = '';
+    state.uploading = true;
+    this.loadingIndicator.show();
+    try {
+      await this.profiles.addGalleryPhoto(this.user.uid, galleryId, state.file, state.caption.trim());
+      this.galleryUploads[galleryId] = { caption: '', file: null, uploading: false };
+      await this.loadGalleries();
+    } catch (error: any) {
+      this.galleryError = error?.message || 'Impossible d\'ajouter cette image.';
+      state.uploading = false;
+    } finally {
+      this.loadingIndicator.hide();
+    }
+  }
+
+  async removeGalleryPhoto(galleryId: string, photoId: string) {
+    if (!this.user) return;
+    this.galleryError = '';
+    this.loadingIndicator.show();
+    try {
+      await this.profiles.removeGalleryPhoto(this.user.uid, galleryId, photoId);
+      await this.loadGalleries();
+    } catch {
+      this.galleryError = 'Suppression impossible pour le moment.';
+    } finally {
+      this.loadingIndicator.hide();
+    }
+  }
+
+  async deleteGallery(galleryId: string) {
+    if (!this.user) return;
+    this.galleryError = '';
+    this.loadingIndicator.show();
+    try {
+      await this.profiles.deleteGallery(this.user.uid, galleryId);
+      delete this.galleryUploads[galleryId];
+      await this.loadGalleries();
+    } catch {
+      this.galleryError = 'Impossible de supprimer cette galerie.';
+    } finally {
+      this.loadingIndicator.hide();
+    }
+  }
+
+  private ensureGalleryUploadState(galleryId: string): GalleryUploadState {
+    if (!this.galleryUploads[galleryId]) {
+      this.galleryUploads[galleryId] = { caption: '', file: null, uploading: false };
+    }
+    return this.galleryUploads[galleryId];
+  }
+
+  galleryUploadState(galleryId: string) {
+    return this.ensureGalleryUploadState(galleryId);
   }
 
   private buildSearchKeywords(values: { firstname?: string; lastname?: string; pseudo?: string }) {

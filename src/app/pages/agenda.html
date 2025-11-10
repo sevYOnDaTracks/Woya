@@ -1,0 +1,27 @@
+<section class="agenda-shell">
+  <header class="agenda-shell__header">
+    <p class="agenda-shell__eyebrow">Agenda</p>
+    <h1>Gère tous tes rendez-vous en un coup d'œil</h1>
+    <p class="agenda-shell__lead">
+      Passe d'un onglet à l'autre pour suivre tes demandes clients ou tes demandes prestataires sans changer de page.
+    </p>
+  </header>
+
+  <div class="agenda-tabs" role="tablist" aria-label="Vue agenda">
+    <button type="button"
+            *ngFor="let tab of tabs"
+            class="agenda-tab"
+            role="tab"
+            [attr.aria-selected]="activeTab === tab.id"
+            [class.agenda-tab--active]="activeTab === tab.id"
+            (click)="selectTab(tab.id)">
+      <span class="agenda-tab__label">{{ tab.label }}</span>
+      <span class="agenda-tab__subtitle">{{ tab.subtitle }}</span>
+    </button>
+  </div>
+
+  <div class="agenda-shell__content" role="tabpanel">
+    <app-client-bookings *ngIf="activeTab === 'client'"></app-client-bookings>
+    <app-provider-bookings *ngIf="activeTab === 'provider'"></app-provider-bookings>
+  </div>
+</section>

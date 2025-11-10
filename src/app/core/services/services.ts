@@ -94,11 +94,13 @@ export class Services {
     const location = data.location && data.location.latitude !== undefined
       ? { lat: data.location.latitude, lng: data.location.longitude }
       : data.location ?? null;
+    const billingMode = data.billingMode === 'hourly' ? 'hourly' : 'per_service';
 
     return {
       id: docSnap.id,
       ...data,
       location,
+      billingMode,
       isActive: data.isActive !== false,
     } as WoyaService;
   }

@@ -105,3 +105,28 @@
 .badge-new--confirmed {
   @apply px-2 py-0.5 text-[10px] rounded-full uppercase tracking-[0.35em] font-semibold bg-[#DCFCE7] text-[#15803D];
 }
+
+.dashboard__welcome-skeleton {
+  display: inline-block;
+  width: 10rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255, 224, 191, 0.6), rgba(255, 200, 163, 0.9), rgba(255, 224, 191, 0.6));
+  background-size: 200% 100%;
+  animation: dashboard-skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes dashboard-skeleton {
+  0% {
+    background-position: 200% 0;
+    opacity: 0.5;
+  }
+  50% {
+    background-position: 100% 0;
+    opacity: 1;
+  }
+  100% {
+    background-position: 0 0;
+    opacity: 0.5;
+  }
+}

@@ -7,81 +7,56 @@
 
   <!-- SEARCH BAR -->
   <div *ngIf="!loading" class="bg-white rounded-2xl p-4 shadow-sm mb-6 flex flex-col gap-4">
-    <div class="flex flex-col md:flex-row md:items-center gap-3 w-full">
-      <input [(ngModel)]="q" (ngModelChange)="onFilterInputChange()" type="text"
-             placeholder="Rechercher un service, une ville..."
-             class="flex-1 border rounded-xl px-4 py-3 outline-none" />
-
-      <select [(ngModel)]="category" (ngModelChange)="onFilterInputChange()"
-              class="border rounded-xl px-4 py-3 md:w-60">
-        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+    <header class="text-center sm:text-left">
+      <p class="text-xs uppercase tracking-[0.3em] text-[#FF7A00] font-semibold">Trouver un service</p>
+      <h1 class="text-2xl font-bold text-[#1A1A1A] mt-1">Affinez votre recherche pour découvrir les meilleures offres</h1>
+    </header>
+    <div class="flex flex-col md:flex-row gap-3 w-full">
+      <select [(ngModel)]="category"
+              (ngModelChange)="onCategoryChange()"
+              class="border rounded-xl px-4 py-3 md:w-64">
+        <option *ngFor="let c of categoryOptions" [value]="c">{{ c }}</option>
       </select>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <div class="flex items-center gap-2 border rounded-xl px-4 py-3">
-        <span class="text-sm text-gray-500 whitespace-nowrap">Budget min</span>
-        <input type="number" min="0"
-               [(ngModel)]="minPrice"
-               (input)="onBudgetChange()"
-               class="flex-1 outline-none bg-transparent text-sm"
-               placeholder="Ex: 5 000" />
-      </div>
-      <div class="flex items-center gap-2 border rounded-xl px-4 py-3">
-        <span class="text-sm text-gray-500 whitespace-nowrap">Budget max</span>
-        <input type="number" min="0"
-               [(ngModel)]="maxPrice"
-               (input)="onBudgetChange()"
-               class="flex-1 outline-none bg-transparent text-sm"
-               placeholder="Ex: 50 000" />
+      <div class="flex-1 relative">
+        <input [(ngModel)]="serviceTitle"
+               (ngModelChange)="onServiceTitleChange()"
+               [attr.list]="titleListId"
+               type="text"
+               placeholder="Rechercher un service"
+               class="w-full border rounded-xl px-4 py-3 outline-none" />
+        <datalist [attr.id]="titleListId">
+          <option *ngFor="let title of titleSuggestions" [value]="title"></option>
+        </datalist>
       </div>
     </div>
 
     <div class="rounded-2xl border border-[#FFE0BF] bg-[#FFF9F2] px-4 py-4 space-y-3">
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p class="text-sm font-semibold text-[#1A1A1A]">Filtrer par proximité</p>
-          <p class="text-xs text-gray-500">Utilise ta position pour voir les services qui couvrent ton périmètre.</p>
+          <p class="text-xs text-gray-500">Affiche uniquement les services qui couvrent ton périmètre.</p>
+          <p *ngIf="locationError" class="text-xs text-red-500 mt-1">{{ locationError }}</p>
         </div>
-        <div class="flex gap-2">
-          <button type="button"
-                  (click)="detectLocation()"
-                  class="rounded-xl border border-[#FF7A00] px-4 py-2 text-xs font-semibold text-[#FF7A00] transition hover:bg-[#FF7A00] hover:text-white disabled:opacity-50"
-                  [disabled]="locating">
-            {{ locating ? 'Localisation...' : 'Utiliser ma position' }}
-          </button>
-          <button *ngIf="userLocation"
-                  type="button"
-                  (click)="clearLocation()"
-                  class="rounded-xl border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-50">
-            Effacer
-          </button>
-        </div>
+        <label class="inline-flex items-center gap-3 text-sm font-semibold text-[#1A1A1A]">
+          <span>Afficher uniquement les services qui me couvrent</span>
+          <span class="relative inline-flex items-center" [class.opacity-50]="locating">
+            <input type="checkbox"
+                   class="sr-only peer"
+                   [(ngModel)]="limitToCoverage"
+                   (change)="onCoverageToggle()"
+                   [disabled]="locating">
+            <span class="block w-11 h-6 rounded-full bg-gray-300 peer-checked:bg-[#FF7A00] transition-colors"></span>
+            <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></span>
+          </span>
+        </label>
       </div>
-      <p *ngIf="userLocation" class="text-xs text-gray-500">
-        Position détectée : {{ userLocation.lat | number:'1.4-4' }}, {{ userLocation.lng | number:'1.4-4' }}
-      </p>
-      <label class="inline-flex items-center gap-2 text-sm text-gray-600">
-        <input type="checkbox"
-               class="size-4 rounded border-gray-300 text-[#FF7A00] focus:ring-[#FF7A00]"
-               [(ngModel)]="limitToCoverage"
-               (change)="onCoverageToggle()"
-               [disabled]="!userLocation">
-        Afficher uniquement les services qui me couvrent
-      </label>
-      <p *ngIf="locationError" class="text-xs text-red-500">{{ locationError }}</p>
-      <p *ngIf="!userLocation && !locationError" class="text-xs text-gray-500">
-        Active ta géolocalisation pour identifier les prestataires proches.
-      </p>
+      <p *ngIf="locating" class="text-xs text-gray-500 text-right">Localisation en cours...</p>
     </div>
 
-    <div class="flex justify-end">
-      <button type="button"
-              (click)="applyCurrentFilters()"
-              class="px-5 py-3 rounded-2xl bg-[#FF7A00] text-white font-semibold text-sm tracking-wide hover:bg-[#e66900] transition">
-        Rechercher ({{ pendingCount }} résultat{{ pendingCount > 1 ? 's' : '' }})
-      </button>
-    </div>
+    <p class="text-right text-sm text-gray-500">
+      {{ pendingCount }} elements trouves, veuillez ajuster le filtre pour une recherche plus appropriee.
+    </p>
   </div>
 
   <!-- GRID -->
@@ -139,7 +114,7 @@
 
         <div class="mt-3 flex items-center justify-between text-sm text-gray-700">
           <span>📍 {{ s.city }}</span>
-          <span *ngIf="s.price" class="font-semibold">{{ s.price | number:'1.0-0' }} FCFA</span>
+          <span class="font-semibold">{{ formatPrice(s) }}</span>
         </div>
 
         <p *ngIf="s.createdAt" class="text-xs text-gray-400 mt-1">

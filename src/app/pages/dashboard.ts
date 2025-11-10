@@ -59,28 +59,21 @@ const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
   },
   {
     id: 'reservations',
-    title: 'Mes réservations',
+    title: 'Mon Agenda',
     description: 'Suis tes demandes et interventions à venir.',
-    route: '/mes-reservations',
+    route: '/agenda',
     icon: 'reservations',
   },
   {
-    id: 'appointments',
-    title: 'Mes rendez-vous',
-    description: 'Valide les demandes reçues et organise ton planning.',
-    route: '/mes-rendez-vous',
-    icon: 'appointments',
-  },
-  {
     id: 'messages',
-    title: 'Messagerie',
+    title: 'Ma Messagerie',
     description: 'Discute avec tes clients et prestataires.',
     route: '/messagerie',
     icon: 'messages',
   },
   {
     id: 'notifications',
-    title: 'Notifications',
+    title: 'Mes Notifications',
     description: 'Avis, confirmations et alertes importantes.',
     route: '/notifications',
     icon: 'notifications',
@@ -104,6 +97,7 @@ const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
 })
 export default class DashboardPage implements OnInit, OnDestroy {
   userName = 'Woya!';
+  userLoading = true;
   dashboardActions: DashboardAction[] = [];
   nextAppointment?: UpcomingAppointment | null;
   appointmentLoading = false;
@@ -114,6 +108,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
   private subs: Subscription[] = [];
   private serviceCoverCache = new Map<string, string | null>();
   private serviceCoverPlaceholder = 'assets/icone.png';
+  private hasLoadedDashboardData = false;
 
   constructor(
     private auth: AuthStore,
@@ -125,23 +120,77 @@ export default class DashboardPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+
     this.subs.push(
+
       this.auth.user$.subscribe(user => {
+
+        const previousUid = this.currentUid;
+
         const uid = user?.uid ?? null;
+
         this.currentUid = uid;
+
+        const uidChanged = previousUid !== uid;
+
+
+
         if (!uid) {
+
+          this.userLoading = false;
+
           this.userName = 'Invité';
+
           this.nextAppointment = null;
+
           this.pendingRequests = 0;
+
           this.pendingReservations = 0;
+
+          this.hasLoadedDashboardData = false;
+
           this.refreshActions();
+
           this.router.navigate(['/login'], { queryParams: { redirect: '/mon-espace' } });
+
           return;
+
         }
-        this.userName = this.displayName(user);
-        this.loadDashboardData();
+
+
+
+        if (uidChanged) {
+
+          this.pendingRequests = 0;
+
+          this.pendingReservations = 0;
+
+          this.nextAppointment = null;
+
+          this.hasLoadedDashboardData = false;
+
+        }
+
+
+
+        this.userLoading = !!user?.profileLoading;
+
+        this.userName = this.userLoading ? 'Chargement...' : this.displayName(user);
+
+
+
+        if (!this.userLoading && !this.hasLoadedDashboardData) {
+
+          this.hasLoadedDashboardData = true;
+
+          this.loadDashboardData();
+
+        }
+
       }),
+
     );
+
   }
 
   ngOnDestroy() {
