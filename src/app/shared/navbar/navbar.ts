@@ -31,6 +31,7 @@ export class Navbar implements OnInit, OnDestroy {
   unreadCount = 0;
   userMenuOpen = false;
   logoutConfirmOpen = false;
+  hideMobileBottomBar = false;
   mobileProfileMenuOpen = false;
   pendingRequests = 0;
   pendingReservations = 0;
@@ -69,6 +70,7 @@ export class Navbar implements OnInit, OnDestroy {
   private providerBookingStates = new Map<string, BookingDoc>();
   private clientBookingStates = new Map<string, BookingDoc>();
   private notificationsLastSeen = this.getStoredNotificationsLastSeen();
+  private lastScrollTop = 0;
 
   constructor(
     public auth: AuthStore,
@@ -307,29 +309,30 @@ export class Navbar implements OnInit, OnDestroy {
     this.requestLogout();
   }
 
-  @HostListener('document:click', ['$event'])
+  
+
+      @HostListener('document:click', ['$event'])
   handleDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement | null;
-    if (this.userMenuOpen) {
-      if (target && target.closest('.user-menu')) {
-        // keep open
-      } else {
-        this.userMenuOpen = false;
-      }
+    if (this.userMenuOpen && (!target || !target.closest('.user-menu'))) {
+      this.userMenuOpen = false;
     }
-    if (this.notificationMenuOpen) {
-      if (target && target.closest('.notification-menu')) {
-        // keep open
-      } else {
-        this.notificationMenuOpen = false;
-      }
+    if (this.notificationMenuOpen && (!target || !target.closest('.notification-menu'))) {
+      this.notificationMenuOpen = false;
     }
-    if (this.searchOpen) {
-      if (target && target.closest('.global-search')) {
-        // keep open
-      } else {
-        this.closeSearchDropdown();
-      }
+    if (this.searchOpen && (!target || !target.closest('.global-search'))) {
+      this.closeSearchDropdown();
+    }
+  }
+
+  @HostListener('window:scroll')
+  handleScroll() {
+    if (typeof window === 'undefined') return;
+    const currentTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+    const delta = currentTop - this.lastScrollTop;
+    if (Math.abs(delta) > 5) {
+      this.hideMobileBottomBar = delta > 0 && currentTop > 100;
+      this.lastScrollTop = currentTop;
     }
   }
 

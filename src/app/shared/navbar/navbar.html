@@ -563,7 +563,8 @@
      (click)="closeMobileProfileMenu()"></div>
 
 <!-- MOBILE BOTTOM BAR -->
-<nav class="mobile-bottom-bar md:hidden">
+<nav class="mobile-bottom-bar md:hidden"
+     [class.mobile-bottom-bar--hidden]="hideMobileBottomBar">
   <a routerLink="/mon-espace"
      routerLinkActive="mobile-bottom-item--active"
      class="mobile-bottom-item"
