@@ -1,43 +1,100 @@
 import { Injectable } from '@angular/core';
 import { firebaseServices } from '../../app.config';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { BehaviorSubject } from 'rxjs';
 
+export interface AuthUserState {
+  uid: string;
+  email?: string | null;
+  displayName?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
+  pseudo?: string | null;
+  phone?: string | null;
+  phoneNumber?: string;
+  photoURL?: string | null;
+  coverURL?: string | null;
+  profileLoading: boolean;
+  [key: string]: any;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
-
-  user$ = new BehaviorSubject<any>(null);
+  user$ = new BehaviorSubject<AuthUserState | null>(null);
   private presenceInterval?: any;
   private unloadHandler?: () => void;
   private visibilityHandler?: () => void;
   private currentUserDoc?: ReturnType<typeof doc>;
+  private hydrationToken = 0;
 
   constructor() {
-    onAuthStateChanged(firebaseServices.auth, async (authUser) => {
-      if (!authUser) {
-        this.user$.next(null);
-        this.currentUserDoc = undefined;
-        this.stopPresence();
-        return;
-      }
-
-      // Charger les données Firestore
-      const ref = doc(firebaseServices.db, 'users', authUser.uid);
-      const snap = await getDoc(ref);
-
-      this.user$.next({
-        uid: authUser.uid,
-        ...snap.data()
+    onAuthStateChanged(firebaseServices.auth, authUser => {
+      this.handleAuthChange(authUser).catch(error => {
+        console.error('Impossible de mettre a jour le store auth', error);
       });
-
-      this.currentUserDoc = ref;
-      this.startPresence();
     });
   }
 
   logout() {
     return firebaseServices.auth.signOut();
+  }
+
+  private async handleAuthChange(authUser: User | null) {
+    this.hydrationToken += 1;
+    const token = this.hydrationToken;
+
+    if (!authUser) {
+      this.user$.next(null);
+      this.currentUserDoc = undefined;
+      this.stopPresence();
+      return;
+    }
+
+    const fallback = this.buildAuthSnapshot(authUser);
+    this.user$.next(fallback);
+
+    const ref = doc(firebaseServices.db, 'users', authUser.uid);
+    this.currentUserDoc = ref;
+
+    try {
+      const snap = await getDoc(ref);
+      if (token !== this.hydrationToken) {
+        return;
+      }
+      const profile = snap.exists() ? snap.data() ?? {} : {};
+      const hydrated = this.mergeProfileSnapshot(fallback, profile);
+      this.user$.next(hydrated);
+    } catch (error) {
+      console.warn('Impossible de charger le profil Firestore', error);
+      if (token === this.hydrationToken) {
+        this.user$.next({ ...fallback, profileLoading: false });
+      }
+    }
+
+    if (token === this.hydrationToken) {
+      this.startPresence();
+    }
+  }
+
+  private buildAuthSnapshot(user: User): AuthUserState {
+    return {
+      uid: user.uid,
+      email: user.email ?? null,
+      displayName: user.displayName ?? null,
+      photoURL: user.photoURL ?? null,
+      profileLoading: true,
+    };
+  }
+
+  private mergeProfileSnapshot(fallback: AuthUserState, profile: Record<string, any>): AuthUserState {
+    return {
+      ...fallback,
+      ...profile,
+      photoURL: profile?.['photoURL'] ?? fallback.photoURL ?? null,
+      coverURL: profile?.['coverURL'] ?? fallback.coverURL ?? null,
+      profileLoading: false,
+    };
   }
 
   private startPresence() {
@@ -48,7 +105,7 @@ export class AuthStore {
       try {
         await updateDoc(this.currentUserDoc!, { lastSeen: serverTimestamp() });
       } catch (error) {
-        console.warn('Impossible de mettre à jour la présence', error);
+        console.warn('Impossible de mettre a jour la presence', error);
       }
     };
 

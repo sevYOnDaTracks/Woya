@@ -724,7 +724,7 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
     return !!this.findCategoryOption(this.form.category);
   }
 
-  private resolveContactPhone(currentUser: { phoneNumber?: string } | null) {
+  private resolveContactPhone(currentUser: any) {
     const storeUser = this.auth.user$.value;
     const storePhone = typeof storeUser?.phone === 'string' ? storeUser.phone : '';
     const firebasePhone = typeof currentUser?.phoneNumber === 'string' ? currentUser.phoneNumber : '';

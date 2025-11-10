@@ -226,12 +226,24 @@
       </a>
 
       <div class="relative user-menu" (click)="$event.stopPropagation()">
+        <ng-template #desktopAvatarSkeleton>
+          <span class="navbar-avatar-skeleton" aria-hidden="true"></span>
+        </ng-template>
+        <ng-template #desktopNameSkeleton>
+          <span class="navbar-name-skeleton" aria-hidden="true"></span>
+        </ng-template>
         <button type="button"
                 (click)="toggleUserMenu()"
                 class="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent hover:border-[#FFE0BF] transition">
-          <img [src]="user.photoURL || 'assets/icone.png'" class="w-8 h-8 rounded-full object-cover border">
+          <div class="navbar-avatar">
+            <ng-container *ngIf="!user?.profileLoading; else desktopAvatarSkeleton">
+              <img [src]="user.photoURL || 'assets/icone.png'" alt="avatar utilisateur" />
+            </ng-container>
+          </div>
           <div class="flex items-center gap-1">
-            <span class="font-semibold text-sm text-[#1A1A1A]">{{ displayName(user) }}</span>
+            <ng-container *ngIf="!user?.profileLoading; else desktopNameSkeleton">
+              <span class="font-semibold text-sm text-[#1A1A1A]">{{ displayName(user) }}</span>
+            </ng-container>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -474,6 +486,10 @@
   </div>
 
 
+  <ng-template #mobileAvatarSkeleton>
+    <span class="navbar-avatar-skeleton navbar-avatar-skeleton--mobile" aria-hidden="true"></span>
+  </ng-template>
+
   <div class="md:hidden flex items-center gap-3">
     <button type="button"
             class="relative text-[#FF7A00] focus:outline-none p-1"
@@ -508,9 +524,13 @@
             class="relative focus:outline-none mobile-profile-trigger"
             aria-label="Menu profil"
             (click)="toggleMobileProfileMenu()">
-      <img [src]="currentUser.photoURL || 'assets/icone.png'"
-           alt="avatar"
-           class="mobile-profile-avatar">
+      <div class="mobile-profile-avatar-wrapper">
+        <ng-container *ngIf="!currentUser?.profileLoading; else mobileAvatarSkeleton">
+          <img [src]="currentUser?.photoURL || 'assets/icone.png'"
+               alt="avatar"
+               class="mobile-profile-avatar">
+        </ng-container>
+      </div>
       <span class="mobile-profile-dot" *ngIf="pendingReservations + pendingRequests > 0"></span>
     </button>
   </div>
@@ -519,12 +539,16 @@
 <div class="mobile-profile-menu md:hidden"
      *ngIf="mobileProfileMenuOpen && currentUser">
   <div class="mobile-profile-menu__header">
-    <img [src]="currentUser.photoURL || 'assets/icone.png'"
-         alt="avatar"
-         class="mobile-profile-avatar">
+    <div class="mobile-profile-avatar-wrapper">
+      <ng-container *ngIf="!currentUser?.profileLoading; else mobileAvatarSkeleton">
+        <img [src]="currentUser?.photoURL || 'assets/icone.png'"
+             alt="avatar"
+             class="mobile-profile-avatar">
+      </ng-container>
+    </div>
     <div class="mobile-profile-menu__identity">
       <p class="mobile-profile-menu__name">{{ displayName(currentUser) }}</p>
-      <p class="mobile-profile-menu__email">{{ currentUser.email }}</p>
+      <p class="mobile-profile-menu__email">{{ currentUser?.email }}</p>
     </div>
   </div>
   <button type="button"

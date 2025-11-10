@@ -97,6 +97,7 @@ const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
 })
 export default class DashboardPage implements OnInit, OnDestroy {
   userName = 'Woya!';
+  userLoading = true;
   dashboardActions: DashboardAction[] = [];
   nextAppointment?: UpcomingAppointment | null;
   appointmentLoading = false;
@@ -107,6 +108,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
   private subs: Subscription[] = [];
   private serviceCoverCache = new Map<string, string | null>();
   private serviceCoverPlaceholder = 'assets/icone.png';
+  private hasLoadedDashboardData = false;
 
   constructor(
     private auth: AuthStore,
@@ -117,26 +119,43 @@ export default class DashboardPage implements OnInit, OnDestroy {
     this.refreshActions();
   }
 
-  ngOnInit() {
-    this.subs.push(
-      this.auth.user$.subscribe(user => {
-        const uid = user?.uid ?? null;
-        this.currentUid = uid;
-        if (!uid) {
-          this.userName = 'Invité';
-          this.nextAppointment = null;
-          this.pendingRequests = 0;
-          this.pendingReservations = 0;
-          this.refreshActions();
-          this.router.navigate(['/login'], { queryParams: { redirect: '/mon-espace' } });
-          return;
-        }
-        this.userName = this.displayName(user);
-        this.loadDashboardData();
-      }),
-    );
-  }
-
+  ngOnInit() {
+    this.subs.push(
+      this.auth.user$.subscribe(user => {
+        const previousUid = this.currentUid;
+        const uid = user?.uid ?? null;
+        this.currentUid = uid;
+        const uidChanged = previousUid !== uid;
+
+        if (!uid) {
+          this.userLoading = false;
+          this.userName = 'Invité';
+          this.nextAppointment = null;
+          this.pendingRequests = 0;
+          this.pendingReservations = 0;
+          this.hasLoadedDashboardData = false;
+          this.refreshActions();
+          this.router.navigate(['/login'], { queryParams: { redirect: '/mon-espace' } });
+          return;
+        }
+
+        if (uidChanged) {
+          this.pendingRequests = 0;
+          this.pendingReservations = 0;
+          this.nextAppointment = null;
+          this.hasLoadedDashboardData = false;
+        }
+
+        this.userLoading = !!user?.profileLoading;
+        this.userName = this.userLoading ? 'Chargement...' : this.displayName(user);
+
+        if (!this.userLoading && !this.hasLoadedDashboardData) {
+          this.hasLoadedDashboardData = true;
+          this.loadDashboardData();
+        }
+      }),
+    );
+  }
   ngOnDestroy() {
     this.subs.forEach(sub => sub.unsubscribe());
   }

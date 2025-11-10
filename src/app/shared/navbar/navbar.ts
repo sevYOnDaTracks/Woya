@@ -338,6 +338,9 @@ export class Navbar implements OnInit, OnDestroy {
 
   displayName(user: any | null | undefined) {
     if (!user) return 'Profil';
+    if (user.profileLoading) {
+      return 'Chargement...';
+    }
     if (user.pseudo && user.pseudo.trim().length > 0) {
       return user.pseudo;
     }

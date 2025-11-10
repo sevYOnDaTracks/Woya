@@ -200,8 +200,45 @@
   @apply rounded-full border-2 border-[#FFE0BF] p-0.5 bg-white shadow-sm;
 }
 
+.navbar-avatar {
+  @apply w-8 h-8 rounded-full border border-[#FFE0BF] overflow-hidden bg-white;
+}
+
+.navbar-avatar img {
+  @apply w-full h-full object-cover;
+}
+
+.navbar-avatar-skeleton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255, 224, 191, 0.4), rgba(255, 200, 163, 0.8), rgba(255, 224, 191, 0.4));
+  background-size: 200% 100%;
+  animation: navbar-skeleton 1.1s ease-in-out infinite;
+}
+
+.navbar-name-skeleton {
+  display: inline-block;
+  width: 4.5rem;
+  height: 0.85rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255, 224, 191, 0.4), rgba(255, 200, 163, 0.8), rgba(255, 224, 191, 0.4));
+  background-size: 200% 100%;
+  animation: navbar-skeleton 1.1s ease-in-out infinite;
+}
+
 .mobile-profile-avatar {
   @apply w-10 h-10 rounded-full object-cover;
+}
+
+.mobile-profile-avatar-wrapper {
+  @apply w-12 h-12 rounded-full border-2 border-[#FFE0BF] overflow-hidden bg-white flex items-center justify-center;
+}
+
+.navbar-avatar-skeleton--mobile {
+  width: 100%;
+  height: 100%;
 }
 
 .mobile-profile-dot {
@@ -238,4 +275,19 @@
 
 .mobile-profile-backdrop {
   @apply fixed inset-0 z-[11000] bg-black/30;
+}
+
+@keyframes navbar-skeleton {
+  0% {
+    background-position: 200% 0;
+    opacity: 0.6;
+  }
+  50% {
+    background-position: 100% 0;
+    opacity: 1;
+  }
+  100% {
+    background-position: 0 0;
+    opacity: 0.6;
+  }
 }
