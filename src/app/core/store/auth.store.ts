@@ -27,8 +27,15 @@ export class AuthStore {
   private visibilityHandler?: () => void;
   private currentUserDoc?: ReturnType<typeof doc>;
   private hydrationToken = 0;
+  private initialAuthResolved = false;
+  private initialAuthPromise: Promise<void>;
+  private resolveInitialAuth?: () => void;
 
   constructor() {
+    this.initialAuthPromise = new Promise(resolve => {
+      this.resolveInitialAuth = resolve;
+    });
+
     onAuthStateChanged(firebaseServices.auth, authUser => {
       this.handleAuthChange(authUser).catch(error => {
         console.error('Impossible de mettre a jour le store auth', error);
@@ -48,11 +55,13 @@ export class AuthStore {
       this.user$.next(null);
       this.currentUserDoc = undefined;
       this.stopPresence();
+      this.markInitialAuthDone();
       return;
     }
 
     const fallback = this.buildAuthSnapshot(authUser);
     this.user$.next(fallback);
+    this.markInitialAuthDone();
 
     const ref = doc(firebaseServices.db, 'users', authUser.uid);
     this.currentUserDoc = ref;
@@ -69,12 +78,29 @@ export class AuthStore {
       console.warn('Impossible de charger le profil Firestore', error);
       if (token === this.hydrationToken) {
         this.user$.next({ ...fallback, profileLoading: false });
+        this.markInitialAuthDone();
       }
     }
 
     if (token === this.hydrationToken) {
       this.startPresence();
     }
+  }
+
+  waitForInitialAuth(): Promise<void> {
+    return this.initialAuthResolved ? Promise.resolve() : this.initialAuthPromise;
+  }
+
+  isInitialAuthResolved() {
+    return this.initialAuthResolved;
+  }
+
+  private markInitialAuthDone() {
+    if (this.initialAuthResolved) {
+      return;
+    }
+    this.initialAuthResolved = true;
+    this.resolveInitialAuth?.();
   }
 
   private buildAuthSnapshot(user: User): AuthUserState {
