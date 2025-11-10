@@ -171,3 +171,67 @@
 .chevron--open {
   @apply rotate-90;
 }
+
+.mobile-bottom-bar {
+  @apply fixed bottom-0 left-0 right-0 z-[9998] bg-white border-t border-[#FFE0BF] shadow-[0_-8px_20px_rgba(26,26,26,0.08)] h-20 flex items-center justify-between px-2;
+}
+
+.mobile-bottom-item {
+  @apply flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-gray-500 flex-1 relative transition-colors duration-200;
+}
+
+.mobile-bottom-item--active {
+  @apply text-[#FF7A00];
+}
+
+.mobile-bottom-label {
+  @apply leading-none;
+}
+
+.mobile-bottom-badge {
+  @apply absolute -top-1 right-3 inline-flex items-center justify-center min-w-[1.15rem] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full;
+}
+
+.mobile-profile-trigger {
+  @apply rounded-full border-2 border-[#FFE0BF] p-0.5 bg-white shadow-sm;
+}
+
+.mobile-profile-avatar {
+  @apply w-10 h-10 rounded-full object-cover;
+}
+
+.mobile-profile-dot {
+  @apply absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#FF7A00];
+}
+
+.mobile-profile-menu {
+  @apply fixed top-20 right-4 z-[11001] bg-white border border-[#FFE0BF] rounded-3xl shadow-2xl w-64 p-4 space-y-3;
+}
+
+.mobile-profile-menu__header {
+  @apply flex items-center gap-3 pb-3 border-b border-[#FFE0BF];
+}
+
+.mobile-profile-menu__identity {
+  @apply flex flex-col;
+}
+
+.mobile-profile-menu__name {
+  @apply text-sm font-semibold text-[#1A1A1A];
+}
+
+.mobile-profile-menu__email {
+  @apply text-xs text-gray-500;
+}
+
+.mobile-profile-menu__item {
+  @apply w-full text-left text-sm font-semibold text-[#1A1A1A] px-3 py-2 rounded-2xl bg-[#FFF9F2] hover:bg-[#FFEFD6] transition;
+}
+
+.mobile-profile-menu__item--danger {
+  @apply text-red-500 bg-red-50 hover:bg-red-100;
+}
+
+.mobile-profile-backdrop {
+  @apply fixed inset-0 z-[11000] bg-black/30;
+}

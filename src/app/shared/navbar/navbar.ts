@@ -31,6 +31,7 @@ export class Navbar implements OnInit, OnDestroy {
   unreadCount = 0;
   userMenuOpen = false;
   logoutConfirmOpen = false;
+  mobileProfileMenuOpen = false;
   pendingRequests = 0;
   pendingReservations = 0;
   currentUser: any | null = null;
@@ -115,6 +116,9 @@ export class Navbar implements OnInit, OnDestroy {
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
     if (this.isMenuOpen) {
+      this.closeMobileProfileMenu();
+    }
+    if (this.isMenuOpen) {
       this.userMenuOpen = false;
       this.logoutConfirmOpen = false;
     }
@@ -128,6 +132,7 @@ export class Navbar implements OnInit, OnDestroy {
     this.logoutConfirmOpen = true;
     this.userMenuOpen = false;
     this.isMenuOpen = false;
+    this.closeMobileProfileMenu();
     this.closeNotificationMenu();
   }
 
@@ -262,6 +267,44 @@ export class Navbar implements OnInit, OnDestroy {
   goToNotifications() {
     this.markNotificationsAsSeen();
     this.router.navigate(['/notifications']);
+  }
+
+  toggleMobileProfileMenu() {
+    if (!this.currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.mobileProfileMenuOpen = !this.mobileProfileMenuOpen;
+    if (this.mobileProfileMenuOpen) {
+      this.isMenuOpen = false;
+      this.userMenuOpen = false;
+      this.closeNotificationMenu();
+    }
+  }
+
+  closeMobileProfileMenu() {
+    this.mobileProfileMenuOpen = false;
+  }
+
+  goToAgendaTab(tab: 'client' | 'provider') {
+    this.router.navigate(['/agenda'], { queryParams: { tab } });
+    this.closeMobileProfileMenu();
+  }
+
+  goToPublicProfile() {
+    if (!this.currentUser?.uid) return;
+    this.router.navigate(['/prestataires', this.currentUser.uid]);
+    this.closeMobileProfileMenu();
+  }
+
+  goToFavorites() {
+    this.router.navigate(['/favoris']);
+    this.closeMobileProfileMenu();
+  }
+
+  handleMobileLogout() {
+    this.closeMobileProfileMenu();
+    this.requestLogout();
   }
 
   @HostListener('document:click', ['$event'])

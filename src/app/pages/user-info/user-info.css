@@ -18,3 +18,55 @@
 .field-input[type='date']::-webkit-calendar-picker-indicator {
   @apply cursor-pointer;
 }
+
+.account-nav {
+  @apply rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2] p-4;
+}
+
+.account-nav__list {
+  @apply flex flex-col gap-3 md:flex-row md:gap-4;
+}
+
+.account-nav__item {
+  @apply w-full text-left rounded-2xl px-4 py-3 bg-white border border-transparent font-semibold text-sm text-[#1A1A1A] shadow-sm hover:border-[#FF7A00] hover:text-[#FF7A00] transition flex flex-col gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB066];
+}
+
+.account-nav__title {
+  @apply text-base font-semibold;
+}
+
+.account-nav__subtitle {
+  @apply text-xs text-gray-500;
+}
+
+.account-nav__item--active {
+  @apply border-[#FF7A00] text-[#FF7A00] bg-[#FFF1E5];
+}
+
+.account-section {
+  @apply rounded-3xl border border-[#FFE0BF] bg-white/90 p-6 space-y-4 focus:outline-none;
+}
+
+.account-section:focus-visible {
+  @apply ring-2 ring-[#FFB066];
+}
+
+.account-section__header {
+  @apply space-y-2;
+}
+
+.account-section__header h2 {
+  @apply text-2xl font-semibold text-[#1A1A1A];
+}
+
+.account-section__eyebrow {
+  @apply text-xs uppercase tracking-[0.35em] text-[#FFB066];
+}
+
+.account-section__body {
+  @apply space-y-4;
+}
+
+.account-media-grid {
+  @apply grid gap-6 md:grid-cols-2;
+}

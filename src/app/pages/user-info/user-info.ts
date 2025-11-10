@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { doc, setDoc } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -9,6 +9,8 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObjec
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
 import { ProfilesService, GalleryItem } from '../../core/services/profiles';
+
+type AccountSection = 'photos' | 'infos' | 'galerie';
 
 interface UserInfoForm {
   firstname: string;
@@ -25,7 +27,7 @@ interface UserInfoForm {
 @Component({
   selector: 'app-user-info',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './user-info.html',
   styleUrl: './user-info.css',
 })
@@ -56,13 +58,16 @@ export default class UserInfo implements OnInit, OnDestroy {
   uploadingGallery = false;
   newGalleryCaption = '';
   newGalleryFile: File | null = null;
+  activeSection: AccountSection = 'photos';
 
   private sub?: Subscription;
+  private sectionSub?: Subscription;
   user: any = null;
 
   constructor(
     private auth: AuthStore,
     private router: Router,
+    private route: ActivatedRoute,
     private location: Location,
     private profiles: ProfilesService,
   ) {}
@@ -75,10 +80,20 @@ export default class UserInfo implements OnInit, OnDestroy {
         this.loadGallery();
       }
     });
+
+    this.sectionSub = this.route.paramMap.subscribe(params => {
+      const raw = params.get('section');
+      const normalized = this.normalizeSection(raw);
+      this.activeSection = normalized;
+      if (raw !== normalized) {
+        this.router.navigate(['/mon-compte', normalized], { replaceUrl: true });
+      }
+    });
   }
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
+    this.sectionSub?.unsubscribe();
   }
 
   get isLoggedIn() {
@@ -178,6 +193,18 @@ export default class UserInfo implements OnInit, OnDestroy {
       this.location.back();
     } else {
       this.router.navigate(['/services']);
+    }
+  }
+
+  private normalizeSection(value: string | null): AccountSection {
+    switch (value) {
+      case 'infos':
+        return 'infos';
+      case 'galerie':
+        return 'galerie';
+      case 'photos':
+      default:
+        return 'photos';
     }
   }
 
