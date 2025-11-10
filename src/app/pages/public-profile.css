@@ -67,6 +67,42 @@
   @apply bg-[#FF7A00] text-white;
 }
 
+.public-gallery-card {
+  @apply rounded-3xl border border-[#FFE0BF] bg-white shadow-sm p-4 md:p-6 space-y-4;
+}
+
+.public-gallery-card__header {
+  @apply flex flex-col md:flex-row md:items-start md:justify-between gap-3;
+}
+
+.public-gallery-card__header h3 {
+  @apply text-lg font-semibold text-[#1A1A1A];
+}
+
+.public-gallery-card__description {
+  @apply text-sm text-gray-500;
+}
+
+.public-gallery-card__count {
+  @apply text-xs font-semibold px-3 py-1 rounded-full bg-[#FFF1E5] text-[#FF7A00];
+}
+
+.public-gallery-card__grid {
+  @apply grid grid-cols-2 md:grid-cols-3 gap-4;
+}
+
+.public-gallery-card__photo {
+  @apply rounded-2xl overflow-hidden border border-[#FFE0BF] bg-white shadow-sm;
+}
+
+.public-gallery-card__image {
+  @apply w-full h-40 object-cover;
+}
+
+.public-gallery-card__caption {
+  @apply p-3 text-xs text-gray-600;
+}
+
 @media (max-width: 640px) {
   .profile-stat-card {
     min-width: unset;

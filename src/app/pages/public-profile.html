@@ -135,15 +135,33 @@
       </div>
 
       <!-- Galerie -->
-      <div *ngIf="activeTab === 'gallery'" class="space-y-4">
-        <p *ngIf="!gallery.length" class="text-sm text-gray-500">
-          Aucune image dans la galerie pour le moment.
+      <div *ngIf="activeTab === 'gallery'" class="space-y-5">
+        <p *ngIf="!galleries.length" class="text-sm text-gray-500">
+          Aucune galerie partagée pour le moment.
         </p>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div *ngFor="let item of gallery" class="rounded-2xl overflow-hidden border border-[#FFE0BF] bg-white shadow-sm">
-            <img [src]="item.url" class="w-full h-40 object-cover" alt="Galerie prestataire" />
-            <div class="p-3 text-xs text-gray-600">{{ item.caption || 'Sans description' }}</div>
-          </div>
+        <div class="space-y-5" *ngIf="galleries.length">
+          <article *ngFor="let gallery of galleries" class="public-gallery-card">
+            <header class="public-gallery-card__header">
+              <div>
+                <h3>{{ gallery.title || 'Galerie sans titre' }}</h3>
+                <p class="public-gallery-card__description" *ngIf="gallery.description">
+                  {{ gallery.description }}
+                </p>
+              </div>
+              <span class="public-gallery-card__count">{{ gallery.photos.length }}/5 photos</span>
+            </header>
+            <div class="public-gallery-card__grid" *ngIf="gallery.photos.length; else emptyPublicGallery">
+              <figure *ngFor="let photo of gallery.photos" class="public-gallery-card__photo">
+                <img [src]="photo.url" class="public-gallery-card__image" alt="Photo de la galerie" />
+                <figcaption class="public-gallery-card__caption">
+                  {{ photo.caption || 'Sans description' }}
+                </figcaption>
+              </figure>
+            </div>
+            <ng-template #emptyPublicGallery>
+              <p class="text-xs text-gray-400">Cette galerie ne contient pas encore de photos.</p>
+            </ng-template>
+          </article>
         </div>
       </div>
 

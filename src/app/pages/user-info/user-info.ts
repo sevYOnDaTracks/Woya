@@ -8,7 +8,7 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObjec
 
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
-import { ProfilesService, GalleryItem } from '../../core/services/profiles';
+import { ProfilesService, GalleryAlbum } from '../../core/services/profiles';
 
 type AccountSection = 'photos' | 'infos' | 'galerie';
 
@@ -22,6 +22,12 @@ interface UserInfoForm {
   city: string;
   address: string;
   bio: string;
+}
+
+interface GalleryUploadState {
+  caption: string;
+  file: File | null;
+  uploading: boolean;
 }
 
 @Component({
@@ -52,12 +58,14 @@ export default class UserInfo implements OnInit, OnDestroy {
   photoFile: File | null = null;
   coverPreview: string | null = null;
   coverFile: File | null = null;
-  gallery: GalleryItem[] = [];
+  galleries: GalleryAlbum[] = [];
   galleryLoading = false;
   galleryError = '';
-  uploadingGallery = false;
-  newGalleryCaption = '';
-  newGalleryFile: File | null = null;
+  newGalleryTitle = '';
+  newGalleryDescription = '';
+  creatingGallery = false;
+  galleryUploads: Record<string, GalleryUploadState> = {};
+  maxPhotosPerGallery = 5;
   activeSection: AccountSection = 'photos';
 
   private sub?: Subscription;
@@ -77,7 +85,7 @@ export default class UserInfo implements OnInit, OnDestroy {
       this.user = user;
       if (user) {
         this.populateForm(user);
-        this.loadGallery();
+        this.loadGalleries();
       }
     });
 
@@ -114,8 +122,9 @@ export default class UserInfo implements OnInit, OnDestroy {
     };
     this.photoPreview = user.photoURL || null;
     this.coverPreview = user.coverURL || null;
-    this.newGalleryCaption = '';
-    this.newGalleryFile = null;
+    this.newGalleryTitle = '';
+    this.newGalleryDescription = '';
+    this.galleryUploads = {};
   }
 
   resetForm() {
@@ -306,25 +315,47 @@ export default class UserInfo implements OnInit, OnDestroy {
     }
   }
 
-  async loadGallery() {
+  async loadGalleries() {
     if (!this.user) return;
     this.galleryLoading = true;
     this.galleryError = '';
     try {
-      this.gallery = await this.profiles.getGallery(this.user.uid);
+      this.galleries = await this.profiles.getGalleries(this.user.uid);
     } catch (error) {
-      this.galleryError = 'Impossible de charger la galerie.';
+      this.galleryError = 'Impossible de charger les galeries.';
     } finally {
       this.galleryLoading = false;
     }
   }
 
-  onSelectGalleryFile(event: Event) {
+  async createGallery() {
+    if (!this.user) return;
+    const title = this.newGalleryTitle.trim();
+    if (!title) {
+      this.galleryError = 'Choisis un nom pour ta galerie.';
+      return;
+    }
+    this.galleryError = '';
+    this.creatingGallery = true;
+    try {
+      await this.profiles.createGallery(this.user.uid, title, this.newGalleryDescription.trim());
+      this.newGalleryTitle = '';
+      this.newGalleryDescription = '';
+      await this.loadGalleries();
+    } catch (error) {
+      this.galleryError = 'Impossible de créer cette galerie.';
+    } finally {
+      this.creatingGallery = false;
+    }
+  }
+
+  onSelectGalleryFile(galleryId: string, event: Event) {
+    const state = this.ensureGalleryUploadState(galleryId);
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
     const message = 'La galerie n’accepte que des images (PNG, JPG, WebP, etc.).';
     if (file && !this.isImageFile(file)) {
-      this.newGalleryFile = null;
+      state.file = null;
       this.galleryError = message;
       input.value = '';
       return;
@@ -332,33 +363,60 @@ export default class UserInfo implements OnInit, OnDestroy {
     if (this.galleryError === message) {
       this.galleryError = '';
     }
-    this.newGalleryFile = file;
+    state.file = file;
   }
 
-  async uploadGalleryItem() {
-    if (!this.user || !this.newGalleryFile) return;
-    this.uploadingGallery = true;
+  async uploadGalleryPhoto(galleryId: string) {
+    if (!this.user) return;
+    const state = this.ensureGalleryUploadState(galleryId);
+    if (!state.file) {
+      this.galleryError = 'Choisis une image avant de l\'ajouter.';
+      return;
+    }
+    this.galleryError = '';
+    state.uploading = true;
+    try {
+      await this.profiles.addGalleryPhoto(this.user.uid, galleryId, state.file, state.caption.trim());
+      this.galleryUploads[galleryId] = { caption: '', file: null, uploading: false };
+      await this.loadGalleries();
+    } catch (error: any) {
+      this.galleryError = error?.message || 'Impossible d\'ajouter cette image.';
+      state.uploading = false;
+    }
+  }
+
+  async removeGalleryPhoto(galleryId: string, photoId: string) {
+    if (!this.user) return;
     this.galleryError = '';
     try {
-      await this.profiles.addGalleryItem(this.user.uid, this.newGalleryFile, this.newGalleryCaption.trim());
-      this.newGalleryCaption = '';
-      this.newGalleryFile = null;
-      await this.loadGallery();
-    } catch (error) {
-      this.galleryError = 'Impossible d\'ajouter cette image.';
-    } finally {
-      this.uploadingGallery = false;
+      await this.profiles.removeGalleryPhoto(this.user.uid, galleryId, photoId);
+      await this.loadGalleries();
+    } catch {
+      this.galleryError = 'Suppression impossible pour le moment.';
     }
   }
 
-  async deleteGalleryItem(item: GalleryItem) {
+  async deleteGallery(galleryId: string) {
     if (!this.user) return;
+    this.galleryError = '';
     try {
-      await this.profiles.removeGalleryItem(this.user.uid, item);
-      this.gallery = this.gallery.filter(g => g.id !== item.id);
-    } catch (error) {
-      this.galleryError = 'Suppression impossible pour le moment.';
+      await this.profiles.deleteGallery(this.user.uid, galleryId);
+      delete this.galleryUploads[galleryId];
+      await this.loadGalleries();
+    } catch {
+      this.galleryError = 'Impossible de supprimer cette galerie.';
     }
+  }
+
+  private ensureGalleryUploadState(galleryId: string): GalleryUploadState {
+    if (!this.galleryUploads[galleryId]) {
+      this.galleryUploads[galleryId] = { caption: '', file: null, uploading: false };
+    }
+    return this.galleryUploads[galleryId];
+  }
+
+  galleryUploadState(galleryId: string) {
+    return this.ensureGalleryUploadState(galleryId);
   }
 
   private buildSearchKeywords(values: { firstname?: string; lastname?: string; pseudo?: string }) {

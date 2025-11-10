@@ -34,13 +34,22 @@ export interface AdminUserRecord {
   updatedAt?: number;
 }
 
-export interface GalleryItem {
+export interface GalleryPhoto {
   id: string;
-  ownerId: string;
   url: string;
   caption?: string;
   storagePath?: string;
   createdAt?: number;
+}
+
+export interface GalleryAlbum {
+  id: string;
+  ownerId: string;
+  title: string;
+  description?: string;
+  photos: GalleryPhoto[];
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface ReviewReply {
@@ -77,7 +86,7 @@ export interface UserReview {
 @Injectable({ providedIn: 'root' })
 export class ProfilesService {
   private db = firebaseServices.db;
-  private galleryCol = collection(this.db, 'userGallery');
+  private galleryAlbumsCol = collection(this.db, 'userGalleries');
   private reviewsCol = collection(this.db, 'reviews');
   private usersCol = collection(this.db, 'users');
 
@@ -101,54 +110,111 @@ export class ProfilesService {
     return this.servicesApi.listByOwner(uid);
   }
 
-  async getGallery(uid: string): Promise<GalleryItem[]> {
-    const q = query(this.galleryCol, where('ownerId', '==', uid));
+  async getGalleries(uid: string): Promise<GalleryAlbum[]> {
+    const q = query(this.galleryAlbumsCol, where('ownerId', '==', uid));
     const snap = await getDocs(q);
     return snap.docs
-      .map(docSnap => {
-        const data = docSnap.data() as any;
-        return {
-          id: docSnap.id,
-          ownerId: data.ownerId,
-          url: data.url,
-          caption: data.caption,
-          storagePath: data.storagePath,
-          createdAt: this.toMillis(data.createdAt),
-        };
-      })
-      .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+      .map(docSnap => this.mapGalleryAlbum(docSnap.id, docSnap.data()))
+      .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
   }
 
-  async addGalleryItem(uid: string, file: File, caption: string) {
-    if (!file) return null;
+  async createGallery(ownerId: string, title: string, description: string) {
+    const payload = {
+      ownerId,
+      title: title.trim(),
+      description: description.trim(),
+      photos: [] as GalleryPhoto[],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(this.galleryAlbumsCol, payload);
+    return {
+      id: ref.id,
+      ownerId,
+      title: payload.title,
+      description: payload.description,
+      photos: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    } as GalleryAlbum;
+  }
+
+  async addGalleryPhoto(ownerId: string, galleryId: string, file: File, caption: string) {
+    if (!file) throw new Error('Aucune image sélectionnée');
+    const galleryRef = doc(this.db, 'userGalleries', galleryId);
+    const snap = await getDoc(galleryRef);
+    if (!snap.exists()) throw new Error('Galerie introuvable');
+    const data = snap.data() as any;
+    if (data.ownerId !== ownerId) {
+      throw new Error('Tu ne peux modifier qu\'une galerie qui t\'appartient.');
+    }
+    const photos: GalleryPhoto[] = Array.isArray(data.photos) ? data.photos : [];
+    if (photos.length >= 5) {
+      throw new Error('Cette galerie contient déjà 5 photos.');
+    }
+
     const storage = getStorage();
-    const path = `users/${uid}/gallery/${Date.now()}-${file.name}`;
-    const storageReference = ref(storage, path);
+    const photoId =
+      typeof globalThis.crypto !== 'undefined' && 'randomUUID' in globalThis.crypto
+        ? globalThis.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const storagePath = `users/${ownerId}/galleries/${galleryId}/${photoId}-${file.name}`;
+    const storageReference = ref(storage, storagePath);
     await uploadBytes(storageReference, file);
     const url = await getDownloadURL(storageReference);
-    const docRef = await addDoc(this.galleryCol, {
-      ownerId: uid,
+
+    const newPhoto: GalleryPhoto = {
+      id: photoId,
       url,
-      caption,
-      storagePath: path,
-      createdAt: serverTimestamp(),
-    });
-    return docRef.id;
+      caption: caption.trim(),
+      storagePath,
+      createdAt: Date.now(),
+    };
+
+    const updatedPhotos = [...photos, newPhoto];
+    await setDoc(
+      galleryRef,
+      { photos: updatedPhotos, updatedAt: serverTimestamp() },
+      { merge: true },
+    );
+    return newPhoto;
   }
 
-  async removeGalleryItem(ownerId: string, item: GalleryItem & { storagePath?: string }) {
-    if (!item?.id) return;
-    const docRef = doc(this.db, 'userGallery', item.id);
-    await deleteDoc(docRef);
-    const storagePath = (item as any).storagePath;
-    if (storagePath) {
-      try {
-        const storage = getStorage();
-        await deleteObject(ref(storage, storagePath));
-      } catch {
-        // ignore errors on delete
-      }
+  async removeGalleryPhoto(ownerId: string, galleryId: string, photoId: string) {
+    const galleryRef = doc(this.db, 'userGalleries', galleryId);
+    const snap = await getDoc(galleryRef);
+    if (!snap.exists()) return;
+    const data = snap.data() as any;
+    if (data.ownerId !== ownerId) return;
+    const photos: GalleryPhoto[] = Array.isArray(data.photos) ? data.photos : [];
+    const target = photos.find(photo => photo.id === photoId);
+    const updatedPhotos = photos.filter(photo => photo.id !== photoId);
+    await setDoc(
+      galleryRef,
+      { photos: updatedPhotos, updatedAt: serverTimestamp() },
+      { merge: true },
+    );
+
+    if (target?.storagePath) {
+      const storage = getStorage();
+      await deleteObject(ref(storage, target.storagePath)).catch(() => null);
     }
+  }
+
+  async deleteGallery(ownerId: string, galleryId: string) {
+    const galleryRef = doc(this.db, 'userGalleries', galleryId);
+    const snap = await getDoc(galleryRef);
+    if (!snap.exists()) return;
+    const data = snap.data() as any;
+    if (data.ownerId !== ownerId) return;
+    const photos: GalleryPhoto[] = Array.isArray(data.photos) ? data.photos : [];
+    const storage = getStorage();
+    await Promise.all(
+      photos
+        .filter(photo => photo.storagePath)
+        .map(photo => deleteObject(ref(storage, photo.storagePath!)).catch(() => null)),
+    );
+    await deleteDoc(galleryRef);
   }
 
   async listAllUsers(): Promise<AdminUserRecord[]> {
@@ -339,6 +405,25 @@ export class ProfilesService {
       createdAt: this.toMillis(data.createdAt),
       updatedAt: this.toMillis(data.updatedAt),
       reviewer: data.reviewer,
+    };
+  }
+
+  private mapGalleryAlbum(id: string, raw: any): GalleryAlbum {
+    const photos: any[] = Array.isArray(raw?.photos) ? raw.photos : [];
+    return {
+      id,
+      ownerId: raw?.ownerId,
+      title: raw?.title ?? 'Galerie',
+      description: raw?.description ?? '',
+      photos: photos.map(photo => ({
+        id: photo?.id ?? '',
+        url: photo?.url ?? '',
+        caption: photo?.caption ?? '',
+        storagePath: photo?.storagePath,
+        createdAt: this.toMillis(photo?.createdAt),
+      })),
+      createdAt: this.toMillis(raw?.createdAt),
+      updatedAt: this.toMillis(raw?.updatedAt),
     };
   }
 

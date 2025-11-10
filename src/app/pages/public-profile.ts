@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
-import { ProfilesService, GalleryItem, UserReview } from '../core/services/profiles';
+import { ProfilesService, GalleryAlbum, UserReview } from '../core/services/profiles';
 import { Services } from '../core/services/services';
 import { WoyaService } from '../core/models/service.model';
 import { MessagingService } from '../core/services/messaging';
@@ -25,7 +25,7 @@ type ProfileTab = 'services' | 'gallery' | 'reviews' | 'about';
 export default class PublicProfile implements OnInit, OnDestroy {
   profile: any = null;
   services: WoyaService[] = [];
-  gallery: GalleryItem[] = [];
+  galleries: GalleryAlbum[] = [];
   reviews: UserReview[] = [];
   averageRating = 0;
   activeTab: ProfileTab = 'services';
@@ -165,7 +165,7 @@ export default class PublicProfile implements OnInit, OnDestroy {
         return;
       }
       this.services = await this.servicesApi.listByOwner(uid);
-      this.gallery = await this.profilesService.getGallery(uid);
+      this.galleries = await this.profilesService.getGalleries(uid);
       await this.loadReviews(uid);
       await this.syncReviewState();
       await this.syncFavoriteState();
