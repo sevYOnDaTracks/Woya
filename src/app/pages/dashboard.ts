@@ -61,15 +61,8 @@ const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
     id: 'reservations',
     title: 'Mes réservations',
     description: 'Suis tes demandes et interventions à venir.',
-    route: '/mes-reservations',
+    route: '/agenda',
     icon: 'reservations',
-  },
-  {
-    id: 'appointments',
-    title: 'Mes rendez-vous',
-    description: 'Valide les demandes reçues et organise ton planning.',
-    route: '/mes-rendez-vous',
-    icon: 'appointments',
   },
   {
     id: 'messages',
