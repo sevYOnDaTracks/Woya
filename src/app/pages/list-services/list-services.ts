@@ -185,38 +185,47 @@ export default class ListServices implements OnInit, AfterViewInit {
     this.previewFilters();
   }
 
-  onCoverageToggle() {
-    if (!this.userLocation) {
+  async onCoverageToggle() {
+    if (!this.limitToCoverage) {
+      this.previewFilters();
+      return;
+    }
+
+    if (this.userLocation) {
+      this.previewFilters();
+      return;
+    }
+
+    const granted = await this.requestUserLocation();
+    if (!granted) {
       this.limitToCoverage = false;
     }
     this.previewFilters();
   }
 
-  detectLocation() {
-    if (!navigator.geolocation) {
-      this.locationError = 'La géolocalisation n’est pas disponible.';
-      return;
+  private requestUserLocation(): Promise<boolean> {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      this.locationError = 'La géolocalisation n\'est pas disponible.';
+      return Promise.resolve(false);
     }
     this.locating = true;
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        this.locating = false;
-        this.locationError = '';
-        this.userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-        this.previewFilters();
-      },
-      () => {
-        this.locating = false;
-        this.locationError = 'Impossible de récupérer ta position.';
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
-  }
-
-  clearLocation() {
-    this.userLocation = null;
-    this.limitToCoverage = false;
-    this.previewFilters();
+    this.locationError = '';
+    return new Promise(resolve => {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          this.locating = false;
+          this.userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+          this.locationError = '';
+          resolve(true);
+        },
+        () => {
+          this.locating = false;
+          this.locationError = 'Impossible de récupérer ta position.';
+          resolve(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 },
+      );
+    });
   }
 
   private matchesCoverage(service: WoyaService): boolean {
