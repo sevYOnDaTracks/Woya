@@ -137,8 +137,29 @@
           <div class="account-section__body space-y-6">
             <div>
               <label class="field-label" for="pseudo">Pseudo</label>
-              <input id="pseudo" name="pseudo" [(ngModel)]="form.pseudo" required maxlength="40"
-                     class="field-input" placeholder="Ton identifiant visible (ex: SuperVoisin)" />
+              <input id="pseudo"
+                     name="pseudo"
+                     [(ngModel)]="form.pseudo"
+                     (ngModelChange)="onPseudoChange($event)"
+                     required
+                     maxlength="40"
+                     class="field-input"
+                     placeholder="Ton identifiant visible (ex: SuperVoisin)" />
+              <p *ngIf="pseudoStatus !== 'idle'"
+                 class="text-xs mt-1"
+                 [ngClass]="{
+                   'text-gray-500': pseudoStatus === 'checking',
+                   'text-green-600': pseudoStatus === 'available',
+                   'text-red-600': pseudoStatus === 'taken',
+                   'text-orange-600': pseudoStatus === 'error'
+                 }">
+                <ng-container [ngSwitch]="pseudoStatus">
+                  <span *ngSwitchCase="'checking'">Vérification du pseudo…</span>
+                  <span *ngSwitchCase="'available'">Pseudo disponible.</span>
+                  <span *ngSwitchCase="'taken'">Ce pseudo est déjà utilisé.</span>
+                  <span *ngSwitchCase="'error'">Impossible de vérifier le pseudo.</span>
+                </ng-container>
+              </p>
             </div>
 
             <div class="grid md:grid-cols-2 gap-5">

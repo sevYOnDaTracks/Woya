@@ -6,6 +6,7 @@ import { Services } from '../../core/services/services';
 import { WoyaService } from '../../core/models/service.model';
 import { ProfilesService } from '../../core/services/profiles';
 import { CITY_OPTIONS, CityOption } from '../../core/models/cities';
+import { formatServicePrice } from '../../core/utils/price';
 
 @Component({
   selector: 'app-landing',
@@ -203,6 +204,10 @@ export class Landing implements OnInit, OnDestroy {
   serviceSubtitle(service: WoyaService) {
     const parts = [service.category, service.city].filter(Boolean);
     return parts.join(' • ') || 'Service local';
+  }
+
+  formatPrice(service: WoyaService) {
+    return formatServicePrice(service);
   }
 
   private async loadRecentRequests() {

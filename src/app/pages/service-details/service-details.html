@@ -49,7 +49,7 @@
       <p class="text-gray-500 text-sm mt-1">{{ service.category }} • {{ service.city }}</p>
 
       <p class="mt-4 text-[#FF7A00] font-semibold text-3xl">
-        {{ service.price | number:'1.0-0' }} FCFA
+        {{ formatPrice(service) }}
       </p>
 
       <div *ngIf="owner; else ownerFallback"

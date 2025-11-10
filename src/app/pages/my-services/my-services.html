@@ -38,7 +38,7 @@
               </p>
             </div>
             <span class="row-price">
-              {{ service.price ? (service.price | number:'1.0-0') + ' FCFA' : '—' }}
+              {{ formatPrice(service) }}
             </span>
             <span class="row-date">
               {{ service.createdAt | timeAgo }}

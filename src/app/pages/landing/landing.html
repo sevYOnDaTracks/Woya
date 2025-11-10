@@ -223,7 +223,7 @@
           <h3 class="mt-4 text-xl font-semibold text-[#1A1A1A]">{{ request.title }}</h3>
           <p class="mt-2 text-sm text-gray-500">📍 {{ request.city || 'Ville non renseignée' }}</p>
           <p class="mt-4 text-lg font-bold text-[#FF7A00]">
-            {{ request.price ? (request.price | number:'1.0-0') + ' FCFA' : 'Tarif à définir' }}
+            {{ formatPrice(request) }}
           </p>
           <p class="mt-2 text-sm text-gray-600 line-clamp-3">
             {{ (request.description || 'Description indisponible.') | slice:0:50 }}{{ ((request.description || '').length) > 50 ? '…' : '' }}

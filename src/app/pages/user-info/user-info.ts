@@ -67,10 +67,13 @@ export default class UserInfo implements OnInit, OnDestroy {
   creatingGallery = false;
   galleryUploads: Record<string, GalleryUploadState> = {};
   maxPhotosPerGallery = 5;
+  pseudoStatus: 'idle' | 'checking' | 'available' | 'taken' | 'error' = 'idle';
   activeSection: AccountSection = 'photos';
 
   private sub?: Subscription;
   private sectionSub?: Subscription;
+  private pseudoCheckTimeout?: ReturnType<typeof setTimeout>;
+  private originalPseudo = '';
   user: any = null;
 
   constructor(
@@ -104,6 +107,9 @@ export default class UserInfo implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.sub?.unsubscribe();
     this.sectionSub?.unsubscribe();
+    if (this.pseudoCheckTimeout) {
+      clearTimeout(this.pseudoCheckTimeout);
+    }
   }
 
   get isLoggedIn() {
@@ -127,6 +133,8 @@ export default class UserInfo implements OnInit, OnDestroy {
     this.newGalleryTitle = '';
     this.newGalleryDescription = '';
     this.galleryUploads = {};
+    this.originalPseudo = user.pseudo || '';
+    this.pseudoStatus = 'idle';
   }
 
   resetForm() {
@@ -148,10 +156,29 @@ export default class UserInfo implements OnInit, OnDestroy {
     this.error = '';
     this.success = '';
 
+    const trimmedPseudo = this.form.pseudo.trim();
+    if (!trimmedPseudo) {
+      this.error = 'Merci de choisir un pseudo.';
+      this.loading = false;
+      return;
+    }
+    const normalizedPseudo = trimmedPseudo.toLowerCase();
+    const originalNormalized = (this.originalPseudo || '').trim().toLowerCase();
+    if (normalizedPseudo !== originalNormalized) {
+      const available = await this.profiles.isPseudoAvailable(trimmedPseudo, this.user.uid);
+      if (!available) {
+        this.error = 'Ce pseudo est déjà utilisé.';
+        this.loading = false;
+        return;
+      }
+    }
+    this.form.pseudo = trimmedPseudo;
+
     const payload: any = {
       firstname: this.form.firstname.trim(),
       lastname: this.form.lastname.trim(),
-      pseudo: this.form.pseudo.trim(),
+      pseudo: trimmedPseudo,
+      pseudoLowercase: normalizedPseudo,
       profession: this.form.profession.trim(),
       birthdate: this.form.birthdate || null,
       phone: this.form.phone.trim(),
@@ -187,6 +214,8 @@ export default class UserInfo implements OnInit, OnDestroy {
 
       this.auth.user$.next({ ...this.user, ...payload });
       this.success = 'Informations mises à jour avec succès.';
+      this.originalPseudo = trimmedPseudo;
+      this.pseudoStatus = 'available';
     } catch (err) {
       this.error = "Impossible d'enregistrer les modifications pour le moment.";
     } finally {
@@ -243,6 +272,34 @@ export default class UserInfo implements OnInit, OnDestroy {
   clearPhotoSelection() {
     this.photoFile = null;
     this.photoPreview = this.user?.photoURL || null;
+  }
+
+  onPseudoChange(value: string) {
+    this.form.pseudo = value;
+    if (this.pseudoCheckTimeout) {
+      clearTimeout(this.pseudoCheckTimeout);
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      this.pseudoStatus = 'idle';
+      return;
+    }
+    const normalized = trimmed.toLowerCase();
+    const originalNormalized = (this.originalPseudo || '').trim().toLowerCase();
+    if (normalized === originalNormalized) {
+      this.pseudoStatus = 'available';
+      return;
+    }
+    this.pseudoStatus = 'checking';
+    this.pseudoCheckTimeout = setTimeout(async () => {
+      try {
+        const available = await this.profiles.isPseudoAvailable(trimmed, this.user?.uid);
+        this.pseudoStatus = available ? 'available' : 'taken';
+      } catch (error) {
+        console.error('Unable to check pseudo availability', error);
+        this.pseudoStatus = 'error';
+      }
+    }, 350);
   }
 
   async removeProfilePhoto() {

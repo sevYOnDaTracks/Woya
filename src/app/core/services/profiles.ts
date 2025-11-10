@@ -451,4 +451,21 @@ export class ProfilesService {
     if (value.seconds) return value.seconds * 1000;
     return undefined;
   }
+
+  async isPseudoAvailable(pseudo: string, excludeUid?: string) {
+    const normalized = (pseudo || '').trim().toLowerCase();
+    if (!normalized) {
+      return false;
+    }
+    const qPseudo = query(this.usersCol, where('pseudoLowercase', '==', normalized), limit(1));
+    const snap = await getDocs(qPseudo);
+    if (snap.empty) {
+      return true;
+    }
+    const docSnap = snap.docs[0];
+    if (excludeUid && docSnap.id === excludeUid) {
+      return true;
+    }
+    return false;
+  }
 }

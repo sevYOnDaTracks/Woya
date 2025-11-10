@@ -12,6 +12,7 @@ import { AuthStore } from '../core/store/auth.store';
 import { TimeAgoPipe } from '../shared/time-ago.pipe';
 import { firebaseServices } from '../app.config';
 import { FavoritesService } from '../core/services/favorites';
+import { formatServicePrice } from '../core/utils/price';
 import { LoadingIndicatorService } from '../core/services/loading-indicator.service';
 
 type ProfileTab = 'services' | 'gallery' | 'reviews' | 'about';
@@ -235,5 +236,9 @@ export default class PublicProfile implements OnInit, OnDestroy {
     }
     const fav = await this.favorites.findEntry(current.uid, this.viewedUid);
     this.favoriteId = fav?.id ?? null;
+  }
+
+  formatPrice(service: WoyaService) {
+    return formatServicePrice(service);
   }
 }

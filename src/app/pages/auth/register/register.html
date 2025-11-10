@@ -26,10 +26,30 @@
       class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
 
     <!-- Pseudo -->
-    <input [(ngModel)]="form.pseudo" placeholder="Pseudo (visible par la communauté)"
-      maxlength="40"
-      required
-      class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
+    <div class="mb-3">
+      <input [(ngModel)]="form.pseudo"
+             name="registerPseudo"
+             (ngModelChange)="onPseudoChange($event)"
+             placeholder="Pseudo (visible par la communauté)"
+             maxlength="40"
+             required
+             class="w-full border rounded-xl px-4 py-3 outline-none" />
+      <p *ngIf="pseudoStatus !== 'idle'"
+         class="text-xs mt-1"
+         [ngClass]="{
+           'text-gray-500': pseudoStatus === 'checking',
+           'text-green-600': pseudoStatus === 'available',
+           'text-red-600': pseudoStatus === 'taken',
+           'text-orange-600': pseudoStatus === 'error'
+         }">
+        <ng-container [ngSwitch]="pseudoStatus">
+          <span *ngSwitchCase="'checking'">Vérification du pseudo…</span>
+          <span *ngSwitchCase="'available'">Pseudo disponible.</span>
+          <span *ngSwitchCase="'taken'">Ce pseudo est déjà utilisé.</span>
+          <span *ngSwitchCase="'error'">Impossible de vérifier le pseudo.</span>
+        </ng-container>
+      </p>
+    </div>
 
     <!-- Profession -->
     <input [(ngModel)]="form.profession" placeholder="Profession (ex: Plombier, Designer…)"
@@ -235,10 +255,28 @@
              name="promptLastName"
              placeholder="Nom"
              class="w-full border rounded-2xl px-4 py-3 outline-none" />
-      <input [(ngModel)]="profilePrompt.pseudo"
-             name="promptPseudo"
-             placeholder="Pseudo"
-             class="w-full border rounded-2xl px-4 py-3 outline-none" />
+      <div>
+        <input [(ngModel)]="profilePrompt.pseudo"
+               (ngModelChange)="onProfilePromptPseudoChange($event)"
+               name="promptPseudo"
+               placeholder="Pseudo"
+               class="w-full border rounded-2xl px-4 py-3 outline-none" />
+        <p *ngIf="profilePromptPseudoStatus !== 'idle'"
+           class="text-xs mt-1"
+           [ngClass]="{
+             'text-gray-500': profilePromptPseudoStatus === 'checking',
+             'text-green-600': profilePromptPseudoStatus === 'available',
+             'text-red-600': profilePromptPseudoStatus === 'taken',
+             'text-orange-600': profilePromptPseudoStatus === 'error'
+           }">
+          <ng-container [ngSwitch]="profilePromptPseudoStatus">
+            <span *ngSwitchCase="'checking'">Vérification du pseudo…</span>
+            <span *ngSwitchCase="'available'">Pseudo disponible.</span>
+            <span *ngSwitchCase="'taken'">Ce pseudo est déjà utilisé.</span>
+            <span *ngSwitchCase="'error'">Impossible de vérifier le pseudo.</span>
+          </ng-container>
+        </p>
+      </div>
       <input [(ngModel)]="profilePrompt.phone"
              name="promptPhone"
              placeholder="Téléphone (optionnel)"

@@ -9,6 +9,7 @@ import { Services } from '../../core/services/services';
 import { WoyaService } from '../../core/models/service.model';
 import { TimeAgoPipe } from '../../shared/time-ago.pipe';
 import { firebaseServices } from '../../app.config';
+import { formatServicePrice } from '../../core/utils/price';
 
 @Component({
   selector: 'app-my-services',
@@ -101,5 +102,9 @@ export default class MyServices implements OnInit, OnDestroy {
 
   trackByService(_index: number, service: WoyaService) {
     return service.id;
+  }
+
+  formatPrice(service: WoyaService) {
+    return formatServicePrice(service);
   }
 }

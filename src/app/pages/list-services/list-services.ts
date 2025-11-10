@@ -8,6 +8,7 @@ import { ProfilesService } from '../../core/services/profiles';
 import { MessagingService } from '../../core/services/messaging';
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
+import { formatServicePrice } from '../../core/utils/price';
 import { TimeAgoPipe } from '../../shared/time-ago.pipe';
 
 @Component({
@@ -326,5 +327,9 @@ export default class ListServices implements OnInit, AfterViewInit {
       Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
     const c = 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
     return R * c;
+  }
+
+  formatPrice(service: WoyaService) {
+    return formatServicePrice(service);
   }
 }
