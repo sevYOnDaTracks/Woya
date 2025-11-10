@@ -13,14 +13,6 @@
         Continuer avec Google
       </button>
 
-      <button (click)="loginWithFacebook()"
-    class="w-full py-3 mt-2 border rounded-xl flex justify-center items-center gap-2 hover:bg-gray-50 transition">
-    
-    <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" class="w-5" />
-
-    Continuer avec Facebook
-  </button>
-
   <div class="my-5 text-center text-gray-500 text-sm">ou</div>
 
       <div *ngIf="error" class="mb-3 text-sm text-red-600 text-center">{{ error }}</div>
@@ -213,7 +205,7 @@
 
       <p class="text-center text-sm mt-6 text-gray-600">
         Déjà un compte ?
-        <a routerLink="/auth/login" class="text-[#FF7A00] font-semibold hover:underline">Se connecter</a>
+        <a routerLink="/login" class="text-[#FF7A00] font-semibold hover:underline">Se connecter</a>
       </p>
 
     </div>

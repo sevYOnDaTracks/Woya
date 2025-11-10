@@ -12,13 +12,13 @@
       <div class="space-y-8 text-center lg:text-left">
         <div class="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-white/70">
           <span class="size-2 rounded-full bg-[#FF7A00]"></span>
-          Communauté locale
+          L'entreprenariat locale
         </div>
 
         <div class="grid gap-10 lg:grid-cols-[3fr,2fr] lg:items-center">
           <div>
             <h1 class="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Trouve un partenaire fiable pour chaque service du quotidien.
+              Trouve un partenaire pour chaque service du quotidien.
             </h1>
            <!-- <p class="mt-6 text-lg text-white/80">
               Woya! connecte habitants, artisans et freelances d’un même quartier pour des demandes rapides,
@@ -124,16 +124,14 @@
             </div>
 
             <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
-              <button type="button"
-                      (click)="exploreServices()"
-                      class="inline-flex items-center justify-center rounded-2xl bg-[#FF7A00] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-[#FF7A00]/40 transition hover:bg-[#e66900]">
-                Explorer les services
-              </button>
-              <!-- <button type="button"
-                      (click)="publishService()"
-                      class="inline-flex items-center justify-center rounded-2xl border border-white/30 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10">
-                Publier un service
-              </button> -->
+              <a routerLink="/login"
+                 class="inline-flex items-center justify-center rounded-2xl border border-white/40 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10">
+                Se connecter
+              </a>
+              <a routerLink="/register"
+                 class="inline-flex items-center justify-center rounded-2xl bg-[#FF7A00] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-[#FF7A00]/40 transition hover:bg-[#e66900]">
+                S'inscrire
+              </a>
             </div>
 
             <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm font-semibold text-white/60 lg:justify-start">

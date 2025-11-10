@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../core/store/auth.store';
 import { Services } from '../../core/services/services';
 import { WoyaService } from '../../core/models/service.model';
@@ -9,7 +9,7 @@ import { CITY_OPTIONS, CityOption } from '../../core/models/cities';
 
 @Component({
   selector: 'app-landing',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })
