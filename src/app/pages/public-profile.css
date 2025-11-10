@@ -67,6 +67,14 @@
   @apply bg-[#FF7A00] text-white;
 }
 
+.page-loading-overlay {
+  @apply absolute inset-0 z-30 flex items-center justify-center bg-[#0B1120]/40 backdrop-blur-sm;
+}
+
+.page-loading-overlay__spinner {
+  @apply w-14 h-14 rounded-full border-4 border-white/40 border-t-[#FF7A00] animate-spin;
+}
+
 .public-gallery-card {
   @apply rounded-3xl border border-[#FFE0BF] bg-white shadow-sm p-4 md:p-6 space-y-4;
 }

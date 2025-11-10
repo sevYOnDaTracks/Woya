@@ -1,4 +1,7 @@
-<section class="min-h-screen bg-[#FFF7EB] pb-16 pt-0 -mt-4 md:pt-0">
+<section class="min-h-screen bg-[#FFF7EB] pb-16 pt-0 -mt-4 md:pt-0 relative">
+  <div class="page-loading-overlay" *ngIf="loading">
+    <div class="page-loading-overlay__spinner"></div>
+  </div>
   <div class="relative h-[19rem] md:h-64 w-full">
     <div class="absolute inset-0">
       <img *ngIf="profile?.coverURL; else defaultCover"

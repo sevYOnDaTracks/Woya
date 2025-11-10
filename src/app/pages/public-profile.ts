@@ -12,6 +12,7 @@ import { AuthStore } from '../core/store/auth.store';
 import { TimeAgoPipe } from '../shared/time-ago.pipe';
 import { firebaseServices } from '../app.config';
 import { FavoritesService } from '../core/services/favorites';
+import { LoadingIndicatorService } from '../core/services/loading-indicator.service';
 
 type ProfileTab = 'services' | 'gallery' | 'reviews' | 'about';
 
@@ -49,6 +50,7 @@ export default class PublicProfile implements OnInit, OnDestroy {
     private favorites: FavoritesService,
     private auth: AuthStore,
     private router: Router,
+    private loadingIndicator: LoadingIndicatorService,
   ) {}
 
   ngOnInit() {
@@ -158,6 +160,7 @@ export default class PublicProfile implements OnInit, OnDestroy {
 
   private async loadProfile(uid: string) {
     this.loading = true;
+    this.loadingIndicator.show();
     try {
       this.profile = await this.profilesService.getPublicProfile(uid);
       if (!this.profile) {
@@ -171,6 +174,7 @@ export default class PublicProfile implements OnInit, OnDestroy {
       await this.syncFavoriteState();
     } finally {
       this.loading = false;
+      this.loadingIndicator.hide();
     }
   }
 

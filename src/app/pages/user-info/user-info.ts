@@ -9,6 +9,7 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObjec
 import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
 import { ProfilesService, GalleryAlbum } from '../../core/services/profiles';
+import { LoadingIndicatorService } from '../../core/services/loading-indicator.service';
 
 type AccountSection = 'photos' | 'infos' | 'galerie';
 
@@ -78,6 +79,7 @@ export default class UserInfo implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private location: Location,
     private profiles: ProfilesService,
+    private loadingIndicator: LoadingIndicatorService,
   ) {}
 
   ngOnInit() {
@@ -319,12 +321,14 @@ export default class UserInfo implements OnInit, OnDestroy {
     if (!this.user) return;
     this.galleryLoading = true;
     this.galleryError = '';
+    this.loadingIndicator.show();
     try {
       this.galleries = await this.profiles.getGalleries(this.user.uid);
     } catch (error) {
       this.galleryError = 'Impossible de charger les galeries.';
     } finally {
       this.galleryLoading = false;
+      this.loadingIndicator.hide();
     }
   }
 
@@ -337,6 +341,7 @@ export default class UserInfo implements OnInit, OnDestroy {
     }
     this.galleryError = '';
     this.creatingGallery = true;
+    this.loadingIndicator.show();
     try {
       await this.profiles.createGallery(this.user.uid, title, this.newGalleryDescription.trim());
       this.newGalleryTitle = '';
@@ -346,6 +351,7 @@ export default class UserInfo implements OnInit, OnDestroy {
       this.galleryError = 'Impossible de créer cette galerie.';
     } finally {
       this.creatingGallery = false;
+      this.loadingIndicator.hide();
     }
   }
 
@@ -375,6 +381,7 @@ export default class UserInfo implements OnInit, OnDestroy {
     }
     this.galleryError = '';
     state.uploading = true;
+    this.loadingIndicator.show();
     try {
       await this.profiles.addGalleryPhoto(this.user.uid, galleryId, state.file, state.caption.trim());
       this.galleryUploads[galleryId] = { caption: '', file: null, uploading: false };
@@ -382,29 +389,37 @@ export default class UserInfo implements OnInit, OnDestroy {
     } catch (error: any) {
       this.galleryError = error?.message || 'Impossible d\'ajouter cette image.';
       state.uploading = false;
+    } finally {
+      this.loadingIndicator.hide();
     }
   }
 
   async removeGalleryPhoto(galleryId: string, photoId: string) {
     if (!this.user) return;
     this.galleryError = '';
+    this.loadingIndicator.show();
     try {
       await this.profiles.removeGalleryPhoto(this.user.uid, galleryId, photoId);
       await this.loadGalleries();
     } catch {
       this.galleryError = 'Suppression impossible pour le moment.';
+    } finally {
+      this.loadingIndicator.hide();
     }
   }
 
   async deleteGallery(galleryId: string) {
     if (!this.user) return;
     this.galleryError = '';
+    this.loadingIndicator.show();
     try {
       await this.profiles.deleteGallery(this.user.uid, galleryId);
       delete this.galleryUploads[galleryId];
       await this.loadGalleries();
     } catch {
       this.galleryError = 'Impossible de supprimer cette galerie.';
+    } finally {
+      this.loadingIndicator.hide();
     }
   }
 
