@@ -3,7 +3,7 @@
 }
 
 .dashboard__hero {
-  @apply rounded-3xl bg-white  border border-[#FFE0BF] p-6 shadow-sm space-y-4 w-full md:w-[25%] ;
+  @apply hidden md:block rounded-3xl bg-white border border-[#FFE0BF] p-6 shadow-sm space-y-4 w-full md:w-[25%];
 }
 
 .dashboard__welcome-label {

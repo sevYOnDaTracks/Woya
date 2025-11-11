@@ -254,6 +254,14 @@
   @apply rounded-full border-2 border-[#FFE0BF] p-0.5 bg-white shadow-sm;
 }
 
+.mobile-login-trigger {
+  @apply inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-[#FFE0BF] text-[#FF7A00] bg-white shadow-sm;
+}
+
+.nav-link-inline {
+  @apply inline-flex items-center whitespace-nowrap;
+}
+
 .navbar-avatar {
   @apply w-8 h-8 rounded-full border border-[#FFE0BF] overflow-hidden bg-white;
 }

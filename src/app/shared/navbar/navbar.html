@@ -61,6 +61,16 @@
     </ng-template>
 
     <div class="md:hidden flex items-center gap-3 flex-shrink-0">
+      <a *ngIf="!currentUser"
+         routerLink="/login"
+         class="mobile-login-trigger"
+         aria-label="Se connecter">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 21a6 6 0 0 1 12 0" />
+        </svg>
+      </a>
+
       <button *ngIf="currentUser"
               type="button"
               class="relative focus:outline-none mobile-profile-trigger"
@@ -118,13 +128,13 @@
     <!-- Si NON connecté -->
     <a *ngIf="!(auth.user$ | async)"
        routerLink="/register"
-       class="text-sm font-semibold text-[#1A1A1A] hover:text-[#FF7A00] transition">
+       class="nav-link-inline text-sm font-semibold text-[#1A1A1A] hover:text-[#FF7A00] transition">
       S'inscrire
     </a>
 
     <a *ngIf="!(auth.user$ | async)"
        routerLink="/login"
-       class="inline-flex items-center gap-2 rounded-full border border-[#1A1A1A] text-[#1A1A1A] px-5 py-2 text-sm font-semibold hover:bg-[#1A1A1A] hover:text-white transition">
+       class="inline-flex items-center gap-2 rounded-full border border-[#1A1A1A] text-[#1A1A1A] px-5 py-2 text-sm font-semibold whitespace-nowrap hover:bg-[#1A1A1A] hover:text-white transition">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11.25a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM5.25 19.5a6.75 6.75 0 0 1 13.5 0" />
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 10.5h2.25m0 0V12m0-1.5v-1.5" />
@@ -245,7 +255,7 @@
       </a>
 
       <a routerLink="/services/new"
-         class="px-4 py-2 bg-[#FF7A00] text-white rounded-xl text-sm hover:bg-[#e66d00] transition">
+         class="px-4 py-2 bg-[#FF7A00] text-white rounded-xl text-sm whitespace-nowrap hover:bg-[#e66d00] transition">
         + Publier
       </a>
 
