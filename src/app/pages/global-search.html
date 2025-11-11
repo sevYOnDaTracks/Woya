@@ -1,112 +1,101 @@
-<section class="global-search-mobile md:hidden">
-  <div class="global-search-mobile__wrapper">
-    <div class="global-search-mobile__field">
-      <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-[#FF7A00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
-      </svg>
-      <input type="text"
-             [value]="term"
-             (input)="onMobileSearchInput($event.target.value)"
-             (focus)="onMobileSearchFocus()"
-             (blur)="onMobileSearchBlur()"
-             (keydown.enter)="submitMobileSearch()"
-             placeholder="Un service ou un prestataire ?"
-             class="global-search-mobile__input" />
-      <button type="button"
-              (click)="submitMobileSearch()"
-              class="global-search-mobile__submit">
-        Rechercher
-      </button>
-    </div>
-
-    <div class="global-search-mobile__dropdown" *ngIf="suggestionsOpen">
-      <div *ngIf="suggestionsLoading" class="global-search-mobile__state">
-        Suggestions en cours...
-      </div>
-      <button type="button"
-              *ngFor="let suggestion of suggestions"
-              class="global-search-mobile__suggestion"
-              (click)="selectSuggestion(suggestion)">
-        <img [src]="suggestion.avatar || 'assets/icone.png'"
-             alt=""
-             class="global-search-mobile__suggestion-avatar">
-        <div class="global-search-mobile__suggestion-body">
-          <p class="global-search-mobile__suggestion-title">{{ suggestion.label }}</p>
-          <p class="global-search-mobile__suggestion-subtitle">{{ suggestion.description }}</p>
-        </div>
-        <span class="global-search-mobile__suggestion-tag">
-          {{ suggestion.kind === 'user' ? 'Profil' : 'Service' }}
-        </span>
-      </button>
-    </div>
-  </div>
-</section>
-
 <section class="min-h-screen bg-[#FFF7EB] pt-4 pb-16 px-4">
   <div class="max-w-6xl mx-auto space-y-8">
-    <div class="glass-card">
-      <p class="hero-eyebrow">Recherche</p>
-      <h1 class="hero-title text-2xl md:text-3xl">Résultats pour « {{ term }} »</h1>
-      <p class="text-sm text-gray-500 mt-2">
-        Retrouve en un coup d’œil les services et utilisateurs correspondants.
-      </p>
-    </div>
-
-    <div *ngIf="loading" class="glass-card flex flex-col items-center gap-3 text-center">
-      <div class="animate-spin h-10 w-10 border-4 border-[#FF7A00] border-t-transparent rounded-full"></div>
-      <p class="text-sm text-gray-500">Chargement…</p>
-    </div>
-
-    <div class="results-grid" *ngIf="!loading">
+    <ng-container *ngIf="hasQuery; else searchShortcuts">
       <div class="glass-card">
-        <div class="section-header">
-          <h2>Services</h2>
-          <span class="badge">{{ servicesResults.length }}</span>
-        </div>
-        <ng-container *ngIf="servicesResults.length; else noServices">
-          <div class="result-list">
-            <a *ngFor="let service of servicesResults"
-               [routerLink]="['/services', service.id]"
-               class="result-item">
-              <img [src]="service.coverUrl || 'assets/icone.png'" alt="cover" class="result-avatar">
-              <div class="result-body">
-                <p class="result-title">{{ service.title }}</p>
-                <p class="result-subtitle">
-                  {{ service.category }} • {{ service.city || 'Ville non renseignée' }}
-                </p>
-              </div>
-            </a>
-          </div>
-        </ng-container>
-        <ng-template #noServices>
-          <p class="empty-state">Aucun service trouvé.</p>
-        </ng-template>
+        <p class="hero-eyebrow">Recherche</p>
+        <h1 class="hero-title text-2xl md:text-3xl">Résultats pour « {{ term.trim() }} »</h1>
+        <p class="text-sm text-gray-500 mt-2">
+          Retrouve en un coup d’œil les services et utilisateurs correspondants.
+        </p>
       </div>
 
-      <div class="glass-card">
-        <div class="section-header">
-          <h2>Utilisateurs</h2>
-          <span class="badge">{{ userResults.length }}</span>
-        </div>
-        <ng-container *ngIf="userResults.length; else noUsers">
-          <div class="result-list">
-            <a *ngFor="let user of userResults"
-               [routerLink]="['/prestataires', user.id]"
-               class="result-item">
-              <img [src]="user.photoURL || 'assets/icone.png'" alt="avatar" class="result-avatar">
-              <div class="result-body">
-                <p class="result-title">{{ displayUserName(user) }}</p>
-                <p class="result-subtitle">
-                  {{ user.profession || 'Prestataire local' }} • {{ user.city || 'Ville non renseignée' }}
-                </p>
-              </div>
-            </a>
-          </div>
-        </ng-container>
-        <ng-template #noUsers>
-          <p class="empty-state">Aucun utilisateur trouvé.</p>
-        </ng-template>
+      <div *ngIf="loading" class="glass-card flex flex-col items-center gap-3 text-center">
+        <div class="animate-spin h-10 w-10 border-4 border-[#FF7A00] border-t-transparent rounded-full"></div>
+        <p class="text-sm text-gray-500">Chargement…</p>
       </div>
-    </div>
+
+      <div class="results-grid" *ngIf="!loading">
+        <div class="glass-card">
+          <div class="section-header">
+            <h2>Services</h2>
+            <span class="badge">{{ servicesResults.length }}</span>
+          </div>
+          <ng-container *ngIf="servicesResults.length; else noServices">
+            <div class="result-list">
+              <a *ngFor="let service of servicesResults"
+                 [routerLink]="['/services', service.id]"
+                 class="result-item">
+                <img [src]="service.coverUrl || 'assets/icone.png'" alt="cover" class="result-avatar">
+                <div class="result-body">
+                  <p class="result-title">{{ service.title }}</p>
+                  <p class="result-subtitle">
+                    {{ service.category }} • {{ service.city || 'Ville non renseignée' }}
+                  </p>
+                </div>
+              </a>
+            </div>
+          </ng-container>
+          <ng-template #noServices>
+            <p class="empty-state">Aucun service trouvé.</p>
+          </ng-template>
+        </div>
+
+        <div class="glass-card">
+          <div class="section-header">
+            <h2>Utilisateurs</h2>
+            <span class="badge">{{ userResults.length }}</span>
+          </div>
+          <ng-container *ngIf="userResults.length; else noUsers">
+            <div class="result-list">
+              <a *ngFor="let user of userResults"
+                 [routerLink]="['/prestataires', user.id]"
+                 class="result-item">
+                <img [src]="user.photoURL || 'assets/icone.png'" alt="avatar" class="result-avatar">
+                <div class="result-body">
+                  <p class="result-title">{{ displayUserName(user) }}</p>
+                  <p class="result-subtitle">
+                    {{ user.profession || 'Prestataire local' }} • {{ user.city || 'Ville non renseignée' }}
+                  </p>
+                </div>
+              </a>
+            </div>
+          </ng-container>
+          <ng-template #noUsers>
+            <p class="empty-state">Aucun utilisateur trouvé.</p>
+          </ng-template>
+        </div>
+      </div>
+    </ng-container>
+    <ng-template #searchShortcuts>
+      <div class="search-shortcuts glass-card">
+        <p class="hero-eyebrow">Commencer</p>
+        <h2 class="hero-title text-xl md:text-2xl mb-4">Lance ta recherche</h2>
+        <div class="search-shortcuts__grid">
+          <a routerLink="/services" class="search-shortcut-card">
+            <div class="search-shortcut-card__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+              </svg>
+            </div>
+            <div class="search-shortcut-card__body">
+              <p class="search-shortcut-card__title">Explorer les services</p>
+              <p class="search-shortcut-card__subtitle">Consulte toutes les prestations disponibles.</p>
+            </div>
+          </a>
+          <a routerLink="/prestataires" class="search-shortcut-card">
+            <div class="search-shortcut-card__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-5 0-7 3-7 5v1h14v-1c0-2-2-5-7-5Z" />
+              </svg>
+            </div>
+            <div class="search-shortcut-card__body">
+              <p class="search-shortcut-card__title">Trouver un prestataire</p>
+              <p class="search-shortcut-card__subtitle">Découvre les professionnels proches de toi.</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </ng-template>
   </div>
 </section>

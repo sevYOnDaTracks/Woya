@@ -121,7 +121,7 @@
 @media (max-width: 640px) {
   .chat-fab {
     right: 1rem;
-    bottom: 1rem;
+    bottom: 6rem;
   }
   .chat-toast {
     width: calc(100vw - 2rem);

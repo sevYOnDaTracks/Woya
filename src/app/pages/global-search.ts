@@ -67,11 +67,16 @@ export default class GlobalSearch implements OnInit, OnDestroy {
     }
   }
 
+  get hasQuery() {
+    return this.term.trim().length > 0;
+  }
+
   async search() {
     const query = this.term.trim();
     if (!query) {
       this.servicesResults = [];
       this.userResults = [];
+      this.loading = false;
       return;
     }
     this.loading = true;

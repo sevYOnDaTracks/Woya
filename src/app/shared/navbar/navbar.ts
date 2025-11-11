@@ -45,6 +45,7 @@ export class Navbar implements OnInit, OnDestroy {
   searchTerm = '';
   searchResults: SearchResult[] = [];
   searchOpen = false;
+  searchOverlayOpen = false;
   searchLoading = false;
   private searchDebounce?: any;
   private searchMin = 2;
@@ -320,7 +321,7 @@ export class Navbar implements OnInit, OnDestroy {
     if (this.notificationMenuOpen && (!target || !target.closest('.notification-menu'))) {
       this.notificationMenuOpen = false;
     }
-    if (this.searchOpen && (!target || !target.closest('.global-search'))) {
+    if (this.searchOpen && (!target || !target.closest('.global-search') && !target.closest('.search-overlay'))) {
       this.closeSearchDropdown();
     }
   }
@@ -370,6 +371,9 @@ export class Navbar implements OnInit, OnDestroy {
   }
 
   onSearchFocus() {
+    if (this.isMobileViewport()) {
+      this.openSearchOverlay();
+    }
     if (this.searchResults.length) {
       this.searchOpen = true;
     }
@@ -378,6 +382,9 @@ export class Navbar implements OnInit, OnDestroy {
   async fetchSearchSuggestions(term: string) {
     this.searchLoading = true;
     this.searchOpen = true;
+    if (this.isMobileViewport()) {
+      this.searchOverlayOpen = true;
+    }
     try {
       const [services, users] = await Promise.all([
         this.services.searchServices(term, 5),
@@ -409,18 +416,50 @@ export class Navbar implements OnInit, OnDestroy {
 
   goToResult(result: SearchResult) {
     this.router.navigate(result.route);
-    this.closeSearchDropdown();
+    this.closeSearchExperience();
   }
 
   submitSearch() {
     const term = this.searchTerm.trim();
     if (!term) return;
-    this.closeSearchDropdown();
+    this.closeSearchExperience();
     this.router.navigate(['/recherche'], { queryParams: { term } });
   }
 
   closeSearchDropdown() {
+    this.closeSearchExperience();
+  }
+
+  clearSearchInput() {
+    this.searchTerm = '';
+    this.searchResults = [];
+    this.searchLoading = false;
     this.searchOpen = false;
+  }
+
+  get hasSearchQuery() {
+    return this.searchTerm.trim().length >= this.searchMin;
+  }
+
+  private openSearchOverlay() {
+    this.searchOverlayOpen = true;
+    this.searchOpen = true;
+  }
+
+  closeSearchOverlay() {
+    this.closeSearchExperience();
+  }
+
+  private closeSearchExperience() {
+    this.searchOpen = false;
+    this.searchOverlayOpen = false;
+  }
+
+  private isMobileViewport() {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.innerWidth < 768;
   }
 
   private async loadRecentReviews() {

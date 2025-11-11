@@ -1,60 +1,71 @@
-<nav class="fixed top-0 left-0 w-full z-[9999] bg-[#FFF7EB] shadow-md p-4 md:px-16 flex md:p-4 justify-between items-center">
+<nav class="fixed top-0 left-0 w-full z-[9999] bg-[#FFF7EB] shadow-md p-4 md:px-16 flex flex-wrap items-center gap-3 md:gap-6 md:flex-nowrap md:p-4 md:justify-between">
 
-  <h1 class="text-3xl font-extrabold text-[#FF7A00] tracking-tight">
-    <a routerLink="/">Woya!</a>
-  </h1>
+  <div class="flex w-full items-center gap-3 md:gap-6">
+    <h1 class="text-3xl font-extrabold text-[#FF7A00] tracking-tight">
+      <a routerLink="/">Woya!</a>
+    </h1>
 
-  <div class="hidden md:flex flex-1 justify-center px-8">
-    <div class="global-search" [class.global-search--open]="searchOpen">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
-      </svg>
-      <input type="text"
-             [value]="searchTerm"
-             (input)="onSearchInput($event.target.value)"
-             (focus)="onSearchFocus()"
-             (keydown.enter)="submitSearch()"
-             placeholder="Que cherchez vous ?">
-      <button type="button" (click)="submitSearch()">OK</button>
-      <div class="search-dropdown" *ngIf="searchOpen">
-        <div *ngIf="searchLoading" class="search-state">Recherche…</div>
-        <ng-container *ngIf="!searchLoading">
-          <button type="button"
-                  *ngFor="let result of searchResults"
-                  class="search-item"
-                  (click)="goToResult(result)">
-            <img [src]="result.avatar || 'assets/icone.png'" alt="" class="search-item__avatar">
-            <div class="search-item__body">
-              <p class="search-item__title">{{ result.label }}</p>
-              <p class="search-item__subtitle">{{ result.description }}</p>
+    <div class="flex-1 min-w-0 md:flex md:justify-center md:px-8">
+      <div class="global-search" [class.global-search--open]="searchOpen">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+        </svg>
+        <input type="search"
+               [value]="searchTerm"
+               (input)="onSearchInput($event.target.value)"
+               (focus)="onSearchFocus()"
+               (keydown.enter)="submitSearch()"
+               placeholder="Rechercher">
+        <div class="search-dropdown hidden md:block" *ngIf="searchOpen && searchTerm.trim().length > 0">
+          <div *ngIf="searchLoading" class="search-state">Recherche…</div>
+          <ng-container *ngIf="!searchLoading">
+            <button type="button"
+                    *ngFor="let result of searchResults"
+                    class="search-item"
+                    (click)="goToResult(result)">
+              <img [src]="result.avatar || 'assets/icone.png'" alt="" class="search-item__avatar">
+              <div class="search-item__body">
+                <p class="search-item__title">{{ result.label }}</p>
+                <p class="search-item__subtitle">{{ result.description }}</p>
+              </div>
+              <span class="search-item__tag" [class.search-item__tag--user]="result.kind === 'user'">
+                {{ result.kind === 'user' ? 'Profil' : 'Service' }}
+              </span>
+            </button>
+            <div class="search-state" *ngIf="!searchResults.length">
+              Aucun résultat
             </div>
-            <span class="search-item__tag" [class.search-item__tag--user]="result.kind === 'user'">
-              {{ result.kind === 'user' ? 'Profil' : 'Service' }}
-            </span>
-          </button>
-          <div class="search-state" *ngIf="!searchResults.length">
-            Aucun résultat
-          </div>
-        </ng-container>
+          </ng-container>
+        </div>
       </div>
+    </div>
+
+    <ng-template #mobileAvatarSkeleton>
+      <span class="navbar-avatar-skeleton" aria-hidden="true"></span>
+    </ng-template>
+
+    <div class="md:hidden flex items-center gap-3 flex-shrink-0">
+      <button *ngIf="currentUser"
+              type="button"
+              class="relative focus:outline-none mobile-profile-trigger"
+              aria-label="Menu profil"
+              (click)="toggleMobileProfileMenu()">
+        <div class="mobile-profile-avatar-wrapper">
+          <ng-container *ngIf="!currentUser?.profileLoading; else mobileAvatarSkeleton">
+            <img [src]="currentUser?.photoURL || 'assets/icone.png'"
+                 alt="avatar"
+                 class="mobile-profile-avatar">
+          </ng-container>
+        </div>
+        <span class="mobile-profile-dot" *ngIf="pendingReservations + pendingRequests > 0"></span>
+      </button>
     </div>
   </div>
 
   <!-- ✅ Desktop -->
   <div class="hidden md:flex items-center gap-6">
 
-    <a routerLink="/"
-       routerLinkActive="active"
-       [routerLinkActiveOptions]="{ exact: true }"
-       aria-label="Site internet"
-       title="Site internet"
-       class="menu-item p-2 rounded-xl">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.7 2.4 4 5.8 4 9s-1.3 6.6-4 9c-2.7-2.4-4-5.8-4-9s1.3-6.6 4-9Z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15" />
-      </svg>
-    </a>
+    
 
     <a *ngIf="currentUser"
        routerLink="/mon-espace"
@@ -62,11 +73,8 @@
        aria-label="Mon espace"
        title="Mon espace"
        class="menu-item p-2 rounded-xl">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
+<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9.5 12 3l9 6.5v9.5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4.5H10V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" />
       </svg>
     </a>
 
@@ -484,57 +492,71 @@
     </ng-container>
 
   </div>
+</nav>
 
-
-    <ng-template #mobileAvatarSkeleton>
-      <span class="navbar-avatar-skeleton" aria-hidden="true"></span>
-    </ng-template>
-
-  <div class="md:hidden flex items-center gap-3">
+<!-- Mobile search overlay -->
+<div class="search-overlay md:hidden" *ngIf="searchOverlayOpen">
+  <div class="search-overlay__header">
     <button type="button"
-            class="relative text-[#FF7A00] focus:outline-none p-1"
-            aria-label="Voir les notifications"
-            (click)="goToNotifications()">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5a4 4 0 0 1 4 4v2.764a2 2 0 0 0 .553 1.382l1.6 1.8A1 1 0 0 1 17.4 16H6.6a1 1 0 0 1-.753-1.654l1.6-1.8A2 2 0 0 0 8 11.764V9a4 4 0 0 1 4-4Z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M10 16a2 2 0 1 0 4 0" />
+            class="search-overlay__icon-button"
+            aria-label="Fermer la recherche"
+            (click)="closeSearchOverlay()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 6 9 12l6 6" />
       </svg>
-      <span *ngIf="notificationBadgeCount"
-            class="notification-badge">
-        {{ notificationBadgeCount > 9 ? '9+' : notificationBadgeCount }}
-      </span>
     </button>
-
+    <div class="search-overlay__input">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+      </svg>
+      <input type="search"
+             [value]="searchTerm"
+             (input)="onSearchInput($event.target.value)"
+             (keydown.enter)="submitSearch()"
+             placeholder="Rechercher">
+    </div>
     <button type="button"
-            class="relative text-[#FF7A00] focus:outline-none p-1"
-            aria-label="Ouvrir la messagerie"
-            (click)="goToMessages()">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="m3 8 8.4 6.3a1 1 0 0 0 1.2 0L21 8" />
+            class="search-overlay__icon-button"
+            aria-label="Effacer la recherche"
+            *ngIf="searchTerm.trim().length"
+            (click)="clearSearchInput()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m18 6-12 12M6 6l12 12" />
       </svg>
-      <span *ngIf="unreadCount > 0"
-            class="notification-badge">
-        {{ unreadCount > 9 ? '9+' : unreadCount }}
-      </span>
-    </button>
-
-    <button *ngIf="currentUser"
-            type="button"
-            class="relative focus:outline-none mobile-profile-trigger"
-            aria-label="Menu profil"
-            (click)="toggleMobileProfileMenu()">
-      <div class="mobile-profile-avatar-wrapper">
-        <ng-container *ngIf="!currentUser?.profileLoading; else mobileAvatarSkeleton">
-          <img [src]="currentUser?.photoURL || 'assets/icone.png'"
-               alt="avatar"
-               class="mobile-profile-avatar">
-        </ng-container>
-      </div>
-      <span class="mobile-profile-dot" *ngIf="pendingReservations + pendingRequests > 0"></span>
     </button>
   </div>
-</nav>
+  <div class="search-overlay__body">
+    <div *ngIf="searchLoading" class="search-overlay__state">Recherche…</div>
+    <ng-container *ngIf="!searchLoading">
+      <button type="button"
+              *ngFor="let result of searchResults"
+              class="search-overlay__item"
+              (click)="goToResult(result)">
+        <img [src]="result.avatar || 'assets/icone.png'" alt="" class="search-overlay__avatar">
+        <div class="search-overlay__item-body">
+          <p class="search-overlay__item-title">{{ result.label }}</p>
+          <p class="search-overlay__item-subtitle">{{ result.description }}</p>
+        </div>
+        <span class="search-overlay__item-tag"
+              [class.search-overlay__item-tag--user]="result.kind === 'user'">
+          {{ result.kind === 'user' ? 'Profil' : 'Service' }}
+        </span>
+      </button>
+      <div *ngIf="!searchResults.length && hasSearchQuery" class="search-overlay__state">
+        Aucun résultat
+      </div>
+    </ng-container>
+    <button type="button"
+            class="search-overlay__see-all"
+            *ngIf="hasSearchQuery"
+            (click)="submitSearch()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+      </svg>
+      <span>Afficher tous les résultats pour « {{ searchTerm.trim() }} »</span>
+    </button>
+  </div>
+</div>
 
 <div class="mobile-profile-menu md:hidden"
      *ngIf="mobileProfileMenuOpen && currentUser">
@@ -588,6 +610,7 @@
 
 <!-- MOBILE BOTTOM BAR -->
 <nav class="mobile-bottom-bar md:hidden"
+     *ngIf="auth.user$ | async"
      [class.mobile-bottom-bar--hidden]="hideMobileBottomBar">
   <a routerLink="/mon-espace"
      routerLinkActive="mobile-bottom-item--active"
@@ -601,16 +624,21 @@
     <span class="mobile-bottom-label">Accueil</span>
   </a>
 
-  <a routerLink="/recherche"
+  <a routerLink="/notifications"
      routerLinkActive="mobile-bottom-item--active"
      class="mobile-bottom-item"
-     aria-label="Rechercher">
+     aria-label="Notifications">
     <span class="mobile-bottom-icon">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5a4 4 0 0 1 4 4v2.764a2 2 0 0 0 .553 1.382l1.6 1.8A1 1 0 0 1 17.4 16H6.6a1 1 0 0 1-.753-1.654l1.6-1.8A2 2 0 0 0 8 11.764V9a4 4 0 0 1 4-4Z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 16a2 2 0 1 0 4 0" />
       </svg>
     </span>
-    <span class="mobile-bottom-label">Rechercher</span>
+    <span class="mobile-bottom-label">Notifications</span>
+    <span *ngIf="notificationBadgeCount"
+          class="mobile-bottom-badge">
+      {{ notificationBadgeCount > 9 ? '9+' : notificationBadgeCount }}
+    </span>
   </a>
 
   <a routerLink="/agenda"
@@ -706,36 +734,6 @@
         </div>
       </div>
     </ng-template>
-
-    <div class="global-search global-search--mobile" [class.global-search--open]="searchOpen">
-      <input type="text"
-             [value]="searchTerm"
-             (input)="onSearchInput($event.target.value)"
-             (focus)="onSearchFocus()"
-             (keydown.enter)="submitSearch(); toggleMenu()"
-             placeholder="Rechercher…">
-      <div class="search-dropdown search-dropdown--mobile" *ngIf="searchOpen">
-        <div *ngIf="searchLoading" class="search-state">Recherche…</div>
-        <ng-container *ngIf="!searchLoading">
-          <button type="button"
-                  *ngFor="let result of searchResults"
-                  class="search-item"
-                  (click)="goToResult(result); toggleMenu()">
-            <img [src]="result.avatar || 'assets/icone.png'" alt="" class="search-item__avatar">
-            <div class="search-item__body">
-              <p class="search-item__title">{{ result.label }}</p>
-              <p class="search-item__subtitle">{{ result.description }}</p>
-            </div>
-            <span class="search-item__tag" [class.search-item__tag--user]="result.kind === 'user'">
-              {{ result.kind === 'user' ? 'Profil' : 'Service' }}
-            </span>
-          </button>
-          <div class="search-state" *ngIf="!searchResults.length">
-            Aucun résultat
-          </div>
-        </ng-container>
-      </div>
-    </div>
 
     <div class="mobile-nav-section">
       <button type="button"

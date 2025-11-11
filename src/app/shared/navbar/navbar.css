@@ -11,15 +11,19 @@
 }
 
 .global-search {
-  @apply relative flex items-center gap-2 bg-white border border-[#FFE0BF] rounded-full px-4 py-2 shadow-sm w-full max-w-xl;
+  @apply relative flex items-center gap-3 bg-white border border-[#FFE0BF] rounded-2xl md:rounded-full px-4 py-2 shadow-sm w-full md:max-w-xl;
+}
+
+.global-search--open {
+  @apply border-[#FFB066] ring-2 ring-[#FFD4B0];
 }
 
 .global-search input {
-  @apply flex-1 border-none outline-none bg-transparent text-sm text-gray-700;
+  @apply flex-1 border-none outline-none bg-transparent text-base md:text-sm text-gray-700;
 }
 
-.global-search button {
-  @apply text-sm font-semibold text-[#FF7A00];
+.global-search svg {
+  @apply text-gray-400 flex-shrink-0;
 }
 
 .search-dropdown {
@@ -62,22 +66,64 @@
   @apply inline-flex items-center justify-center min-w-[1.25rem] px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full;
 }
 
-.global-search--mobile {
-  @apply md:hidden mt-4 flex flex-col gap-3 px-0 py-0 w-full bg-transparent border-none shadow-none;
+.search-overlay {
+  @apply fixed inset-0 z-[10000] bg-white flex flex-col;
 }
 
-.global-search--mobile input {
-  @apply w-full border-2 border-[#FF7A00] rounded-2xl px-4 py-3 text-base text-gray-700 outline-none focus:border-[#FF7A00] focus:ring-2 focus:ring-[#FFD4B0];
-  font-size: 16px; /* évite le zoom iOS */
+.search-overlay__header {
+  @apply flex items-center gap-3 px-4 py-3 border-b border-gray-100;
 }
 
-.search-dropdown--mobile {
-  position: static;
-  left: auto;
-  right: auto;
-  top: auto;
-  margin-top: 0;
-  @apply w-full border border-[#FFE0BF] rounded-2xl shadow-lg max-h-60 overflow-y-auto bg-white;
+.search-overlay__icon-button {
+  @apply w-10 h-10 inline-flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100;
+}
+
+.search-overlay__input {
+  @apply flex-1 flex items-center gap-2 bg-gray-100 rounded-full px-3 py-2;
+}
+
+.search-overlay__input input {
+  @apply flex-1 bg-transparent border-none outline-none text-sm text-gray-900;
+}
+
+.search-overlay__body {
+  @apply flex-1 overflow-y-auto px-4 pb-6;
+}
+
+.search-overlay__state {
+  @apply text-center text-sm text-gray-400 py-4;
+}
+
+.search-overlay__item {
+  @apply w-full flex items-center gap-3 py-3 border-b border-gray-100 text-left;
+}
+
+.search-overlay__avatar {
+  @apply w-12 h-12 rounded-full object-cover border border-[#FFE0BF];
+}
+
+.search-overlay__item-body {
+  @apply flex-1;
+}
+
+.search-overlay__item-title {
+  @apply font-semibold text-sm text-[#1A1A1A];
+}
+
+.search-overlay__item-subtitle {
+  @apply text-xs text-gray-500;
+}
+
+.search-overlay__item-tag {
+  @apply text-[10px] font-semibold uppercase tracking-wide text-[#FF7A00];
+}
+
+.search-overlay__item-tag--user {
+  @apply text-[#3A7AFE];
+}
+
+.search-overlay__see-all {
+  @apply mt-6 w-full inline-flex items-center gap-3 text-sm font-semibold text-[#3A7AFE] justify-center;
 }
 
 .notification-dropdown {
@@ -193,7 +239,7 @@
 }
 
 .mobile-bottom-badge {
-  @apply absolute -top-1 right-3 inline-flex items-center justify-center min-w-[1.15rem] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full;
+  @apply absolute top-[-100px] right-3 inline-flex items-center justify-center min-w-[1.15rem] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full;
 }
 
 .mobile-profile-trigger {
