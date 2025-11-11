@@ -24,10 +24,26 @@
                     class="search-item"
                     (click)="goToResult(result)">
               <img [src]="result.avatar || 'assets/icone.png'" alt="" class="search-item__avatar">
-              <div class="search-item__body">
-                <p class="search-item__title">{{ result.label }}</p>
-                <p class="search-item__subtitle">{{ result.description }}</p>
-              </div>
+            <div class="search-item__body">
+              <p class="search-item__title">{{ result.label }}</p>
+              <p class="search-item__subtitle">{{ result.description }}</p>
+              <p class="search-item__meta"
+                 *ngIf="result.providerName || result.rating !== undefined || result.reviewsCount !== undefined || result.price">
+                <span *ngIf="result.providerName">{{ result.providerName }}</span>
+                <span *ngIf="result.rating !== undefined">
+                  <ng-container *ngIf="result.providerName"> · </ng-container>
+                  Note : {{ formatRating(result.rating) }}/5
+                </span>
+                <span *ngIf="result.reviewsCount !== undefined">
+                  <ng-container *ngIf="result.providerName || result.rating !== undefined"> · </ng-container>
+                  {{ formatReviewCount(result.reviewsCount) }}
+                </span>
+                <span *ngIf="result.price">
+                  <ng-container *ngIf="result.providerName || result.rating !== undefined || result.reviewsCount !== undefined"> · </ng-container>
+                  {{ result.price }}
+                </span>
+              </p>
+            </div>
               <span class="search-item__tag" [class.search-item__tag--user]="result.kind === 'user'">
                 {{ result.kind === 'user' ? 'Profil' : 'Service' }}
               </span>
@@ -536,6 +552,22 @@
         <div class="search-overlay__item-body">
           <p class="search-overlay__item-title">{{ result.label }}</p>
           <p class="search-overlay__item-subtitle">{{ result.description }}</p>
+          <p class="search-overlay__item-meta"
+             *ngIf="result.providerName || result.rating !== undefined || result.reviewsCount !== undefined || result.price">
+            <span *ngIf="result.providerName">{{ result.providerName }}</span>
+            <span *ngIf="result.rating !== undefined">
+              <ng-container *ngIf="result.providerName"> · </ng-container>
+              Note : {{ formatRating(result.rating) }}/5
+            </span>
+            <span *ngIf="result.reviewsCount !== undefined">
+              <ng-container *ngIf="result.providerName || result.rating !== undefined"> · </ng-container>
+              {{ formatReviewCount(result.reviewsCount) }}
+            </span>
+            <span *ngIf="result.price">
+              <ng-container *ngIf="result.providerName || result.rating !== undefined || result.reviewsCount !== undefined"> · </ng-container>
+              {{ result.price }}
+            </span>
+          </p>
         </div>
         <span class="search-overlay__item-tag"
               [class.search-overlay__item-tag--user]="result.kind === 'user'">

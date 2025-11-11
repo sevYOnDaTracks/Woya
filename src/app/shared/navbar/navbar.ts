@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import { firebaseServices } from '../../app.config';
 import { BookingStatus } from '../../core/models/booking.model';
+import { WoyaService } from '../../core/models/service.model';
 
 type MenuSectionKey = 'navigation' | 'client' | 'profile' | 'provider';
 
@@ -390,23 +391,18 @@ export class Navbar implements OnInit, OnDestroy {
         this.services.searchServices(term, 5),
         this.profiles.searchProfiles(term).then(list => list.slice(0, 5)),
       ]);
+      const ownerProfiles = await this.loadServiceOwners(services);
+      const profilesForStats = [
+        ...users,
+        ...Object.values(ownerProfiles),
+      ];
+      const reviewStats = await this.loadReviewStatsForProfiles(profilesForStats);
       const results: SearchResult[] = [
-        ...users.map(user => ({
-          id: user.id,
-          label: this.displayName(user),
-          description: user.profession || user.city || '',
-          avatar: user.photoURL,
-          route: ['/prestataires', user.id],
-          kind: 'user' as const,
-        })),
-        ...services.map(service => ({
-          id: service.id!,
-          label: service.title,
-          description: `${service.category} • ${service.city || 'Ville non renseignée'}`,
-          avatar: service.coverUrl,
-          route: ['/services', service.id!],
-          kind: 'service' as const,
-        })),
+        ...users.map(user => this.buildUserSearchResult(user, reviewStats[user.id])),
+        ...services.map(service => {
+          const owner = ownerProfiles[service.ownerId ?? ''];
+          return this.buildServiceSearchResult(service, owner, owner ? reviewStats[owner.id] : undefined);
+        }),
       ];
       this.searchResults = results.slice(0, 8);
     } finally {
@@ -441,6 +437,22 @@ export class Navbar implements OnInit, OnDestroy {
     return this.searchTerm.trim().length >= this.searchMin;
   }
 
+  formatRating(value?: number | null) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return '0.0';
+    }
+    const normalized = Math.max(0, Math.min(5, value));
+    return normalized.toFixed(1);
+  }
+
+  formatReviewCount(count?: number | null) {
+    if (typeof count !== 'number' || Number.isNaN(count) || count <= 0) {
+      return '0 avis';
+    }
+    const display = count > 100 ? '100+' : count;
+    return `${display} avis`;
+  }
+
   private openSearchOverlay() {
     this.searchOverlayOpen = true;
     this.searchOpen = true;
@@ -460,6 +472,151 @@ export class Navbar implements OnInit, OnDestroy {
       return false;
     }
     return window.innerWidth < 768;
+  }
+
+  private buildUserSearchResult(user: any, stats?: ReviewStats | undefined): SearchResult {
+    const rating = stats?.rating ?? this.extractRating(user);
+    const reviewsCount = stats?.count ?? this.extractReviewsCount(user);
+    return {
+      id: user.id,
+      label: this.displayName(user),
+      description: this.formatProfessionCity(user),
+      avatar: user.photoURL,
+      route: ['/prestataires', user.id],
+      kind: 'user',
+      rating: rating ?? 0,
+      reviewsCount: reviewsCount ?? 0,
+    };
+  }
+
+  private buildServiceSearchResult(service: WoyaService, owner?: any, stats?: ReviewStats): SearchResult {
+    const ratingSource = owner ?? service;
+    const rating = stats?.rating ?? this.extractRating(ratingSource);
+    const reviewsCount = stats?.count ?? this.extractReviewsCount(ratingSource);
+    const providerName = owner ? this.displayName(owner) : undefined;
+    return {
+      id: service.id ?? '',
+      label: service.title,
+      description: `${service.category} • ${service.city || 'Ville non renseignée'}`,
+      avatar: service.coverUrl,
+      route: ['/services', service.id ?? ''],
+      kind: 'service',
+      providerName,
+      rating: rating ?? 0,
+      reviewsCount: reviewsCount ?? 0,
+      price: this.formatPrice(service),
+    };
+  }
+
+  private async loadServiceOwners(services: WoyaService[]): Promise<Record<string, any>> {
+    const ownerIds = Array.from(new Set(services.map(service => service.ownerId).filter((id): id is string => !!id)));
+    if (!ownerIds.length) {
+      return {};
+    }
+    try {
+      return await this.profiles.getProfilesByIds(ownerIds);
+    } catch (error) {
+      console.error('Unable to load service owners', error);
+      return {};
+    }
+  }
+
+  private extractRating(source: any): number | undefined {
+    if (!source) return undefined;
+    const candidates = [
+      source?.averageRating,
+      source?.ratingAverage,
+      source?.rating,
+      source?.reviewsAverage,
+      source?.stats?.rating,
+      source?.reviewsSummary?.average,
+    ];
+    const value = candidates.find(v => typeof v === 'number' && !Number.isNaN(v));
+    if (typeof value === 'number') {
+      return Math.max(0, Math.min(5, value));
+    }
+    return undefined;
+  }
+
+  private extractReviewsCount(source: any): number | undefined {
+    if (!source) return undefined;
+    if (Array.isArray(source?.reviews)) {
+      return source.reviews.length;
+    }
+    const candidates = [
+      source?.reviewsCount,
+      source?.reviewCount,
+      source?.ratingCount,
+      source?.stats?.reviews,
+      source?.reviewsSummary?.count,
+    ];
+    const value = candidates.find(v => typeof v === 'number' && !Number.isNaN(v));
+    if (typeof value === 'number') {
+      return Math.max(0, value);
+    }
+    return undefined;
+  }
+
+  private formatProfessionCity(user: any) {
+    const parts = [
+      user?.profession || undefined,
+      user?.city || undefined,
+    ].filter((value): value is string => !!value && value.trim().length > 0);
+    return parts.join(' • ');
+  }
+
+  private formatPrice(service: WoyaService) {
+    if (service.price === null || service.price === undefined || Number.isNaN(service.price)) {
+      return undefined;
+    }
+    const priceValue = Number(service.price);
+    const priceLabel = priceValue.toLocaleString('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+    const billing =
+      service.billingMode === 'hourly'
+        ? 'FCFA /h'
+        : 'FCFA';
+    return `${priceLabel} ${billing}`;
+  }
+
+  private async loadReviewStatsForProfiles(profiles: any[]): Promise<Record<string, ReviewStats>> {
+    const stats: Record<string, ReviewStats> = {};
+    const seen = new Set<string>();
+    const targets = profiles
+      .filter(profile => profile && profile.id)
+      .filter(profile => {
+        if (seen.has(profile.id)) {
+          return false;
+        }
+        seen.add(profile.id);
+        const hasRating = this.extractRating(profile) !== undefined;
+        const hasCount = this.extractReviewsCount(profile) !== undefined;
+        return !(hasRating && hasCount);
+      });
+    if (!targets.length) {
+      return stats;
+    }
+    await Promise.all(
+      targets.map(async profile => {
+        try {
+          const reviews = await this.profiles.getReviews(profile.id);
+          if (reviews.length) {
+            const total = reviews.reduce((sum, review) => sum + (review.rating ?? 0), 0);
+            stats[profile.id] = {
+              rating: total / reviews.length,
+              count: reviews.length,
+            };
+          } else {
+            stats[profile.id] = { rating: 0, count: 0 };
+          }
+        } catch (error) {
+          console.error('Unable to load review stats for profile', profile.id, error);
+        }
+      }),
+    );
+    return stats;
   }
 
   private async loadRecentReviews() {
@@ -694,6 +851,15 @@ interface SearchResult {
   avatar?: string | null;
   route: any[];
   kind: 'service' | 'user';
+  providerName?: string;
+  rating?: number;
+  reviewsCount?: number;
+  price?: string;
+}
+
+interface ReviewStats {
+  rating?: number;
+  count?: number;
 }
 
 interface NavbarNotification {

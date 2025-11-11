@@ -17,8 +17,8 @@ type AgendaTab = 'client' | 'provider';
 export default class AgendaPage implements OnInit, OnDestroy {
   activeTab: AgendaTab = 'client';
   readonly tabs: { id: AgendaTab; label: string; subtitle: string }[] = [
-    { id: 'client', label: 'Mes demandes', subtitle: 'Toutes les réservations passées en tant que client.' },
-    { id: 'provider', label: 'Demandes reçues', subtitle: 'Les demandes envoyées à ton business.' },
+    { id: 'client', label: 'Mes Réservations', subtitle: 'tes réservations par rapport à une offre' },
+    { id: 'provider', label: 'Demandes reçues', subtitle: 'Les demandes que tu as reçus de client(s)' },
   ];
 
   private querySub?: Subscription;

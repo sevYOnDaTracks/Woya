@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  documentId,
   getDoc,
   getDocs,
   limit,
@@ -371,6 +372,26 @@ export class ProfilesService {
     }
 
     return results.slice(0, 20);
+  }
+
+  async getProfilesByIds(uids: string[]) {
+    const unique = Array.from(new Set(uids.filter(Boolean)));
+    if (!unique.length) {
+      return {};
+    }
+    const chunks: string[][] = [];
+    for (let i = 0; i < unique.length; i += 10) {
+      chunks.push(unique.slice(i, i + 10));
+    }
+    const results: Record<string, any> = {};
+    for (const chunk of chunks) {
+      const q = query(this.usersCol, where(documentId(), 'in', chunk));
+      const snap = await getDocs(q);
+      snap.docs.forEach(docSnap => {
+        results[docSnap.id] = this.mapProfile(docSnap);
+      });
+    }
+    return results;
   }
 
   private mapProfile(docSnap: any) {

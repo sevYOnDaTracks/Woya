@@ -3,7 +3,7 @@
 }
 
 .dashboard__hero {
-  @apply bg-gradient-to-r from-[#FFEDD5] to-[#FFE4C7] rounded-3xl p-8 flex flex-col gap-4 shadow-inner;
+  @apply rounded-3xl bg-white  border border-[#FFE0BF] p-6 shadow-sm space-y-4 w-full md:w-[25%] ;
 }
 
 .dashboard__welcome-label {

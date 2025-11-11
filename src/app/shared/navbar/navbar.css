@@ -54,12 +54,16 @@
   @apply text-xs text-gray-500;
 }
 
+.search-item__meta {
+  @apply text-[11px] text-gray-400 mt-1;
+}
+
 .search-item__tag {
   @apply text-[10px] font-semibold uppercase tracking-wide text-[#FF7A00];
 }
 
 .search-item__tag--user {
-  @apply text-[#3A7AFE];
+  @apply text-[#FF7A00];
 }
 
 .badge-inline {
@@ -114,6 +118,10 @@
   @apply text-xs text-gray-500;
 }
 
+.search-overlay__item-meta {
+  @apply text-[11px] text-gray-400;
+}
+
 .search-overlay__item-tag {
   @apply text-[10px] font-semibold uppercase tracking-wide text-[#FF7A00];
 }
@@ -123,7 +131,7 @@
 }
 
 .search-overlay__see-all {
-  @apply mt-6 w-full inline-flex items-center gap-3 text-sm font-semibold text-[#3A7AFE] justify-center;
+  @apply mt-6 w-full inline-flex items-center gap-3 text-sm font-semibold text-[#FF7A00] justify-center;
 }
 
 .notification-dropdown {

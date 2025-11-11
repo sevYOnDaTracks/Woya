@@ -2,14 +2,22 @@
   <div class="dashboard__hero">
     <div class="dashboard__welcome">
       <p class="dashboard__welcome-label">Bienvenue</p>
-      <h1 class="dashboard__welcome-title">
-        <ng-container *ngIf="!userLoading; else dashboardNameLoading">
-          {{ userName }}
-        </ng-container>
-      </h1>
-      <ng-template #dashboardNameLoading>
-        <span class="dashboard__welcome-skeleton" aria-hidden="true"></span>
-      </ng-template>
+      <h1 class="dashboard__welcome-title">
+
+        <ng-container *ngIf="!userLoading; else dashboardNameLoading">
+
+          {{ userName }}
+
+        </ng-container>
+
+      </h1>
+
+      <ng-template #dashboardNameLoading>
+
+        <span class="dashboard__welcome-skeleton" aria-hidden="true"></span>
+
+      </ng-template>
+
      <p class="dashboard__welcome-subtitle">
         Retrouve toutes tes actions importantes au même endroit.
       </p>
@@ -18,7 +26,7 @@
 
   <div class="dashboard__appointment">
     <div class="dashboard__appointment-header">
-      <p>Prochain rendez-vous</p>
+      <p>Prochain rendez-vous : </p>
       <span class="badge-new badge-new--confirmed" *ngIf="nextAppointment">Confirmé</span>
     </div>
 
