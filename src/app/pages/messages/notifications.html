@@ -1,6 +1,6 @@
-<section class="min-h-screen bg-[#FFF7EB] pt-10 md:pt-24 pb-16 px-4 md:px-16">
-  <div class="max-w-4xl mx-auto">
-    <header class="mb-8">
+<section class="notifications-shell" [class.notifications-shell--panel]="mode === 'panel'">
+  <div class="notifications-shell__inner" [class.notifications-shell__inner--panel]="mode === 'panel'">
+    <header class="mb-8" *ngIf="mode === 'page'">
       <p class="text-sm uppercase tracking-[0.3em] text-[#FFB066] font-semibold">Notifications</p>
       <h1 class="text-3xl font-bold text-[#1A1A1A] mt-1">Notifications récentes</h1>
       <p class="text-sm text-gray-600 mt-2">
@@ -8,7 +8,7 @@
       </p>
     </header>
 
-    <div class="rounded-3xl border border-[#FFE0BF] bg-white/90 backdrop-blur shadow-sm overflow-hidden">
+    <div class="notifications-shell__card" [class.notifications-shell__card--panel]="mode === 'panel'">
       <div *ngIf="loading" class="py-16 text-center text-gray-500">
         Chargement des notifications…
       </div>

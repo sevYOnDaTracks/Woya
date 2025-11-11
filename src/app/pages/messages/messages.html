@@ -1,46 +1,44 @@
-<section class="min-h-screen bg-[#FFF7EB] pt-10 md:pt-28 pb-16 px-4 md:px-16">
-  <div class="max-w-5xl -mt20 mx-auto">
-    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
-      <div>
-        <p class="text-sm uppercase tracking-[0.35em] text-[#FFB066]">Messagerie</p>
-        <h1 class="text-3xl font-bold text-[#1A1A1A] mt-1">Boîte de réception</h1>
-        <p class="text-sm text-gray-600 mt-2">
-          Retrouvez ici toutes vos conversations avec les prestataires et clients.
-        </p>
-      </div>
-    </header>
-
-    
-
-    <div class="bg-white/90 backdrop-blur rounded-3xl border border-[#FFE0BF] shadow-sm">
+<section class="messages-shell">
+  <div class="messages-list">
+    <div class="messages-primary-tabs" role="tablist">
+      <button type="button"
+              class="messages-primary-tab mt-2"
+              role="tab"
+              [attr.aria-selected]="activeTab === 'conversations'"
+              [class.messages-primary-tab--active]="activeTab === 'conversations'"
+              (click)="setTab('conversations')">
+        <span class="messages-primary-tab__label">Conversations</span>
+        <span class="messages-primary-tab__count">({{ conversations.length || 0 }})</span>
+      </button>
+      <button type="button"
+              class="messages-primary-tab mt-2"
+              role="tab"
+              [attr.aria-selected]="activeTab === 'notifications'"
+              [class.messages-primary-tab--active]="activeTab === 'notifications'"
+              (click)="setTab('notifications')">
+        <span class="messages-primary-tab__label">Notifications</span>
+        <span class="messages-primary-tab__count">({{ notificationsCount || 0 }})</span>
+      </button>
+    </div>
+    <div class="messages-pane messages-pane--conversations"
+         [style.display]="activeTab === 'conversations' ? 'block' : 'none'">
       <div *ngIf="loading" class="py-14 flex items-center justify-center text-gray-500">
         Chargement de vos conversations…
       </div>
 
       <ng-container *ngIf="!loading">
-        <div class="px-6 py-4 border-b border-[#FFE0BF] flex flex-col gap-4">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3" *ngIf="conversations.length">
-            <div class="relative flex-1">
-              <input type="text"
-                     [(ngModel)]="searchTerm"
-                     placeholder="Rechercher dans vos conversations"
-                     class="w-full rounded-2xl border border-[#FFE0BF] px-4 py-2 outline-none text-sm text-gray-700 focus:ring-2 focus:ring-[#FF7A00]/40" />
-              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#FF7A00] text-xs font-semibold">
-                {{ filteredConversations.length }}/{{ conversations.length }}
-              </span>
-            </div>
-            <p class="text-xs text-gray-500 text-center md:text-right" *ngIf="conversations.length && conversations[0].conversation.updatedAt">
-              Dernière maj {{ conversations[0].conversation.updatedAt | timeAgo }}
-            </p>
-          </div>
-
-          <div class="relative">
-            <label class="block text-xs text-gray-500 font-semibold mb-1">Contacter un prestataire</label>
+        <div class="messages-filters">
+          <div class="relative mt-2">
+            <span class="messages-search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+              </svg>
+            </span>
             <input type="text"
                    [value]="newContactTerm"
                    (input)="onNewContactInput($event.target.value)"
-                   placeholder="Saisis un nom ou un métier"
-                   class="w-full rounded-2xl border border-[#FFE0BF] px-4 py-2 outline-none text-sm text-gray-700 focus:ring-2 focus:ring-[#FF7A00]/40" />
+                   placeholder="Rechercher ..."
+                   class="w-full rounded-2xl border border-[#FFE0BF] pl-11 pr-10 py-2 outline-none text-sm text-gray-700 focus:ring-2 focus:ring-[#FF7A00]/40" />
             <div class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400" *ngIf="newContactLoading">
               Recherche…
             </div>
@@ -61,6 +59,34 @@
               </button>
             </div>
           </div>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3" *ngIf="conversations.length">
+            
+            <!-- <p class="text-xs text-gray-500 text-center md:text-right" *ngIf="conversations.length && conversations[0].conversation.updatedAt">
+              Dernière maj {{ conversations[0].conversation.updatedAt | timeAgo }}
+            </p> -->
+          </div>
+          <div class="messages-tabs -mt-4" *ngIf="conversations.length">
+            <button type="button"
+                    class="messages-tab"
+                    [class.messages-tab--active]="activeFilter === 'all'"
+                    (click)="setFilter('all')">
+              Toutes
+            </button>
+            <button type="button"
+                    class="messages-tab"
+                    [class.messages-tab--active]="activeFilter === 'unread'"
+                    (click)="setFilter('unread')">
+              Non lues
+            </button>
+            <button type="button"
+                    class="messages-tab"
+                    [class.messages-tab--active]="activeFilter === 'archived'"
+                    (click)="setFilter('archived')">
+              Archivées
+            </button>
+          </div>
+
+          
         </div>
 
         <div *ngIf="!conversations.length" class="py-16 flex flex-col items-center justify-center text-center gap-3">
@@ -75,45 +101,97 @@
           Aucun résultat pour « {{ searchTerm }} ».
         </div>
 
-        <div *ngIf="filteredConversations.length" class="max-h-[32rem] overflow-y-auto" (scroll)="onScroll($event)">
-        <ul class="divide-y divide-[#FFE0BF]">
-          <li *ngFor="let item of visibleConversations" (click)="open(item.conversation)" class="cursor-pointer px-6 py-5 hover:bg-[#FFF4E6] transition">
-            <div class="flex gap-4 items-start">
-              <button type="button"
-                      class="focus:outline-none"
-                      (click)="goToProfile(item, $event)">
-                <img [src]="item.otherUser?.photoURL || 'assets/icone.png'" alt="Avatar" class="w-12 h-12 rounded-full object-cover border border-[#FFE0BF]" />
-              </button>
-              <div class="flex-1 min-w-0">
-                <div class="flex flex-wrap items-center gap-2">
-                  <button type="button"
-                          (click)="goToProfile(item, $event)"
-                          class="font-semibold text-[#1A1A1A] text-base truncate text-left hover:text-[#FF7A00] focus:outline-none">
-                    {{ displayName(item.otherUser) }}
-                  </button>
-                  <span *ngIf="item.unread" class="px-2 py-0.5 text-xs rounded-full bg-[#FF7A00] text-white uppercase tracking-wide">Nouveau</span>
-                </div>
-                <p class="text-xs text-gray-500" *ngIf="item.otherUser?.pseudo && (item.otherUser?.firstname || item.otherUser?.lastname)">
-                  {{ item.otherUser?.firstname }} {{ item.otherUser?.lastname }}
-                </p>
-                <p class="text-xs text-gray-500" *ngIf="item.otherUser?.profession">
-                  {{ item.otherUser.profession }}
-                </p>
-
-                <p class="text-sm text-gray-600 truncate mt-1">
-                  {{ item.conversation.lastMessage?.body || 'Aucun message pour le moment' }}
-                </p>
-
-                <div class="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
-                  <span *ngIf="item.conversation.updatedAt">Mis à jour {{ item.conversation.updatedAt | timeAgo }}</span>
-                  <span *ngIf="item.otherUser?.lastSeen">Dernière connexion {{ item.otherUser.lastSeen | timeAgo }}</span>
+        <div *ngIf="filteredConversations.length" class="messages-scroll" (scroll)="onScroll($event)">
+          <ul class="conversation-list divide-y divide-[#FFE0BF]">
+            <li *ngFor="let item of visibleConversations"
+                class="conversation-item"
+                [class.conversation-item--pinned]="isPinned(item)">
+              <div class="conversation-swipe">
+                <button type="button"
+                        class="conversation-swipe__action conversation-swipe__action--left"
+                        [attr.aria-label]="isArchived(item) ? 'Restaurer la conversation' : 'Archiver la conversation'"
+                        (click)="toggleArchiveConversation(item, $event)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="conversation-swipe__icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 8v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M9 8V4h6v4" />
+                  </svg>
+                  <span>{{ isArchived(item) ? 'Restaurer' : 'Archiver' }}</span>
+                </button>
+                <button type="button"
+                        class="conversation-swipe__action conversation-swipe__action--right"
+                        [attr.aria-label]="isPinned(item) ? 'Désépingler la conversation' : 'Épingler la conversation'"
+                        (click)="togglePinConversation(item, $event)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="conversation-swipe__icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m15.5 6.5-7 7M12 4v2m0 8v6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 4h8l1 4H7l1-4Z" />
+                  </svg>
+                  <span>{{ isPinned(item) ? 'Désépingler' : 'Épingler' }}</span>
+                </button>
+                <div class="conversation-item__content"
+                     [style.transform]="getSwipeTransform(item.conversation.id)"
+                     [class.conversation-item__content--dragging]="isSwiping(item.conversation.id)"
+                     (pointerdown)="onSwipeStart($event, item.conversation.id)"
+                     (pointermove)="onSwipeMove($event, item.conversation.id)"
+                     (pointerup)="onSwipeEnd($event, item)"
+                     (pointercancel)="onSwipeCancel($event, item.conversation.id)"
+                     (pointerleave)="onSwipeCancel($event, item.conversation.id)"
+                     (click)="onConversationClick(item)">
+                  <div class="conversation-item__wrapper">
+                    <button type="button"
+                            class="conversation-item__avatar-btn"
+                            (click)="goToProfile(item, $event)">
+                      <img [src]="item.otherUser?.photoURL || 'assets/icone.png'"
+                           alt="Avatar"
+                           class="conversation-item__avatar" />
+                    </button>
+                    <div class="conversation-item__body">
+                      <div class="conversation-item__header">
+                        <div class="conversation-item__title">
+                          <button type="button"
+                                  (click)="goToProfile(item, $event)"
+                                  class="conversation-item__name">
+                            {{ displayName(item.otherUser) }}
+                          </button>
+                          <span class="conversation-item__profession" *ngIf="item.otherUser?.profession">
+                            {{ item.otherUser.profession }}
+                          </span>
+                          <span class="conversation-item__pin" *ngIf="isPinned(item)">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="m13.5 5.5-5 5M12 4v2m0 10v4" />
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M8 4h8l0.8 3.4H7.2L8 4Z" />
+                            </svg>
+                            Épinglée
+                          </span>
+                        </div>
+                        <div class="conversation-item__status">
+                          <span class="conversation-item__date" *ngIf="item.conversation.updatedAt">
+                            {{ item.conversation.updatedAt | date:'d MMM':'':'fr-FR' }}
+                          </span>
+                          <span *ngIf="item.unread" class="conversation-item__badge"></span>
+                        </div>
+                      </div>
+                      <p class="conversation-item__preview">
+                        {{ item.conversation.lastMessage?.body || 'Aucun message pour le moment' }}
+                      </p>
+                      <p class="conversation-item__meta" *ngIf="item.otherUser?.lastSeen">
+                        Dernière connexion {{ item.otherUser.lastSeen | timeAgo }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </li>
-        </ul>
+            </li>
+          </ul>
         </div>
       </ng-container>
+    </div>
+    <div class="messages-pane messages-pane--notifications"
+         [style.display]="activeTab === 'notifications' ? 'block' : 'none'">
+      <app-notifications
+        class="messages-pane__notifications"
+        mode="panel"
+        (countChange)="onNotificationsCountChange($event)">
+      </app-notifications>
     </div>
   </div>
 </section>

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -16,6 +16,8 @@ import { ServiceBooking } from '../../core/models/booking.model';
   styleUrl: './notifications.css',
 })
 export default class NotificationsPage implements OnInit, OnDestroy {
+  @Input() mode: 'page' | 'panel' = 'page';
+  @Output() countChange = new EventEmitter<number>();
   loading = true;
   notifications: NotificationItem[] = [];
 
@@ -36,6 +38,8 @@ export default class NotificationsPage implements OnInit, OnDestroy {
       this.auth.user$.subscribe(user => {
         this.currentUid = user?.uid ?? null;
         if (!this.currentUid) {
+          this.notifications = [];
+          this.emitCount();
           this.router.navigate(['/login'], { queryParams: { redirect: '/notifications' } });
           return;
         }
@@ -75,6 +79,7 @@ export default class NotificationsPage implements OnInit, OnDestroy {
       this.notifications = merged;
       const newest = this.notifications.length ? this.notifications[0].createdAt ?? Date.now() : Date.now();
       this.setLastSeen(newest);
+      this.emitCount();
     } finally {
       this.loading = false;
     }
@@ -90,6 +95,7 @@ export default class NotificationsPage implements OnInit, OnDestroy {
     this.dismissedNotificationIds.add(notification.id);
     this.notifications = this.notifications.filter(item => item.id !== notification.id);
     this.persistDismissedNotifications();
+    this.emitCount();
   }
 
   private mapReviewNotification(review: UserReview, lastSeen: number): NotificationItem {
@@ -113,6 +119,10 @@ export default class NotificationsPage implements OnInit, OnDestroy {
       route: reviewerId ? ['/prestataires', reviewerId] : ['/notifications'],
       actionLabel: reviewerId ? 'Voir le profil' : 'Ouvrir',
     };
+  }
+
+  private emitCount() {
+    this.countChange.emit(this.notifications.length);
   }
 
   private mapBookingNotification(

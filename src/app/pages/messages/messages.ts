@@ -7,6 +7,7 @@ import { AuthStore } from '../../core/store/auth.store';
 import { ConversationSummary } from '../../core/models/conversation.model';
 import { TimeAgoPipe } from '../../shared/time-ago.pipe';
 import { ProfilesService } from '../../core/services/profiles';
+import NotificationsPage from './notifications';
 
 interface ConversationItem {
   conversation: ConversationSummary;
@@ -14,16 +15,25 @@ interface ConversationItem {
   unread: boolean;
 }
 
+interface SwipeTracker {
+  startX: number;
+  startY: number;
+  pointerId: number;
+  dragging: boolean;
+}
+
 @Component({
   selector: 'app-messages-inbox',
   standalone: true,
-  imports: [...SharedImports, TimeAgoPipe],
+  imports: [...SharedImports, TimeAgoPipe, NotificationsPage],
   templateUrl: './messages.html',
   styleUrl: './messages.css',
 })
 export default class MessagesInbox implements OnInit, OnDestroy {
   loading = true;
   conversations: ConversationItem[] = [];
+  activeFilter: 'all' | 'unread' | 'archived' = 'all';
+  activeTab: 'conversations' | 'notifications' = 'conversations';
   currentUid: string | null = null;
   filteredConversations: ConversationItem[] = [];
   visibleConversations: ConversationItem[] = [];
@@ -34,6 +44,14 @@ export default class MessagesInbox implements OnInit, OnDestroy {
   private newContactDebounce?: ReturnType<typeof setTimeout>;
 
   private readonly pageSize = 5;
+  notificationsCount = 0;
+  swipeOffsets: Record<string, number> = {};
+  private swipeTrackers = new Map<string, SwipeTracker>();
+  private swipePreventClick = new Set<string>();
+  private readonly swipeTriggerDistance = 90;
+  private readonly swipeMaxDistance = 140;
+  private readonly swipeActivationDelta = 8;
+
   private _searchTerm = '';
   get searchTerm() {
     return this._searchTerm;
@@ -49,6 +67,131 @@ export default class MessagesInbox implements OnInit, OnDestroy {
     if (this._searchTerm === value) return;
     this._searchTerm = value;
     this.updateFiltered();
+  }
+
+  setFilter(filter: 'all' | 'unread' | 'archived') {
+    if (this.activeFilter === filter) return;
+    this.activeFilter = filter;
+    this.updateFiltered();
+  }
+
+  isPinned(item: ConversationItem) {
+    if (!this.currentUid) return false;
+    return (item.conversation.pinnedBy ?? []).includes(this.currentUid);
+  }
+
+  isArchived(item: ConversationItem) {
+    if (!this.currentUid) return false;
+    return (item.conversation.archivedBy ?? []).includes(this.currentUid);
+  }
+
+  onConversationClick(item: ConversationItem) {
+    if (this.swipePreventClick.has(item.conversation.id)) {
+      return;
+    }
+    this.open(item.conversation);
+  }
+
+  async toggleArchiveConversation(item: ConversationItem, event?: Event) {
+    event?.stopPropagation();
+    this.resetSwipe(item.conversation.id);
+    const shouldArchive = !this.isArchived(item);
+    try {
+      await this.messaging.setArchiveState(item.conversation.id, shouldArchive);
+    } catch (error) {
+      console.error('Unable to toggle archive state', error);
+    }
+  }
+
+  async togglePinConversation(item: ConversationItem, event?: Event) {
+    event?.stopPropagation();
+    this.resetSwipe(item.conversation.id);
+    const shouldPin = !this.isPinned(item);
+    try {
+      await this.messaging.setPinState(item.conversation.id, shouldPin);
+    } catch (error) {
+      console.error('Unable to toggle pin state', error);
+    }
+  }
+
+  onSwipeStart(event: PointerEvent, conversationId: string) {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+    const target = event.currentTarget as HTMLElement | null;
+    target?.setPointerCapture?.(event.pointerId);
+    this.swipeTrackers.set(conversationId, {
+      startX: event.clientX,
+      startY: event.clientY,
+      pointerId: event.pointerId,
+      dragging: false,
+    });
+  }
+
+  onSwipeMove(event: PointerEvent, conversationId: string) {
+    const tracker = this.swipeTrackers.get(conversationId);
+    if (!tracker) return;
+
+    const deltaX = event.clientX - tracker.startX;
+    const deltaY = event.clientY - tracker.startY;
+
+    if (!tracker.dragging) {
+      if (Math.abs(deltaX) < this.swipeActivationDelta) {
+        return;
+      }
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        this.resetSwipe(conversationId, event.currentTarget as HTMLElement | null);
+        return;
+      }
+      tracker.dragging = true;
+    }
+
+    event.preventDefault();
+    this.swipeOffsets[conversationId] = Math.max(
+      -this.swipeMaxDistance,
+      Math.min(this.swipeMaxDistance, deltaX),
+    );
+    this.swipePreventClick.add(conversationId);
+  }
+
+  onSwipeEnd(event: PointerEvent, item: ConversationItem) {
+    const conversationId = item.conversation.id;
+    const tracker = this.swipeTrackers.get(conversationId);
+    if (!tracker) return;
+
+    const target = event.currentTarget as HTMLElement | null;
+    target?.releasePointerCapture?.(tracker.pointerId);
+
+    const offset = this.swipeOffsets[conversationId] ?? 0;
+    if (offset > this.swipeTriggerDistance) {
+      this.toggleArchiveConversation(item);
+    } else if (offset < -this.swipeTriggerDistance) {
+      this.togglePinConversation(item);
+    }
+
+    this.resetSwipe(conversationId);
+  }
+
+  onSwipeCancel(event: PointerEvent, conversationId: string) {
+    this.resetSwipe(conversationId, event.currentTarget as HTMLElement | null);
+  }
+
+  getSwipeTransform(conversationId: string) {
+    const offset = this.swipeOffsets[conversationId] ?? 0;
+    return `translateX(${offset}px)`;
+  }
+
+  isSwiping(conversationId: string) {
+    return this.swipeTrackers.get(conversationId)?.dragging ?? false;
+  }
+
+  setTab(tab: 'conversations' | 'notifications') {
+    if (this.activeTab === tab) return;
+    this.activeTab = tab;
+  }
+
+  onNotificationsCountChange(count: number) {
+    this.notificationsCount = count;
   }
 
   private subs: Subscription[] = [];
@@ -162,7 +305,7 @@ export default class MessagesInbox implements OnInit, OnDestroy {
       }),
     );
 
-    this.conversations = items.sort((a, b) => (b.conversation.updatedAt ?? 0) - (a.conversation.updatedAt ?? 0));
+    this.conversations = items.sort((a, b) => this.sortConversations(a, b));
     this.updateFiltered();
     this.loading = false;
   }
@@ -211,6 +354,16 @@ export default class MessagesInbox implements OnInit, OnDestroy {
     this.visibleConversations = this.filteredConversations.slice(0, this.visibleCount);
   }
 
+  private resetSwipe(conversationId: string, target?: HTMLElement | null) {
+    const tracker = this.swipeTrackers.get(conversationId);
+    if (target && tracker) {
+      target.releasePointerCapture?.(tracker.pointerId);
+    }
+    this.swipeTrackers.delete(conversationId);
+    this.swipeOffsets[conversationId] = 0;
+    setTimeout(() => this.swipePreventClick.delete(conversationId), 80);
+  }
+
   private updateFiltered() {
     this.filteredConversations = this.filterConversations();
     this.visibleCount = Math.min(this.pageSize, this.filteredConversations.length);
@@ -219,8 +372,19 @@ export default class MessagesInbox implements OnInit, OnDestroy {
 
   private filterConversations() {
     const term = this._searchTerm.trim().toLowerCase();
-    if (!term) return [...this.conversations];
     return this.conversations.filter(item => {
+      const isArchived = this.isArchived(item);
+      if (this.activeFilter === 'archived') {
+        if (!isArchived) return false;
+      } else if (isArchived) {
+        return false;
+      }
+
+      if (this.activeFilter === 'unread' && !item.unread) {
+        return false;
+      }
+
+      if (!term) return true;
       const haystack = [
         this.displayName(item.otherUser),
         item.otherUser?.firstname || '',
@@ -233,5 +397,14 @@ export default class MessagesInbox implements OnInit, OnDestroy {
         .toLowerCase();
       return haystack.includes(term);
     });
+  }
+
+  private sortConversations(a: ConversationItem, b: ConversationItem) {
+    const pinA = this.isPinned(a) ? 1 : 0;
+    const pinB = this.isPinned(b) ? 1 : 0;
+    if (pinA !== pinB) {
+      return pinB - pinA;
+    }
+    return (b.conversation.updatedAt ?? 0) - (a.conversation.updatedAt ?? 0);
   }
 }

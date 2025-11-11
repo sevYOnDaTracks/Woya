@@ -8,6 +8,8 @@ export interface ConversationSummary {
     createdAt?: number;
   } | null;
   readBy?: string[];
+  archivedBy?: string[];
+  pinnedBy?: string[];
 }
 
 export interface Message {

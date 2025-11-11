@@ -1,3 +1,27 @@
+.notifications-shell {
+  @apply min-h-screen bg-[#FFF7EB] pt-10 md:pt-24 pb-16 px-4 md:px-16;
+}
+
+.notifications-shell--panel {
+  @apply min-h-0 bg-transparent pt-0 md:pt-0 pb-0 px-0;
+}
+
+.notifications-shell__inner {
+  @apply max-w-4xl mx-auto;
+}
+
+.notifications-shell__inner--panel {
+  @apply max-w-none mx-0;
+}
+
+.notifications-shell__card {
+  @apply rounded-3xl border border-[#FFE0BF] bg-white/90 backdrop-blur shadow-sm overflow-hidden;
+}
+
+.notifications-shell__card--panel {
+  @apply rounded-2xl bg-white border border-[#FFE0BF];
+}
+
 .badge-new {
   @apply px-2 py-0.5 text-[10px] rounded-full bg-[#FF7A00] text-white uppercase tracking-wide;
 }

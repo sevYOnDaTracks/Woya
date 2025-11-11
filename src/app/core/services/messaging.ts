@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
   doc,
@@ -121,6 +122,24 @@ export class MessagingService {
     });
   }
 
+  async setArchiveState(conversationId: string, archived: boolean) {
+    const currentUid = this.currentUid();
+    if (!currentUid) throw new Error('Utilisateur non authentifié');
+    const conversationRef = doc(this.db, 'conversations', conversationId);
+    await updateDoc(conversationRef, {
+      archivedBy: archived ? arrayUnion(currentUid) : arrayRemove(currentUid),
+    });
+  }
+
+  async setPinState(conversationId: string, pinned: boolean) {
+    const currentUid = this.currentUid();
+    if (!currentUid) throw new Error('Utilisateur non authentifié');
+    const conversationRef = doc(this.db, 'conversations', conversationId);
+    await updateDoc(conversationRef, {
+      pinnedBy: pinned ? arrayUnion(currentUid) : arrayRemove(currentUid),
+    });
+  }
+
   async getConversation(conversationId: string): Promise<ConversationSummary | null> {
     const ref = doc(this.db, 'conversations', conversationId);
     const snap = await getDoc(ref);
@@ -151,6 +170,8 @@ export class MessagingService {
       participantIds: data.participantIds ?? [],
       updatedAt: this.toMillis(data.updatedAt),
       readBy: data.readBy ?? [],
+      archivedBy: data.archivedBy ?? [],
+      pinnedBy: data.pinnedBy ?? [],
       lastMessage: data.lastMessage
         ? {
             body: data.lastMessage.body,
