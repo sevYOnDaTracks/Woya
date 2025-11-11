@@ -1,4 +1,4 @@
-export type BillingMode = 'hourly' | 'per_service';
+export type BillingMode = 'hourly' | 'per_service' | 'custom';
 
 export interface WoyaService {
   id?: string;

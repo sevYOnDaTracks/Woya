@@ -1,0 +1,21 @@
+.publish-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+  background-color: #f3f4f6;
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.publish-back-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.publish-back-btn svg {
+  color: #1a1a1a;
+}

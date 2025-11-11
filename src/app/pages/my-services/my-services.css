@@ -68,3 +68,16 @@
 .danger-btn {
   @apply border border-red-500 text-red-500 rounded-2xl px-4 py-2 font-semibold text-sm hover:bg-red-500 hover:text-white transition disabled:opacity-60 disabled:cursor-not-allowed;
 }
+.row-service-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.row-service-image {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  object-fit: cover;
+  border: 1px solid #ffe0bf;
+}

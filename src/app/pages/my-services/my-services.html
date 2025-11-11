@@ -30,12 +30,17 @@
 
           <div *ngFor="let service of services; trackBy: trackByService"
                class="crud-row">
-            <div>
-              <p class="row-title">{{ service.title }}</p>
-              <p class="row-meta">{{ service.category }} • {{ service.city }}</p>
-              <p class="text-xs mt-1" [class.text-green-600]="service.isActive !== false" [class.text-gray-400]="service.isActive === false">
-                {{ service.isActive === false ? 'Masqué' : 'Visible' }}
-              </p>
+            <div class="row-service-preview">
+              <img [src]="service.coverUrl || 'assets/icone.png'"
+                   alt="aperçu service"
+                   class="row-service-image">
+              <div>
+                <p class="row-title">{{ service.title }}</p>
+                <p class="row-meta">{{ service.category }} • {{ service.city }}</p>
+                <p class="text-xs mt-1" [class.text-green-600]="service.isActive !== false" [class.text-gray-400]="service.isActive === false">
+                  {{ service.isActive === false ? 'Masqué' : 'Visible' }}
+                </p>
+              </div>
             </div>
             <span class="row-price">
               {{ formatPrice(service) }}

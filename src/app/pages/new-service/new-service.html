@@ -1,8 +1,11 @@
 <div class="max-w-xl mx-auto px-6 py-8 bg-white rounded-2xl shadow-sm mt-6">
   <button type="button"
           (click)="goBack()"
-          class="text-sm text-gray-500 hover:text-black mb-4 flex items-center gap-1">
-    Retour
+          class="publish-back-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7" />
+    </svg>
+    <span>Retour</span>
   </button>
   <h2 class="text-2xl font-bold mb-6 text-[#FF7A00]">
     {{ editing ? 'Mettre à jour un service' : 'Publier un service' }}
@@ -99,36 +102,46 @@
       <p class="text-sm font-semibold text-[#1A1A1A]">Mode de facturation</p>
       <div class="flex flex-col gap-3 sm:flex-row">
         <label class="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A] border rounded-2xl px-4 py-2 cursor-pointer"
-               [class.border-[#FF7A00]]="form.billingMode === 'per_service'"
-               [class.bg-[#FFF2E5]]="form.billingMode === 'per_service'">
+               [class.border-[#FF7A00]]="form.billingMode === billingModes.perService"
+               [class.bg-[#FFF2E5]]="form.billingMode === billingModes.perService">
           <input type="radio"
                  class="text-[#FF7A00]"
                  name="billingMode"
                  [(ngModel)]="form.billingMode"
-                 [value]="'per_service'">
+                 [value]="billingModes.perService">
           À la prestation
         </label>
         <label class="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A] border rounded-2xl px-4 py-2 cursor-pointer"
-               [class.border-[#FF7A00]]="form.billingMode === 'hourly'"
-               [class.bg-[#FFF2E5]]="form.billingMode === 'hourly'">
+               [class.border-[#FF7A00]]="form.billingMode === billingModes.hourly"
+               [class.bg-[#FFF2E5]]="form.billingMode === billingModes.hourly">
           <input type="radio"
                  class="text-[#FF7A00]"
                  name="billingMode"
                  [(ngModel)]="form.billingMode"
-                 [value]="'hourly'">
+                 [value]="billingModes.hourly">
           À l'heure
+        </label>
+        <label class="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A] border rounded-2xl px-4 py-2 cursor-pointer"
+               [class.border-[#FF7A00]]="form.billingMode === billingModes.custom"
+               [class.bg-[#FFF2E5]]="form.billingMode === billingModes.custom">
+          <input type="radio"
+                 class="text-[#FF7A00]"
+                 name="billingMode"
+                 [(ngModel)]="form.billingMode"
+                 [value]="billingModes.custom">
+          À convenir
         </label>
       </div>
     </div>
 
-    <div>
+    <div *ngIf="form.billingMode !== billingModes.custom">
       <label class="text-sm font-semibold text-[#1A1A1A] mb-2 block">
-        Tarif {{ form.billingMode === 'hourly' ? 'par heure' : 'par prestation' }}
+        Tarif {{ form.billingMode === billingModes.hourly ? 'par heure' : 'par prestation' }}
       </label>
       <input [(ngModel)]="form.price" type="number" min="0" placeholder="Montant en FCFA"
              class="border rounded-xl px-4 py-3 outline-none w-full" />
       <p class="text-xs text-gray-500 mt-1">
-        {{ form.billingMode === 'hourly'
+        {{ form.billingMode === billingModes.hourly
             ? 'Indique le tarif facturé pour une heure complète.'
             : 'Indique le tarif fixe pour la prestation complète.' }}
       </p>

@@ -21,10 +21,17 @@ type AvailabilityFormDay = { day: number; start: string; end: string; enabled: b
   selector: 'app-new-service',
   standalone: true,
   imports: [CommonModule, FormsModule, HttpClientModule],
-  templateUrl: './new-service.html'
+  templateUrl: './new-service.html',
+  styleUrl: './new-service.css',
 })
 export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapContainer') mapContainer?: ElementRef<HTMLDivElement>;
+
+  billingModes = {
+    perService: 'per_service' as BillingMode,
+    hourly: 'hourly' as BillingMode,
+    custom: 'custom' as BillingMode,
+  } as const;
 
   private readonly defaultCoverIcon = 'assets/icone.png';
   private readonly defaultServiceSuggestions: Record<string, string[]> = {
