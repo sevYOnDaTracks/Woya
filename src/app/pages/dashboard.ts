@@ -31,6 +31,9 @@ interface UpcomingAppointment {
   title: string;
   dateLabel: string;
   roleLabel: string;
+  status: 'confirmed' | 'pending';
+  role: 'provider' | 'client';
+  bookingId?: string;
   route: any[];
   coverUrl?: string | null;
 }
@@ -103,6 +106,8 @@ export default class DashboardPage implements OnInit, OnDestroy {
   appointmentLoading = false;
   pendingRequests = 0;
   pendingReservations = 0;
+  cancellingNext = false;
+  cancelNextError = '';
 
   private currentUid: string | null = null;
   private subs: Subscription[] = [];
@@ -201,6 +206,15 @@ export default class DashboardPage implements OnInit, OnDestroy {
     return action.id;
   }
 
+  get canCancelNextAppointment() {
+    return (
+      !!this.nextAppointment &&
+      this.nextAppointment.status === 'pending' &&
+      this.nextAppointment.role === 'client' &&
+      !!this.nextAppointment.bookingId
+    );
+  }
+
   private async loadDashboardData() {
     if (!this.currentUid) return;
     const uid = this.currentUid;
@@ -216,6 +230,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
       this.pendingRequests = providerBookings.filter(booking => booking.status === 'pending').length;
       this.pendingReservations = clientBookings.filter(booking => booking.status === 'pending').length;
       await this.computeNextAppointment(providerBookings, clientBookings, uid);
+      this.cancelNextError = '';
       this.refreshActions();
     } finally {
       if (uid === this.currentUid) {
@@ -234,7 +249,16 @@ export default class DashboardPage implements OnInit, OnDestroy {
       ...providerBookings.map(booking => ({ booking, role: 'provider' as const })),
       ...clientBookings.map(booking => ({ booking, role: 'client' as const })),
     ]
-      .filter(entry => entry.booking.status === 'confirmed' && (entry.booking.startTime ?? 0) >= now)
+      .filter(({ booking, role }) => {
+        const isUpcoming = (booking.startTime ?? 0) >= now;
+        if (!isUpcoming) {
+          return false;
+        }
+        if (booking.status === 'confirmed') {
+          return true;
+        }
+        return role === 'client' && booking.status === 'pending';
+      })
       .sort((a, b) => (a.booking.startTime ?? 0) - (b.booking.startTime ?? 0));
 
     const next = combined[0];
@@ -250,10 +274,16 @@ export default class DashboardPage implements OnInit, OnDestroy {
       return;
     }
 
+    const status: 'confirmed' | 'pending' =
+      booking.status === 'pending' && role === 'client' ? 'pending' : 'confirmed';
+
     this.nextAppointment = {
       title: booking.serviceTitle || 'Service',
       dateLabel: this.formatDate(booking.startTime),
       roleLabel: role === 'provider' ? 'En tant que prestataire' : 'En tant que client',
+      status,
+      role,
+      bookingId: booking.id,
       route: [role === 'provider' ? '/mes-rendez-vous' : '/mes-reservations'],
       coverUrl: coverUrl ?? this.serviceCoverPlaceholder,
     };
@@ -324,5 +354,34 @@ export default class DashboardPage implements OnInit, OnDestroy {
     }
     this.serviceCoverCache.set(serviceId, null);
     return null;
+  }
+
+  async cancelNextAppointment() {
+    if (!this.nextAppointment || !this.canCancelNextAppointment) return;
+    const bookingId = this.nextAppointment.bookingId;
+    if (!bookingId) return;
+
+    const shouldCancel = typeof confirm === 'function'
+      ? confirm('Annuler cette reservation ?')
+      : true;
+    if (!shouldCancel) return;
+
+    this.cancellingNext = true;
+    this.cancelNextError = '';
+    try {
+      await this.bookings.cancelPendingBookingByClient(bookingId);
+      await this.loadDashboardData();
+    } catch (error: any) {
+      console.error('Unable to cancel dashboard booking', error);
+      if (error instanceof Error && error.message === 'BOOKING_NOT_PENDING') {
+        this.cancelNextError = 'Ce rendez-vous vient d etre confirme.';
+      } else if (error instanceof Error && error.message === 'BOOKING_NOT_FOUND') {
+        this.cancelNextError = 'Ce rendez-vous n\'existe plus.';
+      } else {
+        this.cancelNextError = 'Impossible d\'annuler ce rendez-vous.';
+      }
+    } finally {
+      this.cancellingNext = false;
+    }
   }
 }

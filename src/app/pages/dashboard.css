@@ -3,7 +3,12 @@
 }
 
 .dashboard__hero {
-  @apply rounded-3xl bg-white border border-[#FFE0BF] p-6 shadow-sm space-y-6 w-full;
+  @apply rounded-3xl bg-white border border-[#FFE0BF] p-6 shadow-sm w-full;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .dashboard__welcome-label {
@@ -19,7 +24,31 @@
 }
 
 .dashboard__hero-next {
-  @apply rounded-2xl border border-[#FFE0BF] bg-[#FFF9F2] p-5 space-y-4;
+  @apply rounded-2xl border border-[#FFE0BF] bg-[#FFF9F2] p-5 space-y-4 text-left;
+  width: 100%;
+}
+
+.dashboard__appointment-body {
+  @apply space-y-2 text-left;
+}
+
+@media (min-width: 1024px) {
+  .dashboard__hero {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: flex-start;
+    justify-items: start;
+    gap: 2rem;
+  }
+
+  .dashboard__welcome {
+    width: 100%;
+  }
+
+  .dashboard__hero-next {
+    width: 100%;
+    justify-self: start;
+  }
 }
 
 .dashboard__appointment-header {
@@ -46,8 +75,24 @@
   @apply text-xs text-gray-400 uppercase tracking-wide mt-2;
 }
 
+.dashboard__appointment-tip {
+  @apply mt-3 text-xs text-[#92400E] bg-[#FEF3C7] px-3 py-2 rounded-2xl inline-flex items-center;
+}
+
+.dashboard__appointment-error {
+  @apply mt-3 text-xs text-red-600;
+}
+
+.dashboard__appointment-actions {
+  @apply mt-4 flex flex-col gap-2;
+}
+
 .dashboard__appointment-link {
-  @apply inline-flex items-center gap-2 mt-4 text-sm font-semibold text-[#FF7A00] hover:text-[#e66d00];
+  @apply inline-flex items-center justify-center rounded-2xl border border-[#FF7A00] px-4 py-2 text-sm font-semibold text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white transition;
+}
+
+.dashboard__appointment-cancel {
+  @apply inline-flex items-center justify-center rounded-2xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition disabled:opacity-60 disabled:cursor-not-allowed;
 }
 
 .dashboard__appointment-cta {
@@ -142,8 +187,16 @@
   @apply text-white/80;
 }
 
+.badge-new {
+  @apply px-2 py-0.5 text-[10px] rounded-full uppercase tracking-[0.35em] font-semibold;
+}
+
 .badge-new--confirmed {
-  @apply px-2 py-0.5 text-[10px] rounded-full uppercase tracking-[0.35em] font-semibold bg-[#DCFCE7] text-[#15803D];
+  @apply bg-[#DCFCE7] text-[#15803D];
+}
+
+.badge-new--pending {
+  @apply bg-[#FEF3C7] text-[#92400E];
 }
 
 .dashboard__welcome-skeleton {

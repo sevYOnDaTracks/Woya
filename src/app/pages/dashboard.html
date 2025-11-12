@@ -25,7 +25,16 @@
     <div class="dashboard__hero-next">
       <div class="dashboard__appointment-header">
         <p>Prochain rendez-vous </p>
-        <span class="badge-new badge-new--confirmed" *ngIf="nextAppointment">Confirmé</span>
+        <span
+          class="badge-new"
+          *ngIf="nextAppointment"
+          [ngClass]="{
+            'badge-new--confirmed': nextAppointment.status === 'confirmed',
+            'badge-new--pending': nextAppointment.status === 'pending'
+          }"
+        >
+          {{ nextAppointment.status === 'confirmed' ? 'Confirmé' : 'En attente' }}
+        </span>
       </div>
 
       <div class="dashboard__appointment-body" *ngIf="!appointmentLoading; else appointmentLoadingTpl">
@@ -36,9 +45,33 @@
           <h2>{{ nextAppointment.title }}</h2>
           <p class="dashboard__appointment-date">{{ nextAppointment.dateLabel }}</p>
           <p class="dashboard__appointment-role">{{ nextAppointment.roleLabel }}</p>
-          <a class="dashboard__appointment-link" [routerLink]="nextAppointment.route">
-            Voir le détail
-          </a>
+          <p
+            class="dashboard__appointment-tip"
+            *ngIf="nextAppointment.status === 'pending'"
+          >
+            Ta demande est en attente de validation.
+          </p>
+          <p class="dashboard__appointment-error" *ngIf="cancelNextError">
+            {{ cancelNextError }}
+          </p>
+          <div class="dashboard__appointment-actions" *ngIf="nextAppointment">
+            <button
+              type="button"
+              class="dashboard__appointment-link"
+              [routerLink]="nextAppointment.route"
+            >
+              Voir le détail
+            </button>
+            <button
+              type="button"
+              class="dashboard__appointment-cancel"
+              *ngIf="canCancelNextAppointment"
+              (click)="cancelNextAppointment()"
+              [disabled]="cancellingNext"
+            >
+              {{ cancellingNext ? 'Annulation...' : 'Annuler la demande' }}
+            </button>
+          </div>
         </ng-container>
       </div>
     </div>
@@ -104,7 +137,7 @@
 
 <ng-template #noAppointmentTpl>
   <div class="dashboard__appointment-empty">
-    <p>Aucun rendez-vous confirmé pour le moment.</p>
+    <p>Aucun rendez-vous à venir pour le moment.</p>
     <a routerLink="/services" class="dashboard__appointment-cta">Réserver un service</a>
   </div>
 </ng-template>

@@ -1,16 +1,16 @@
 
 
   <!-- HERO -->
-  <section class="relative isolate overflow-hidden -mt-8 text-white bg-[#0B1120]">
+  <section class="relative isolate overflow-hidden -mt-8 bg-white text-[#1A1A1A]">
     <div class="absolute inset-0 -z-10 pointer-events-none">
-      <div class="absolute inset-0 bg-gradient-to-r from-[#FF7A00]/70 via-[#ffffff]/20 to-[#15803D]/60 opacity-90"></div>
-      <div class="absolute -bottom-10 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-white/30 blur-3xl"></div>
-      <div class="absolute top-10 right-10 h-48 w-48 rounded-full bg-[#FF7A00]/30 blur-3xl"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-[#FFF7EB] via-white to-[#E6F6EE] opacity-70"></div>
+      <div class="absolute -bottom-10 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#FFE0BF]/60 blur-3xl"></div>
+      <div class="absolute top-10 right-10 h-48 w-48 rounded-full bg-[#C6F6D5]/60 blur-3xl"></div>
     </div>
 
     <div class="mx-auto max-w-6xl px-6 pt-24 pb-20 lg:px-12 lg:pt-32">
       <div class="space-y-8 text-center lg:text-left">
-        <div class="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-white/70">
+        <div class="inline-flex items-center gap-2 rounded-full border border-[#FFE0BF] bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-[#FF7A00] shadow-sm">
           <span class="size-2 rounded-full bg-[#FF7A00]"></span>
           L'entreprenariat locale
         </div>
@@ -25,17 +25,17 @@
               sécurisées et humaines. Publie ton savoir faire, discute dans l’app et choisis en toute confiance.
             </p> -->
 
-            <div class="mt-8 rounded-3xl border border-white/20 bg-white/10 p-6 backdrop-blur hidden md:block">
-              <div class="flex items-center gap-2 rounded-2xl bg-white/10 p-1">
+            <div class="mt-8 hidden rounded-3xl border border-[#FFE0BF] bg-white/90 p-6 shadow-lg md:block">
+              <div class="flex items-center gap-2 rounded-2xl bg-[#FFF4E8] p-1">
                 <button type="button"
                         (click)="setSearchMode('services')"
-                        [ngClass]="searchMode === 'services' ? 'bg-white text-[#FF7A00]' : 'text-white/70'"
+                        [ngClass]="searchMode === 'services' ? 'bg-white text-[#FF7A00]' : 'text-gray-500'"
                         class="flex-1 rounded-2xl px-4 py-2 text-sm font-semibold transition">
                   Services
                 </button>
                 <button type="button"
                         (click)="setSearchMode('providers')"
-                        [ngClass]="searchMode === 'providers' ? 'bg-white text-[#FF7A00]' : 'text-white/70'"
+                        [ngClass]="searchMode === 'providers' ? 'bg-white text-[#FF7A00]' : 'text-gray-500'"
                         class="flex-1 rounded-2xl px-4 py-2 text-sm font-semibold transition">
                   Prestataires
                 </button>
@@ -58,8 +58,8 @@
                   </button>
                 </div>
 
-                <div class="flex flex-col gap-2 text-white/80">
-                  <label class="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+                <div class="flex flex-col gap-2 text-gray-600">
+                  <label class="text-xs font-semibold uppercase tracking-[0.3em] text-[#FF7A00]">
                     Ville
                   </label>
                   <div class="relative">
@@ -68,12 +68,12 @@
                            (focus)="openCityDropdown()"
                            (blur)="closeCityDropdownSoon()"
                            placeholder="Ex: Abidjan, Cocody, Yopougon..."
-                           class="w-full rounded-2xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white placeholder:text-white/60 backdrop-blur focus:border-white focus:outline-none" />
-                    <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           class="w-full rounded-2xl border border-[#FFE0BF] bg-white px-4 py-2 text-sm font-semibold text-[#1A1A1A] placeholder:text-gray-500 focus:border-[#FF7A00] focus:outline-none" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF7A00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 9l6 6 6-6" />
                     </svg>
                     <div *ngIf="cityDropdownOpen && filteredCityOptions.length"
-                         class="absolute left-0 right-0 z-20 mt-2 rounded-2xl border border-white/20 bg-white/95 text-[#1A1A1A] shadow-xl">
+                         class="absolute left-0 right-0 z-20 mt-2 rounded-2xl border border-[#FFE0BF] bg-white/95 text-[#1A1A1A] shadow-xl">
                       <button type="button"
                               *ngFor="let city of filteredCityOptions"
                               (mousedown)="chooseCity(city)"
@@ -82,13 +82,13 @@
                       </button>
                     </div>
                   </div>
-                  <p *ngIf="cityError" class="text-xs font-semibold text-red-200">{{ cityError }}</p>
+                  <p *ngIf="cityError" class="text-xs font-semibold text-red-500">{{ cityError }}</p>
                 </div>
 
-                <p *ngIf="searchError" class="text-xs font-semibold text-red-200">{{ searchError }}</p>
-                <p *ngIf="searchLoading" class="text-xs text-white/80">Recherche en cours…</p>
+                <p *ngIf="searchError" class="text-xs font-semibold text-red-500">{{ searchError }}</p>
+                <p *ngIf="searchLoading" class="text-xs text-gray-500">Recherche en cours…</p>
 
-                <div *ngIf="!searchLoading && searchResults.length" class="rounded-2xl border border-white/20 bg-white/80 p-3 text-[#1A1A1A] shadow-lg">
+                <div *ngIf="!searchLoading && searchResults.length" class="rounded-2xl border border-[#FFE0BF] bg-white p-3 text-[#1A1A1A] shadow-lg">
                   <p class="px-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                     {{ searchMode === 'services' ? 'Services suggérés' : 'Prestataires suggérés' }}
                   </p>
@@ -125,7 +125,7 @@
 
             <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
               <a routerLink="/login"
-                 class="inline-flex items-center justify-center rounded-2xl border border-white/40 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10">
+                 class="inline-flex items-center justify-center rounded-2xl border border-[#FFE0BF] px-6 py-3 text-base font-semibold text-[#1A1A1A] transition hover:bg-[#FFF7EB]">
                 Se connecter
               </a>
               <a routerLink="/register"
@@ -134,55 +134,55 @@
               </a>
             </div>
 
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm font-semibold text-white/60 lg:justify-start">
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm font-semibold text-gray-600 lg:justify-start">
               <div>
-                <p class="text-2xl font-bold text-white">{{ serviceStatLabel }}</p>
-                <p class="text-sm text-white/70">sur Woya!</p>
+                <p class="text-2xl font-bold text-[#1A1A1A]">{{ serviceStatLabel }}</p>
+                <p class="text-sm text-gray-500">sur Woya!</p>
               </div>
-              <span class="h-10 w-px bg-white/20"></span>
+              <span class="h-10 w-px bg-[#FFE0BF]"></span>
               <div>
-                <p class="text-2xl font-bold text-white">100%</p>
+                <p class="text-2xl font-bold text-[#1A1A1A]">100%</p>
                 <p>Messagerie sécurisée</p>
               </div>
-              <span class="h-10 w-px bg-white/20"></span>
+              <span class="h-10 w-px bg-[#FFE0BF]"></span>
               <div>
-                <p class="text-2xl font-bold text-white">24/7</p>
+                <p class="text-2xl font-bold text-[#1A1A1A]">24/7</p>
                 <p>Confiance locale</p>
               </div>
             </div>
           </div>
 
-          <div class="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <div class="rounded-3xl border border-[#FFE0BF] bg-white p-6 shadow-xl">
             <p class="text-sm font-semibold uppercase tracking-[0.3em] text-[#FFB066]">Demandes en cours</p>
-            <div class="mt-4 space-y-4 text-left text-sm text-white/80">
-              <div class="flex items-start gap-4 rounded-2xl bg-white/5 p-4">
+            <div class="mt-4 space-y-4 text-left text-sm text-gray-600">
+              <div class="flex items-start gap-4 rounded-2xl bg-[#FFF7EB] p-4">
                 <div class="flex size-10 items-center justify-center rounded-full bg-[#FF7A00]/20 text-[#FF7A00]">
                   🧹
                 </div>
                 <div>
-                  <p class="font-semibold text-white">Ménage express - Cocody</p>
+                  <p class="font-semibold text-[#1A1A1A]">Ménage express - Cocody</p>
                   <p>Besoin demain matin • 12 000 FCFA</p>
                 </div>
               </div>
-              <div class="flex items-start gap-4 rounded-2xl bg-white/5 p-4">
+              <div class="flex items-start gap-4 rounded-2xl bg-[#FFF7EB] p-4">
                 <div class="flex size-10 items-center justify-center rounded-full bg-[#FF7A00]/20 text-[#FF7A00]">
                   💻
                 </div>
                 <div>
-                  <p class="font-semibold text-white">Installation wifi - Yopougon</p>
+                  <p class="font-semibold text-[#1A1A1A]">Installation wifi - Yopougon</p>
                   <p>RDV aujourd’hui • 18 500 FCFA</p>
                 </div>
               </div>
-              <div class="flex items-start gap-4 rounded-2xl bg-white/5 p-4">
+              <div class="flex items-start gap-4 rounded-2xl bg-[#FFF7EB] p-4">
                 <div class="flex size-10 items-center justify-center rounded-full bg-[#FF7A00]/20 text-[#FF7A00]">
                   🌿
                 </div>
                 <div>
-                  <p class="font-semibold text-white">Entretien jardin - Bingerville</p>
+                  <p class="font-semibold text-[#1A1A1A]">Entretien jardin - Bingerville</p>
                   <p>Week-end prochain • 25 000 FCFA</p>
                 </div>
               </div>
-              <p class="pt-2 text-xs text-white/60">Des centaines de nouvelles demandes chaque jour dans Abidjan et ses environs.</p>
+              <p class="pt-2 text-xs text-gray-500">Des centaines de nouvelles demandes chaque jour dans Abidjan et ses environs.</p>
             </div>
           </div>
         </div>

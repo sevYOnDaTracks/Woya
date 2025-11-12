@@ -126,6 +126,13 @@
                       Voir l'annonce
                     </button>
                     <button type="button"
+                            class="danger-outline-btn"
+                            *ngIf="booking.status === 'pending'"
+                            [disabled]="cancellingId === booking.id"
+                            (click)="cancelBooking(booking)">
+                      {{ cancellingId === booking.id ? 'Annulation...' : 'Annuler' }}
+                    </button>
+                    <button type="button"
                             class="icon-btn"
                             [disabled]="contactingId === (booking.id || booking.serviceId)"
                             (click)="contactProvider(booking)">

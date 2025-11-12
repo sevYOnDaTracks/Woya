@@ -33,6 +33,7 @@ export default class ClientBookings implements OnInit, OnDestroy {
   bookings: ServiceBooking[] = [];
   view: BookingView = 'upcoming';
   contactingId: string | null = null;
+  cancellingId: string | null = null;
   statusFilter: 'all' | 'pending' | 'confirmed' | 'cancelled' = 'all';
   serviceFilter = '';
   searchTerm = '';
@@ -197,6 +198,33 @@ export default class ClientBookings implements OnInit, OnDestroy {
       this.error = 'Impossible d’ouvrir la messagerie pour ce rendez-vous.';
     } finally {
       this.contactingId = null;
+    }
+  }
+
+  async cancelBooking(booking: ServiceBooking) {
+    if (!booking.id || booking.status !== 'pending') return;
+    const confirmCancel = typeof confirm === 'function'
+      ? confirm('Annuler cette réservation ?')
+      : true;
+    if (!confirmCancel) return;
+
+    this.cancellingId = booking.id;
+    this.error = '';
+    try {
+      await this.bookingsService.cancelPendingBookingByClient(booking.id);
+      booking.status = 'cancelled';
+      this.ensureActiveDateHasContext(true);
+    } catch (error: any) {
+      console.error('Unable to cancel booking as client', error);
+      if (error instanceof Error && error.message === 'BOOKING_NOT_PENDING') {
+        this.error = 'Ce rendez-vous a deja ete confirme par le prestataire.';
+      } else if (error instanceof Error && error.message === 'BOOKING_NOT_FOUND') {
+        this.error = 'Ce rendez-vous n\'existe plus.';
+      } else {
+        this.error = 'Impossible d\'annuler ce rendez-vous.';
+      }
+    } finally {
+      this.cancellingId = null;
     }
   }
 

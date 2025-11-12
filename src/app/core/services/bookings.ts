@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -69,6 +70,22 @@ export class BookingsService {
     const ref = doc(this.db, 'bookings', bookingId);
     await updateDoc(ref, {
       status,
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  async cancelPendingBookingByClient(bookingId: string) {
+    const ref = doc(this.db, 'bookings', bookingId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      throw new Error('BOOKING_NOT_FOUND');
+    }
+    const currentStatus = (snap.data()?.['status'] as BookingStatus | undefined) ?? 'pending';
+    if (currentStatus !== 'pending') {
+      throw new Error('BOOKING_NOT_PENDING');
+    }
+    await updateDoc(ref, {
+      status: 'cancelled',
       updatedAt: serverTimestamp(),
     });
   }
