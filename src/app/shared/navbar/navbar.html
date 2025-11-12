@@ -649,6 +649,23 @@
   </button>
   <button type="button"
           class="mobile-profile-menu__item"
+          (click)="goToNotifications()">
+    <span class="mobile-profile-menu__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 0 0-9-5.197" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 17h5" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10" />
+      </svg>
+    </span>
+    <span class="mobile-profile-menu__label">
+      Notifications
+      <span *ngIf="notificationBadgeCount" class="mobile-profile-menu__badge">
+        {{ notificationBadgeCount > 99 ? '99+' : notificationBadgeCount }}
+      </span>
+    </span>
+  </button>
+  <button type="button"
+          class="mobile-profile-menu__item"
           (click)="goToAgendaTab('provider')">
     <span class="mobile-profile-menu__icon">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">

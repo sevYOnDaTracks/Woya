@@ -6,6 +6,22 @@
   @apply flex flex-col gap-6;
 }
 
+.dashboard__profile-warning {
+  @apply flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-3xl border border-amber-200 bg-amber-50 px-6 py-4 text-amber-800;
+}
+
+.dashboard__profile-warning-title {
+  @apply text-xs font-bold uppercase tracking-[0.35em] text-amber-500;
+}
+
+.dashboard__profile-warning-text {
+  @apply text-sm md:text-base;
+}
+
+.dashboard__profile-warning-btn {
+  @apply inline-flex items-center justify-center rounded-2xl border border-amber-400 px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100 transition;
+}
+
 .dashboard__card {
   @apply rounded-3xl bg-white border border-[#FFE0BF] p-6 shadow-sm w-full;
 }

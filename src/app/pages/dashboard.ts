@@ -113,6 +113,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
   pendingReservations = 0;
   cancellingNext = false;
   cancelNextError = '';
+  showProfileWarning = false;
 
   private currentUid: string | null = null;
   private subs: Subscription[] = [];
@@ -151,6 +152,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
           this.userLoading = false;
 
           this.userName = 'Invité';
+          this.showProfileWarning = false;
 
           this.nextAppointment = null;
 
@@ -187,6 +189,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
         this.userLoading = !!user?.profileLoading;
 
         this.userName = this.userLoading ? 'Chargement...' : this.displayName(user);
+        this.showProfileWarning = this.shouldShowProfileWarning(user);
 
 
 
@@ -316,6 +319,29 @@ export default class DashboardPage implements OnInit, OnDestroy {
   private formatBadge(value: number) {
     if (value <= 0) return undefined;
     return value > 99 ? '99+' : String(value);
+  }
+
+  private shouldShowProfileWarning(user: any | null | undefined) {
+    if (!user) return false;
+    const fields = [
+      user.firstname,
+      user.lastname,
+      user.pseudo,
+      user.profession,
+      user.birthdate,
+      user.phone,
+      user.city,
+      user.address,
+    ];
+    return fields.every(value => !this.hasValue(value));
+  }
+
+  private hasValue(value: any) {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') {
+      return value.trim().length > 0;
+    }
+    return !!value;
   }
 
   private displayName(user: any) {

@@ -361,3 +361,10 @@
     opacity: 0.6;
   }
 }
+.mobile-profile-menu__label {
+  @apply flex items-center gap-2;
+}
+
+.mobile-profile-menu__badge {
+  @apply inline-flex items-center justify-center min-w-[1.75rem] px-2 py-[2px] rounded-full text-xs font-semibold bg-[#FF7A00] text-white;
+}

@@ -1,4 +1,15 @@
 <section class="dashboard">
+  <div *ngIf="showProfileWarning" class="dashboard__profile-warning">
+    <div>
+      <p class="dashboard__profile-warning-title">My rendre</p>
+      <p class="dashboard__profile-warning-text">
+        Complète tes informations personnelles pour profiter pleinement de Woya.
+      </p>
+    </div>
+    <a routerLink="/mon-compte/infos" class="dashboard__profile-warning-btn">
+      Renseigner mes infos
+    </a>
+  </div>
   <div class="dashboard__layout">
     <div class="dashboard__welcome dashboard__card">
       <p class="dashboard__welcome-label">Bienvenue</p>
