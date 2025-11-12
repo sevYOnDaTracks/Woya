@@ -66,14 +66,14 @@
           </p>
           <div class="dashboard__appointment-actions" *ngIf="nextAppointment">
             <a class="dashboard__appointment-message" routerLink="/messagerie">
-              Message
+              Contacter le prestataire
             </a>
             <button
               type="button"
               class="dashboard__appointment-link"
               [routerLink]="nextAppointment.route"
             >
-              Voir le détail
+              Détail
             </button>
             <button
               type="button"
@@ -82,7 +82,7 @@
               (click)="cancelNextAppointment()"
               [disabled]="cancellingNext"
             >
-              {{ cancellingNext ? 'Annulation...' : 'Annuler la demande' }}
+              {{ cancellingNext ? 'Annulation...' : 'Annuler ma réservation' }}
             </button>
           </div>
         </ng-container>
