@@ -111,6 +111,58 @@
   @apply p-3 text-xs text-gray-600;
 }
 
+.public-service-card {
+  @apply rounded-2xl border border-[#FFE0BF] p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4;
+}
+
+.public-service-card__info {
+  @apply flex-1 space-y-1;
+}
+
+.public-service-card__media {
+  @apply w-full md:w-32 h-32 rounded-2xl overflow-hidden border border-[#FFE0BF] bg-white flex-shrink-0;
+}
+
+.public-service-card__media img {
+  @apply w-full h-full object-cover;
+}
+
+.public-service-card__actions {
+  @apply flex flex-wrap gap-3 justify-start md:justify-end;
+}
+
+.review-editing-alert {
+  @apply flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs text-[#FF7A00] bg-[#FFF9F2] border border-[#FFE0BF] rounded-2xl px-3 py-2;
+}
+
+.review-actions {
+  @apply flex flex-wrap items-center justify-between gap-3 pt-2;
+}
+
+.review-like-btn {
+  @apply inline-flex items-center gap-2 rounded-2xl border border-[#FFE0BF] px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-[#FFF9F2] transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.review-like-btn--active {
+  @apply bg-[#FF7A00]/10 text-[#FF7A00] border-[#FF7A00];
+}
+
+.review-owner-actions {
+  @apply flex items-center gap-2;
+}
+
+.review-edit-btn {
+  @apply text-xs font-semibold text-[#FF7A00] underline-offset-2 hover:underline;
+}
+
+.review-delete-btn {
+  @apply inline-flex items-center justify-center rounded-2xl border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.review-edited-flag {
+  @apply text-[11px] text-gray-400 ml-2;
+}
+
 @media (max-width: 640px) {
   .profile-stat-card {
     min-width: unset;

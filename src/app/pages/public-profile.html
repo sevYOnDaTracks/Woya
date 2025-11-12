@@ -112,8 +112,8 @@
         <p *ngIf="!services.length" class="text-sm text-gray-500">
           Ce prestataire n'a pas encore publié de services publics.
         </p>
-        <div *ngFor="let service of services" class="rounded-2xl border border-[#FFE0BF] p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
+        <div *ngFor="let service of services" class="public-service-card">
+          <div class="public-service-card__info">
             <p class="text-xs uppercase tracking-widest text-[#FFB066]">{{ service.category }}</p>
             <h3 class="text-lg font-semibold text-[#1A1A1A]">{{ service.title }}</h3>
             <p class="text-sm text-gray-500">📍 {{ service.city || 'Ville non renseignée' }}</p>
@@ -121,7 +121,13 @@
               {{ formatPrice(service) }}
             </p>
           </div>
-          <div class="flex gap-3">
+          <div class="public-service-card__media" role="button" tabindex="0" (click)="viewService(service)" (keyup.enter)="viewService(service)" aria-label="Voir le service">
+            <img
+              [src]="service.coverUrl || service.extraImages?.[0] || 'assets/icone.png'"
+              [alt]="service.title"
+            />
+          </div>
+          <div class="public-service-card__actions">
             <button type="button"
                     (click)="viewService(service)"
                     class="px-4 py-2 rounded-2xl text-sm font-semibold border border-[#FF7A00] text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white">
@@ -197,13 +203,22 @@
                     rows="3"
                     class="w-full border rounded-2xl px-4 py-3 outline-none"
                     placeholder="Partage ton expérience avec ce prestataire"></textarea>
+          <div *ngIf="isEditingReview" class="review-editing-alert">
+            <span>Tu modifies ton avis existant.</span>
+            <button type="button"
+                    class="review-delete-btn"
+                    (click)="removeOwnReview()"
+                    [disabled]="deletingReviewId === editingReviewId">
+              {{ deletingReviewId === editingReviewId ? 'Suppression...' : 'Supprimer mon avis' }}
+            </button>
+          </div>
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <p class="text-xs text-gray-500">Une note et un commentaire pour rassurer la communauté.</p>
             <button type="button"
                     (click)="submitReview()"
                     [disabled]="submittingReview"
                     class="px-5 py-2 rounded-2xl bg-[#FF7A00] text-white text-sm font-semibold hover:bg-[#e66900] disabled:opacity-50">
-              {{ submittingReview ? 'Envoi...' : 'Publier mon avis' }}
+              {{ submittingReview ? 'Envoi...' : reviewSubmitLabel }}
             </button>
           </div>
           <p *ngIf="reviewError" class="text-xs text-red-500">{{ reviewError }}</p>
@@ -219,6 +234,7 @@
               <p class="font-semibold text-[#1A1A1A]">{{ review.reviewer?.pseudo || review.reviewer?.firstname || 'Utilisateur' }}</p>
               <p class="text-xs text-gray-500">
                 {{ review.createdAt ? (review.createdAt | timeAgo) : 'À l\'instant' }}
+                <span *ngIf="review.isEdited" class="review-edited-flag">(Modifi\u00E9)</span>
               </p>
             </div>
           </div>
@@ -235,6 +251,27 @@
             </ng-container>
           </div>
           <p class="text-sm text-gray-600 whitespace-pre-line">{{ review.comment }}</p>
+          <div class="review-actions">
+            <button type="button"
+                    class="review-like-btn"
+                    [class.review-like-btn--active]="review.currentUserLiked"
+                    (click)="toggleReviewLike(review)"
+                    [disabled]="likeSubmitting[review.id]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11.45 20.6a.75.75 0 0 0 .7 0c1.18-.63 7-4 7-9.93A4.67 4.67 0 0 0 12 6.87 4.67 4.67 0 0 0 4.85 10.7c0 5.92 5.83 9.3 7 9.9Z"/>
+              </svg>
+              <span>{{ review.likesCount || 0 }}</span>
+            </button>
+            <div class="review-owner-actions" *ngIf="review.isOwnReview">
+              <button type="button" class="review-edit-btn" (click)="startEditReview(review)">Modifier</button>
+              <button type="button"
+                      class="review-delete-btn"
+                      (click)="removeReview(review)"
+                      [disabled]="deletingReviewId === review.id">
+                {{ deletingReviewId === review.id ? 'Suppression...' : 'Supprimer' }}
+              </button>
+            </div>
+          </div>
 
           <div *ngIf="review.replies?.length" class="mt-3 space-y-2 pl-4 border-l-2 border-[#FFE0BF]">
             <div *ngFor="let reply of review.replies" class="rounded-2xl bg-[#FFF9F2] p-3 text-sm text-gray-600">

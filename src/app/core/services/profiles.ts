@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import {
   addDoc,
+  arrayRemove,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -12,6 +14,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -75,6 +78,8 @@ export interface UserReview {
   comment: string;
   createdAt?: number;
   updatedAt?: number;
+  likedBy?: string[];
+  likesCount?: number;
   reviewer?: {
     pseudo?: string;
     firstname?: string;
@@ -279,38 +284,71 @@ export class ProfilesService {
   }
 
   async getUserReview(targetId: string, reviewerId: string): Promise<UserReview | null> {
-    const docId = `${targetId}_${reviewerId}`;
-    const ref = doc(this.db, 'reviews', docId);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    return this.mapReview(snap.id, snap.data());
+    const existing = await this.findReviewDoc(targetId, reviewerId);
+    if (!existing) return null;
+    return this.mapReview(existing.id, existing.data());
   }
 
   async saveReview(targetId: string, rating: number, comment: string) {
-  const reviewer = firebaseServices.auth.currentUser;
-  if (!reviewer) throw new Error('Utilisateur non connecté');
-  if (!rating || rating < 1 || rating > 5) throw new Error('Note invalide');
+    const reviewer = firebaseServices.auth.currentUser;
+    if (!reviewer) throw new Error('Utilisateur non connecté');
+    if (!rating || rating < 1 || rating > 5) throw new Error('Note invalide');
 
-  const reviewerProfile = await this.getPublicProfile(reviewer.uid);
+    const reviewerProfile = await this.getPublicProfile(reviewer.uid);
+    const trimmedComment = comment.trim();
+    const existing = await this.findReviewDoc(targetId, reviewer.uid);
 
-  const payload = {
-    targetId,
-    reviewerId: reviewer.uid,
-    rating,
-    comment: comment.trim(),
-    reviewer: {
-      pseudo: reviewerProfile?.pseudo ?? reviewerProfile?.firstname,
-      firstname: reviewerProfile?.firstname,
-      lastname: reviewerProfile?.lastname,
-      photoURL: reviewerProfile?.photoURL,
-    },
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
+    if (existing) {
+      await updateDoc(existing.ref, {
+        rating,
+        comment: trimmedComment,
+        updatedAt: serverTimestamp(),
+      });
+      return existing.id;
+    }
 
-  // ✅ CHANGEMENT ICI : nouvel avis = nouveau document
-  await addDoc(this.reviewsCol, payload);
-}
+    const payload = {
+      targetId,
+      reviewerId: reviewer.uid,
+      rating,
+      comment: trimmedComment,
+      reviewer: {
+        pseudo: reviewerProfile?.pseudo ?? reviewerProfile?.firstname,
+        firstname: reviewerProfile?.firstname,
+        lastname: reviewerProfile?.lastname,
+        photoURL: reviewerProfile?.photoURL,
+      },
+      likedBy: [] as string[],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    const docRef = await addDoc(this.reviewsCol, payload);
+    return docRef.id;
+  }
+
+  async deleteReview(reviewId: string) {
+    const current = firebaseServices.auth.currentUser;
+    if (!current) throw new Error('Utilisateur non connecté');
+    const ref = doc(this.db, 'reviews', reviewId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      throw new Error('REVIEW_NOT_FOUND');
+    }
+    if (snap.data()?.['reviewerId'] !== current.uid) {
+      throw new Error('NOT_AUTHORIZED');
+    }
+    await deleteDoc(ref);
+  }
+
+  async toggleReviewLike(reviewId: string, shouldLike: boolean) {
+    const current = firebaseServices.auth.currentUser;
+    if (!current) throw new Error('Utilisateur non connecté');
+    const ref = doc(this.db, 'reviews', reviewId);
+    await updateDoc(ref, {
+      likedBy: shouldLike ? arrayUnion(current.uid) : arrayRemove(current.uid),
+    });
+  }
 
 
   async addReviewReply(reviewId: string, message: string) {
@@ -417,6 +455,7 @@ export class ProfilesService {
   }
 
   private mapReview(id: string, data: any): UserReview {
+    const likedBy: string[] = Array.isArray(data?.likedBy) ? data.likedBy : [];
     return {
       id,
       targetId: data.targetId,
@@ -425,6 +464,8 @@ export class ProfilesService {
       comment: data.comment,
       createdAt: this.toMillis(data.createdAt),
       updatedAt: this.toMillis(data.updatedAt),
+      likedBy,
+      likesCount: likedBy.length,
       reviewer: data.reviewer,
     };
   }
@@ -488,5 +529,16 @@ export class ProfilesService {
       return true;
     }
     return false;
+  }
+
+  private async findReviewDoc(targetId: string, reviewerId: string) {
+    const qReview = query(
+      this.reviewsCol,
+      where('targetId', '==', targetId),
+      where('reviewerId', '==', reviewerId),
+      limit(1),
+    );
+    const snap = await getDocs(qReview);
+    return snap.docs[0] ?? null;
   }
 }
