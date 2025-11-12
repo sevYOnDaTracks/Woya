@@ -1,6 +1,6 @@
 <section class="dashboard">
-  <div class="dashboard__hero">
-    <div class="dashboard__welcome">
+  <div class="dashboard__layout">
+    <div class="dashboard__welcome dashboard__card">
       <p class="dashboard__welcome-label">Bienvenue</p>
       <h1 class="dashboard__welcome-title">
 
@@ -22,7 +22,7 @@
         Retrouve toutes tes actions importantes ici !
       </p>
     </div>
-    <div class="dashboard__hero-next">
+    <div class="dashboard__hero-next dashboard__card">
       <div class="dashboard__appointment-header">
         <p>Prochain rendez-vous </p>
         <span
@@ -43,6 +43,16 @@
             <img [src]="nextAppointment.coverUrl" alt="Service réservé">
           </div>
           <h2>{{ nextAppointment.title }}</h2>
+          <p class="dashboard__appointment-provider" *ngIf="nextAppointment.counterpartName">
+            Avec
+            <a
+              *ngIf="nextAppointment.counterpartLink; else plainName"
+              [routerLink]="nextAppointment.counterpartLink"
+            >
+              {{ nextAppointment.counterpartName }}
+            </a>
+            <ng-template #plainName>{{ nextAppointment.counterpartName }}</ng-template>
+          </p>
           <p class="dashboard__appointment-date">{{ nextAppointment.dateLabel }}</p>
           <p class="dashboard__appointment-role">{{ nextAppointment.roleLabel }}</p>
           <p
@@ -55,6 +65,9 @@
             {{ cancelNextError }}
           </p>
           <div class="dashboard__appointment-actions" *ngIf="nextAppointment">
+            <a class="dashboard__appointment-message" routerLink="/messagerie">
+              Message
+            </a>
             <button
               type="button"
               class="dashboard__appointment-link"

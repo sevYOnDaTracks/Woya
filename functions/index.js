@@ -36,8 +36,8 @@ app.post("/sendEmail", (req, res) => {
       console.error("Erreur lors de l'envoi de l'email", error);
       return res.status(500).send(error.toString());
     }
-    console.log("Email envoyé avec succès", info.response);
-    return res.status(200).send("Email envoyé: " + info.response);
+    console.log("Email envoy avec succs", info.response);
+    return res.status(200).send("Email envoy: " + info.response);
   });
 });
 

@@ -7,6 +7,7 @@ import { AdminUserRecord } from '../core/services/profiles';
 import { WoyaService } from '../core/models/service.model';
 import { BookingStatus, ServiceBooking } from '../core/models/booking.model';
 import { Category } from '../core/models/category.model';
+import { EmailService } from '../core/services/email';
 
 type AdminTab = 'users' | 'services' | 'categories' | 'bookings' | 'reservations';
 
@@ -50,12 +51,19 @@ export default class AdminDashboard implements OnInit {
   savingUser = false;
   userUpdateMessage = '';
   userUpdateState: 'success' | 'error' | '' = '';
+  mailModalOpen = false;
+  mailTargetUser: AdminUserRecord | null = null;
+  mailForm = this.createMailForm();
+  mailSending = false;
+  mailMessage = '';
+  mailMessageType: 'success' | 'error' | '' = '';
   readonly defaultAvatar = 'https://ui-avatars.com/api/?name=W&background=fff3e0&color=ff7a00';
   readonly defaultServiceImage = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=60';
 
   constructor(
     private adminAuth: AdminAuthService,
     private adminData: AdminDataService,
+    private emails: EmailService,
   ) {}
 
   async ngOnInit() {
@@ -387,6 +395,60 @@ export default class AdminDashboard implements OnInit {
     }
   }
 
+  openMailModal(user: AdminUserRecord) {
+    this.mailTargetUser = user;
+    this.mailForm = this.createMailForm(user);
+    this.mailMessage = '';
+    this.mailMessageType = '';
+    this.mailModalOpen = true;
+  }
+
+  closeMailModal() {
+    this.mailModalOpen = false;
+    this.mailTargetUser = null;
+    this.mailForm = this.createMailForm();
+    this.mailMessage = '';
+    this.mailMessageType = '';
+    this.mailSending = false;
+  }
+
+  async sendMailToUser() {
+    if (!this.mailTargetUser?.email) {
+      this.mailMessage = 'Cet utilisateur ne possède pas dadresse email.';
+      this.mailMessageType = 'error';
+      return;
+    }
+    const subject = this.mailForm.subject.trim();
+    const message = this.mailForm.message.trim();
+    if (!subject || !message) {
+      this.mailMessage = 'Merci de renseigner un objet et un message.';
+      this.mailMessageType = 'error';
+      return;
+    }
+    this.mailSending = true;
+    this.mailMessage = '';
+    this.mailMessageType = '';
+    try {
+      const success = await this.emails.send({
+        to: this.mailTargetUser.email,
+        subject,
+        body: message,
+      });
+      if (!success) {
+        throw new Error('SEND_FAILED');
+      }
+      this.mailMessage = 'Email envoyé avec succès.';
+      this.mailMessageType = 'success';
+      setTimeout(() => this.closeMailModal(), 1200);
+    } catch (error) {
+      console.error('Unable to send email', error);
+      this.mailMessage = 'Impossible denvoyer ce message.';
+      this.mailMessageType = 'error';
+    } finally {
+      this.mailSending = false;
+    }
+  }
+
   private buildUserIndex() {
     this.userIndex.clear();
     this.users.forEach(user => this.userIndex.set(user.id, user));
@@ -428,6 +490,15 @@ export default class AdminDashboard implements OnInit {
       profession: '',
       role: '',
       isActive: true,
+    };
+  }
+
+  private createMailForm(user?: AdminUserRecord) {
+    const firstname = user?.firstname || user?.pseudo || user?.lastname || '';
+    const baseSubject = firstname ? `Message pour ${firstname}` : `Message de l'equipe Woya`;
+    return {
+      subject: baseSubject,
+      message: '',
     };
   }
 

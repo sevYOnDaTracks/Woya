@@ -1,11 +1,13 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { doc, getDoc } from 'firebase/firestore';
 import { Subscription } from 'rxjs';
 import { AuthStore } from '../core/store/auth.store';
 import { BookingsService } from '../core/services/bookings';
 import { ServiceBooking } from '../core/models/booking.model';
 import { Services } from '../core/services/services';
+import { firebaseServices } from '../app.config';
 
 interface DashboardAction {
   id: string;
@@ -36,6 +38,9 @@ interface UpcomingAppointment {
   bookingId?: string;
   route: any[];
   coverUrl?: string | null;
+  counterpartName?: string;
+  counterpartAvatar?: string | null;
+  counterpartLink?: any[] | null;
 }
 
 const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
@@ -114,6 +119,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
   private serviceCoverCache = new Map<string, string | null>();
   private serviceCoverPlaceholder = 'assets/icone.png';
   private hasLoadedDashboardData = false;
+  private userNameCache = new Map<string, string | null>();
 
   constructor(
     private auth: AuthStore,
@@ -277,6 +283,9 @@ export default class DashboardPage implements OnInit, OnDestroy {
     const status: 'confirmed' | 'pending' =
       booking.status === 'pending' && role === 'client' ? 'pending' : 'confirmed';
 
+    const counterpartId = role === 'provider' ? booking.clientId : booking.providerId;
+    const counterpart = counterpartId ? await this.getUserDisplayName(counterpartId) : null;
+
     this.nextAppointment = {
       title: booking.serviceTitle || 'Service',
       dateLabel: this.formatDate(booking.startTime),
@@ -286,6 +295,8 @@ export default class DashboardPage implements OnInit, OnDestroy {
       bookingId: booking.id,
       route: [role === 'provider' ? '/mes-rendez-vous' : '/mes-reservations'],
       coverUrl: coverUrl ?? this.serviceCoverPlaceholder,
+      counterpartName: counterpart,
+      counterpartLink: counterpartId ? ['/prestataires', counterpartId] : null,
     };
   }
 
@@ -383,5 +394,30 @@ export default class DashboardPage implements OnInit, OnDestroy {
     } finally {
       this.cancellingNext = false;
     }
+  }
+
+  private async getUserDisplayName(uid?: string | null) {
+    if (!uid) return null;
+    if (this.userNameCache.has(uid)) {
+      return this.userNameCache.get(uid) ?? null;
+    }
+    try {
+      const ref = doc(firebaseServices.db, 'users', uid);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data() as any;
+        const name =
+          data?.pseudo ||
+          [data?.firstname, data?.lastname].filter(Boolean).join(' ').trim() ||
+          data?.email ||
+          null;
+        this.userNameCache.set(uid, name);
+        return name;
+      }
+    } catch (error) {
+      console.warn('Unable to load user name', error);
+    }
+    this.userNameCache.set(uid, null);
+    return null;
   }
 }

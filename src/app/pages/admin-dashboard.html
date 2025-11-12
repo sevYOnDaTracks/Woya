@@ -136,6 +136,16 @@
                 </td>
                 <td class="flex flex-wrap gap-2">
                   <button type="button"
+                          class="icon-btn"
+                          (click)="openMailModal(user)"
+                          [disabled]="!user.email"
+                          title="Envoyer un email">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m3 8 8.4 6.3a1 1 0 0 0 1.2 0L21 8" />
+                    </svg>
+                  </button>
+                  <button type="button"
                           class="icon-btn warn"
                           (click)="toggleUserStatus(user)"
                           [disabled]="updatingUserId === user.id"
@@ -561,3 +571,42 @@
     </div>
   </div>
 </section>
+
+<div class="admin-modal-backdrop" *ngIf="mailModalOpen">
+  <div class="admin-modal">
+    <div class="admin-modal__header">
+      <div>
+        <p class="admin-modal__eyebrow">Envoyer un email</p>
+        <h3 class="admin-modal__title">{{ displayUserName(mailTargetUser?.id) }}</h3>
+        <p class="admin-modal__subtitle">{{ mailTargetUser?.email || 'Aucune adresse disponible' }}</p>
+      </div>
+      <button type="button" class="admin-modal__close" (click)="closeMailModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="admin-modal__body">
+      <label class="admin-modal__label">Objet</label>
+      <input type="text" class="form-control" [(ngModel)]="mailForm.subject" placeholder="Objet du message" />
+      <label class="admin-modal__label">Message</label>
+      <textarea rows="6" class="form-control" [(ngModel)]="mailForm.message" placeholder="Saisis ton message ici..."></textarea>
+    </div>
+    <div class="admin-modal__footer">
+      <p *ngIf="mailMessage"
+         class="admin-modal__message"
+         [class.admin-modal__message--success]="mailMessageType === 'success'"
+         [class.admin-modal__message--error]="mailMessageType === 'error'">
+        {{ mailMessage }}
+      </p>
+      <div class="admin-modal__actions">
+        <button type="button" class="secondary-btn" (click)="closeMailModal()" [disabled]="mailSending">
+          Annuler
+        </button>
+        <button type="button" class="primary-btn" (click)="sendMailToUser()" [disabled]="mailSending">
+          {{ mailSending ? 'Envoi...' : 'Envoyer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
