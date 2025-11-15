@@ -1,13 +1,16 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Subscription } from 'rxjs';
 import { AuthStore } from '../core/store/auth.store';
 import { BookingsService } from '../core/services/bookings';
 import { ServiceBooking } from '../core/models/booking.model';
 import { Services } from '../core/services/services';
 import { firebaseServices } from '../app.config';
+import { ProfilesService } from '../core/services/profiles';
 
 interface DashboardAction {
   id: string;
@@ -41,6 +44,18 @@ interface UpcomingAppointment {
   counterpartName?: string;
   counterpartAvatar?: string | null;
   counterpartLink?: any[] | null;
+}
+
+interface ProfileModalForm {
+  pseudo: string;
+  firstname: string;
+  lastname: string;
+  profession: string;
+  phone: string;
+  birthdate: string;
+  city: string;
+  address: string;
+  bio: string;
 }
 
 const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
@@ -99,7 +114,7 @@ const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -114,6 +129,15 @@ export default class DashboardPage implements OnInit, OnDestroy {
   cancellingNext = false;
   cancelNextError = '';
   showProfileWarning = false;
+  requireProfileModal = false;
+  profileModalForm: ProfileModalForm = this.createProfileModalForm();
+  profileModalError = '';
+  profileModalSaving = false;
+  profilePseudoStatus: 'idle' | 'checking' | 'available' | 'taken' | 'error' = 'idle';
+  profilePhotoPreview: string | null = null;
+  profilePhotoFile: File | null = null;
+  coverPhotoPreview: string | null = null;
+  coverPhotoFile: File | null = null;
 
   private currentUid: string | null = null;
   private subs: Subscription[] = [];
@@ -121,12 +145,15 @@ export default class DashboardPage implements OnInit, OnDestroy {
   private serviceCoverPlaceholder = 'assets/icone.png';
   private hasLoadedDashboardData = false;
   private userNameCache = new Map<string, string | null>();
+  private profileModalPseudoTimeout?: ReturnType<typeof setTimeout>;
+  private originalProfilePseudo = '';
 
   constructor(
     private auth: AuthStore,
     private bookings: BookingsService,
     private servicesApi: Services,
     private router: Router,
+    private profiles: ProfilesService,
   ) {
     this.refreshActions();
   }
@@ -190,6 +217,17 @@ export default class DashboardPage implements OnInit, OnDestroy {
 
         this.userName = this.userLoading ? 'Chargement...' : this.displayName(user);
         this.showProfileWarning = this.shouldShowProfileWarning(user);
+        this.requireProfileModal = this.shouldForceProfileModal(user);
+        if (this.requireProfileModal) {
+          this.populateProfileModal(user);
+        } else {
+          this.profilePseudoStatus = 'idle';
+          this.profileModalError = '';
+          this.profilePhotoFile = null;
+          this.coverPhotoFile = null;
+          this.profilePhotoPreview = user?.photoURL || null;
+          this.coverPhotoPreview = user?.coverURL || null;
+        }
 
 
 
@@ -209,6 +247,10 @@ export default class DashboardPage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subs.forEach(sub => sub.unsubscribe());
+    if (this.profileModalPseudoTimeout) {
+      clearTimeout(this.profileModalPseudoTimeout);
+      this.profileModalPseudoTimeout = undefined;
+    }
   }
 
   trackByActionId(_: number, action: DashboardAction) {
@@ -336,6 +378,16 @@ export default class DashboardPage implements OnInit, OnDestroy {
     return fields.every(value => !this.hasValue(value));
   }
 
+  private shouldForceProfileModal(user: any | null | undefined) {
+    if (!user || user.profileLoading) return false;
+    const requiredFields: (keyof ProfileModalForm)[] = ['pseudo', 'firstname', 'lastname', 'phone', 'city'];
+    const missingRequired = requiredFields.some(field => !this.hasValue(user[field]));
+    if (!missingRequired) {
+      return false;
+    }
+    return user.onboardingCompleted !== true;
+  }
+
   private hasValue(value: any) {
     if (value === null || value === undefined) return false;
     if (typeof value === 'string') {
@@ -445,5 +497,205 @@ export default class DashboardPage implements OnInit, OnDestroy {
     }
     this.userNameCache.set(uid, null);
     return null;
+  }
+
+  private createProfileModalForm(): ProfileModalForm {
+    return {
+      pseudo: '',
+      firstname: '',
+      lastname: '',
+      profession: '',
+      phone: '',
+      birthdate: '',
+      city: '',
+      address: '',
+      bio: '',
+    };
+  }
+
+  private populateProfileModal(user: any | null | undefined) {
+    this.profileModalForm = {
+      pseudo: user?.pseudo || '',
+      firstname: user?.firstname || '',
+      lastname: user?.lastname || '',
+      profession: user?.profession || '',
+      phone: user?.phone || '',
+      birthdate: user?.birthdate || '',
+      city: user?.city || '',
+      address: user?.address || '',
+      bio: user?.bio || '',
+    };
+    this.originalProfilePseudo = user?.pseudo || '';
+    this.profilePhotoPreview = user?.photoURL || null;
+    this.coverPhotoPreview = user?.coverURL || null;
+    this.profilePhotoFile = null;
+    this.coverPhotoFile = null;
+  }
+
+  onProfileModalPseudoChange(value: string) {
+    if (this.profileModalPseudoTimeout) {
+      clearTimeout(this.profileModalPseudoTimeout);
+    }
+    const normalizedOriginal = (this.originalProfilePseudo || '').trim().toLowerCase();
+    const normalizedValue = (value || '').trim().toLowerCase();
+    if (!normalizedValue) {
+      this.profilePseudoStatus = 'idle';
+      return;
+    }
+    if (normalizedValue === normalizedOriginal) {
+      this.profilePseudoStatus = 'available';
+      return;
+    }
+    this.profilePseudoStatus = 'checking';
+    this.profileModalPseudoTimeout = setTimeout(async () => {
+      try {
+        const available = await this.profiles.isPseudoAvailable(value, this.currentUid ?? undefined);
+        this.profilePseudoStatus = available ? 'available' : 'taken';
+      } catch (error) {
+        console.warn('Unable to verify pseudo', error);
+        this.profilePseudoStatus = 'error';
+      }
+    }, 400);
+  }
+
+  onSelectProfilePhoto(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!this.isImageFile(file)) {
+      this.profileModalError = 'Merci de sélectionner une image valide pour la photo de profil.';
+      input.value = '';
+      return;
+    }
+    this.profilePhotoFile = file;
+    const reader = new FileReader();
+    reader.onload = () => (this.profilePhotoPreview = reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  onSelectCoverPhoto(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!this.isImageFile(file)) {
+      this.profileModalError = 'Merci de sélectionner une image valide pour la couverture.';
+      input.value = '';
+      return;
+    }
+    this.coverPhotoFile = file;
+    const reader = new FileReader();
+    reader.onload = () => (this.coverPhotoPreview = reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async saveProfileModal() {
+    if (!this.currentUid) {
+      this.profileModalError = 'Utilisateur non identifié.';
+      return;
+    }
+    const requiredFields: (keyof ProfileModalForm)[] = ['pseudo', 'firstname', 'lastname', 'phone', 'city'];
+    const missing = requiredFields.find(field => !this.hasValue(this.profileModalForm[field]));
+    if (missing) {
+      this.profileModalError = 'Merci de renseigner tous les champs obligatoires.';
+      return;
+    }
+    const trimmedPseudo = this.profileModalForm.pseudo.trim();
+    const normalizedOriginal = (this.originalProfilePseudo || '').trim().toLowerCase();
+    if (trimmedPseudo.toLowerCase() !== normalizedOriginal) {
+      try {
+        const available = await this.profiles.isPseudoAvailable(trimmedPseudo, this.currentUid);
+        if (!available) {
+          this.profilePseudoStatus = 'taken';
+          this.profileModalError = 'Ce pseudo est déjà utilisé.';
+          return;
+        }
+      } catch (error) {
+        console.warn('Unable to verify pseudo', error);
+        this.profileModalError = 'Impossible de vérifier le pseudo.';
+        return;
+      }
+    }
+
+    const payload: Record<string, any> = {
+      pseudo: trimmedPseudo,
+      pseudoLowercase: trimmedPseudo.toLowerCase(),
+      firstname: this.profileModalForm.firstname.trim(),
+      lastname: this.profileModalForm.lastname.trim(),
+      profession: this.profileModalForm.profession.trim(),
+      phone: this.profileModalForm.phone.trim(),
+      birthdate: this.profileModalForm.birthdate || null,
+      city: this.profileModalForm.city.trim(),
+      address: this.profileModalForm.address.trim(),
+      bio: this.profileModalForm.bio.trim(),
+      onboardingCompleted: true,
+      updatedAt: Date.now(),
+      searchKeywords: this.buildSearchKeywords({
+        firstname: this.profileModalForm.firstname,
+        lastname: this.profileModalForm.lastname,
+        pseudo: trimmedPseudo,
+      }),
+    };
+
+    this.profileModalSaving = true;
+    this.profileModalError = '';
+    try {
+      if (this.profilePhotoFile) {
+        const storage = getStorage();
+        const avatarRef = storageRef(storage, `users/${this.currentUid}/profile.jpg`);
+        await uploadBytes(avatarRef, this.profilePhotoFile);
+        payload['photoURL'] = await getDownloadURL(avatarRef);
+        this.profilePhotoPreview = payload['photoURL'];
+      }
+      if (this.coverPhotoFile) {
+        payload['coverURL'] = await this.profiles.saveCover(this.currentUid, this.coverPhotoFile);
+        this.coverPhotoPreview = payload['coverURL'];
+      }
+
+      const ref = doc(firebaseServices.db, 'users', this.currentUid);
+      await setDoc(ref, payload, { merge: true });
+      const currentUser = this.auth.user$.value;
+      if (currentUser) {
+        this.auth.user$.next({
+          ...currentUser,
+          ...payload,
+          profileLoading: false,
+        });
+      }
+      this.requireProfileModal = false;
+      this.originalProfilePseudo = payload['pseudo'];
+      this.profilePseudoStatus = 'available';
+      this.profilePhotoFile = null;
+      this.coverPhotoFile = null;
+    } catch (error) {
+      console.error('Unable to save onboarding profile', error);
+      this.profileModalError = 'Impossible de sauvegarder tes informations pour le moment.';
+    } finally {
+      this.profileModalSaving = false;
+    }
+  }
+
+  private buildSearchKeywords(values: { firstname?: string; lastname?: string; pseudo?: string }) {
+    const tokens = new Set<string>();
+    const addValue = (value?: string) => {
+      if (!value) return;
+      const normalized = value.trim().toLowerCase();
+      if (!normalized) return;
+      tokens.add(normalized);
+      normalized.split(/[\s-]+/).forEach(part => {
+        if (part) tokens.add(part);
+      });
+    };
+    addValue(values.pseudo);
+    addValue(values.firstname);
+    addValue(values.lastname);
+    addValue(`${values.firstname ?? ''} ${values.lastname ?? ''}`);
+    return Array.from(tokens);
+  }
+
+  private isImageFile(file: File) {
+    const mime = (file.type || '').toLowerCase();
+    if (mime && mime.startsWith('image/')) return true;
+    const ext = (file.name || '').toLowerCase();
+    return /\.(png|jpe?g|gif|bmp|webp|avif|heic|heif)$/.test(ext);
   }
 }

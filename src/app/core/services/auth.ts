@@ -43,7 +43,7 @@ export class AuthService {
           firstname,
           pseudo,
           email: cred.user.email,
-          photoURL: cred.user.photoURL,
+          photoURL: '',
           provider: "google",
           createdAt: new Date()
         });

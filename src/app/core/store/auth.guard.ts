@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { firebaseServices } from '../../app.config';
 import { AuthStore } from './auth.store';
 import { LoadingIndicatorService } from '../services/loading-indicator.service';
+import { firebaseServices } from '../../app.config';
 
 export const requireAuthGuard: CanActivateFn = async (_route, state) => {
   const auth = inject(AuthStore);
@@ -20,7 +20,17 @@ export const requireAuthGuard: CanActivateFn = async (_route, state) => {
 
   const user = auth.user$.value || firebaseServices.auth.currentUser;
   if (user) {
-    return true;
+    if (auth.user$.value?.profileLoading) {
+      loading.show();
+      try {
+        await auth.waitForProfileReady();
+      } finally {
+        loading.hide();
+      }
+    }
+    if (auth.user$.value) {
+      return true;
+    }
   }
 
   const redirect = state?.url && state.url !== '/login' ? state.url : undefined;

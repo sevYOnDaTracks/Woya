@@ -57,7 +57,7 @@ export default class AdminDashboard implements OnInit {
   mailSending = false;
   mailMessage = '';
   mailMessageType: 'success' | 'error' | '' = '';
-  readonly defaultAvatar = 'https://ui-avatars.com/api/?name=W&background=fff3e0&color=ff7a00';
+  readonly defaultAvatar = 'assets/icone.png';
   readonly defaultServiceImage = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=60';
 
   constructor(

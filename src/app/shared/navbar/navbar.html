@@ -104,7 +104,7 @@
       </svg>
     </a>
 
-    <a routerLink="/services"
+   <!-- <a routerLink="/services"
        routerLinkActive="active"
        aria-label="Services"
        title="Services"
@@ -112,7 +112,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
       </svg>
-    </a>
+    </a> -->
 
   <!--  <a routerLink="/prestataires"
        routerLinkActive="active"
@@ -274,9 +274,9 @@
               <img [src]="user.photoURL || 'assets/icone.png'" alt="avatar utilisateur" />
             </ng-container>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="navbar-identity">
             <ng-container *ngIf="!user?.profileLoading; else desktopNameSkeleton">
-              <span class="font-semibold text-sm text-[#1A1A1A]">{{ displayName(user) }}</span>
+              <span class="navbar-username">{{ displayName(user) }}</span>
             </ng-container>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -300,7 +300,7 @@
               </svg>
             </button>
             <div class="menu-section__body" *ngIf="userMenuSections.navigation">
-              <!-- <a routerLink="/"
+               <a routerLink="/"
                  routerLinkActive="active"
                  [routerLinkActiveOptions]="{ exact: true }"
                  (click)="closeUserMenu()"

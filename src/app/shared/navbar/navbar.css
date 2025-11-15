@@ -267,7 +267,7 @@
 }
 
 .navbar-avatar {
-  @apply w-8 h-8 rounded-full border border-[#FFE0BF] overflow-hidden bg-white;
+  @apply w-8 h-8 rounded-full border border-[#FFE0BF] overflow-hidden bg-white flex-shrink-0;
 }
 
 .navbar-avatar img {
@@ -293,6 +293,14 @@
   background: linear-gradient(90deg, rgba(255, 224, 191, 0.4), rgba(255, 200, 163, 0.8), rgba(255, 224, 191, 0.4));
   background-size: 200% 100%;
   animation: navbar-skeleton 1.1s ease-in-out infinite;
+}
+
+.navbar-identity {
+  @apply flex items-center gap-1 min-w-0 whitespace-nowrap;
+}
+
+.navbar-username {
+  @apply font-semibold text-sm text-[#1A1A1A] whitespace-nowrap overflow-hidden text-ellipsis max-w-[11rem];
 }
 
 .mobile-profile-avatar {

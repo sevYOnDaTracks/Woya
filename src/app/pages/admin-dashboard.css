@@ -1,5 +1,153 @@
-section {
-  min-height: 100vh;
+.admin-shell {
+  @apply min-h-screen bg-slate-900 flex;
+}
+
+.admin-sidebar {
+  @apply w-72 bg-[#050b1f] text-slate-100 flex flex-col gap-8 p-6;
+}
+
+.admin-brand {
+  @apply flex items-center gap-4;
+}
+
+.admin-brand__logo {
+  @apply w-12 h-12 rounded-2xl bg-orange-300 text-white font-bold text-2xl flex items-center justify-center shadow-lg;
+}
+
+.admin-brand__eyebrow {
+  @apply text-xs uppercase tracking-[0.35em] text-slate-400;
+}
+
+.admin-brand__title {
+  @apply text-lg font-semibold text-white;
+}
+
+.admin-nav {
+  @apply flex flex-col gap-2;
+}
+
+.admin-nav__item {
+  @apply flex items-center gap-3 rounded-2xl px-4 py-2 text-sm text-slate-300 hover:bg-white/10 transition;
+}
+
+.admin-nav__item--active {
+  @apply bg-white text-slate-900;
+}
+
+.admin-nav__icon {
+  @apply w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-slate-100;
+}
+
+.admin-sidebar__logout {
+  @apply mt-6 inline-flex items-center gap-3 text-sm text-red-200 border border-red-400/30 rounded-2xl px-4 py-2 hover:bg-red-500/10 transition;
+}
+
+.admin-main {
+  @apply flex-1 bg-[#eef2ff] min-h-screen flex flex-col;
+}
+
+.admin-topbar {
+  @apply bg-white border-b border-slate-200 px-8 py-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between shadow-sm;
+}
+
+.admin-search {
+  @apply flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 w-full lg:max-w-xl;
+}
+
+.admin-search input {
+  @apply flex-1 bg-transparent border-none outline-none text-sm text-slate-700;
+}
+
+.admin-topbar__actions {
+  @apply flex items-center gap-4 justify-between lg:justify-end;
+}
+
+.admin-topbar__btn {
+  @apply inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition disabled:opacity-60;
+}
+
+.admin-profile {
+  @apply flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5;
+}
+
+.admin-profile img {
+  @apply w-10 h-10 rounded-full object-cover border border-white shadow-sm;
+}
+
+.admin-profile p {
+  @apply text-sm font-semibold text-slate-900 leading-none;
+}
+
+.admin-profile span {
+  @apply text-xs text-slate-500;
+}
+
+.admin-content {
+  @apply flex-1 overflow-y-auto;
+}
+
+.admin-inner {
+  @apply max-w-6xl mx-auto w-full px-6 py-8 space-y-8;
+}
+
+.admin-indicators {
+  @apply bg-white border border-slate-200 rounded-3xl p-6 shadow-lg;
+}
+
+.admin-indicators__header {
+  @apply flex flex-col gap-2 mb-6 md:flex-row md:items-center md:justify-between;
+}
+
+.admin-indicators__eyebrow {
+  @apply text-xs uppercase tracking-[0.35em] text-orange-500;
+}
+
+.admin-indicators__header h2 {
+  @apply text-2xl font-semibold text-slate-900;
+}
+
+.admin-indicators__grid {
+  @apply grid gap-4 md:grid-cols-2 xl:grid-cols-3;
+}
+
+.indicator-card {
+  @apply bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-1;
+}
+
+.indicator-card--accent {
+  @apply bg-gradient-to-r from-orange-500 to-orange-300 text-white border-transparent;
+}
+
+.indicator-card__label {
+  @apply text-xs uppercase tracking-[0.35em] text-slate-500;
+}
+
+.indicator-card--accent .indicator-card__label {
+  @apply text-white/70;
+}
+
+.indicator-card__value {
+  @apply text-3xl font-semibold text-slate-900;
+}
+
+.indicator-card--accent .indicator-card__value {
+  @apply text-white;
+}
+
+.indicator-card__hint {
+  @apply text-xs text-slate-500;
+}
+
+.indicator-card--accent .indicator-card__hint {
+  @apply text-white/80;
+}
+
+.admin-stats {
+  @apply grid gap-4 md:grid-cols-2 xl:grid-cols-4;
+}
+
+.admin-tabbar {
+  @apply bg-white border border-orange-100 rounded-3xl p-3 flex flex-wrap gap-2;
 }
 
 .glass-panel {
@@ -139,29 +287,38 @@ section {
   @apply text-slate-400 hover:text-red-500;
 }
 
-@media (max-width: 768px) {
-  header {
-    @apply flex-col items-start gap-4;
+@media (max-width: 1024px) {
+  .admin-shell {
+    @apply flex-col;
   }
 
-  header > div:last-child {
-    @apply w-full flex-col items-stretch;
+  .admin-sidebar {
+    @apply w-full flex-row items-stretch gap-4 overflow-x-auto;
   }
 
-  .stat-card {
-    @apply p-3;
+  .admin-nav {
+    @apply flex-row flex-wrap;
   }
 
-  .stat-value {
-    @apply text-2xl;
+  .admin-nav__item {
+    @apply flex-1;
+    min-width: 9rem;
+  }
+
+  .admin-topbar {
+    @apply flex-col gap-3;
+  }
+
+  .admin-profile {
+    @apply w-full justify-between;
+  }
+
+  .admin-inner {
+    @apply px-4;
   }
 
   .admin-tab {
     @apply flex-1 text-center text-xs;
-  }
-
-  .glass-panel {
-    @apply p-3;
   }
 
   .filters-panel {
@@ -175,14 +332,6 @@ section {
   .admin-table th,
   .admin-table td {
     @apply px-2 py-2 text-xs;
-  }
-
-  .icon-btn {
-    @apply w-8 h-8;
-  }
-
-  .chips {
-    @apply gap-1;
   }
 }
 

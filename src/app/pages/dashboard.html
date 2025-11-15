@@ -1,3 +1,112 @@
+<div class="onboarding-backdrop" *ngIf="requireProfileModal">
+  <div class="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+    <div class="onboarding-modal__header">
+      <p class="onboarding-modal__eyebrow">Premiers pas</p>
+      <h2 id="onboardingTitle">Complète ton profil</h2>
+      <p>Ces informations sont nécessaires pour sécuriser ton compte et faciliter les échanges.</p>
+    </div>
+
+    <form class="onboarding-modal__form" (ngSubmit)="saveProfileModal()">
+      <div class="onboarding-modal__grid">
+        <label class="onboarding-field">
+          <span>Pseudo *</span>
+          <input
+            type="text"
+            name="pseudo"
+            maxlength="40"
+            required
+            [(ngModel)]="profileModalForm.pseudo"
+            (ngModelChange)="onProfileModalPseudoChange($event)"
+          />
+          <small class="onboarding-field__hint" *ngIf="profilePseudoStatus !== 'idle'">
+            <ng-container [ngSwitch]="profilePseudoStatus">
+              <span *ngSwitchCase="'checking'">Vérification du pseudo…</span>
+              <span *ngSwitchCase="'available'" class="text-emerald-600">Pseudo disponible.</span>
+              <span *ngSwitchCase="'taken'" class="text-red-600">Ce pseudo est déjà utilisé.</span>
+              <span *ngSwitchCase="'error'" class="text-orange-600">Impossible de vérifier le pseudo.</span>
+            </ng-container>
+          </small>
+        </label>
+
+        <label class="onboarding-field">
+          <span>Nom *</span>
+          <input type="text" name="lastname" maxlength="60" required [(ngModel)]="profileModalForm.lastname" />
+        </label>
+
+        <label class="onboarding-field">
+          <span>Prénom *</span>
+          <input type="text" name="firstname" maxlength="60" required [(ngModel)]="profileModalForm.firstname" />
+        </label>
+
+        <label class="onboarding-field">
+          <span>Téléphone *</span>
+          <input type="text" name="phone" maxlength="30" required [(ngModel)]="profileModalForm.phone" />
+        </label>
+
+        <label class="onboarding-field">
+          <span>Ville *</span>
+          <input type="text" name="city" maxlength="80" required [(ngModel)]="profileModalForm.city" />
+        </label>
+
+        <label class="onboarding-field">
+          <span>Adresse</span>
+          <input type="text" name="address" maxlength="120" [(ngModel)]="profileModalForm.address" />
+        </label>
+
+        <label class="onboarding-field">
+          <span>Profession</span>
+          <input type="text" name="profession" maxlength="60" [(ngModel)]="profileModalForm.profession" />
+        </label>
+
+        <label class="onboarding-field">
+          <span>Date de naissance</span>
+          <input type="date" name="birthdate" [(ngModel)]="profileModalForm.birthdate" />
+        </label>
+
+        <label class="onboarding-field onboarding-field--full">
+          <span>Biographie</span>
+          <textarea
+            name="bio"
+            rows="3"
+            maxlength="300"
+            [(ngModel)]="profileModalForm.bio"
+            placeholder="Présente-toi en quelques lignes…"
+          ></textarea>
+        </label>
+      </div>
+
+      <div class="onboarding-media">
+        <div class="onboarding-media__item">
+          <p class="onboarding-field__label">Photo de profil (optionnel)</p>
+          <div class="onboarding-media__preview">
+            <img [src]="profilePhotoPreview || 'assets/icone.png'" alt="Prévisualisation profil" />
+          </div>
+          <label class="onboarding-media__button">
+            Choisir une image
+            <input type="file" accept="image/*" (change)="onSelectProfilePhoto($event)" hidden />
+          </label>
+        </div>
+        <div class="onboarding-media__item">
+          <p class="onboarding-field__label">Photo de couverture (optionnel)</p>
+          <div class="onboarding-media__preview onboarding-media__preview--wide">
+            <img [src]="coverPhotoPreview || 'assets/icone.png'" alt="Prévisualisation couverture" />
+          </div>
+          <label class="onboarding-media__button">
+            Choisir une image
+            <input type="file" accept="image/*" (change)="onSelectCoverPhoto($event)" hidden />
+          </label>
+        </div>
+      </div>
+
+      <p class="onboarding-modal__error" *ngIf="profileModalError">{{ profileModalError }}</p>
+
+      <button type="submit" class="onboarding-modal__submit" [disabled]="profileModalSaving || profilePseudoStatus === 'checking'">
+        {{ profileModalSaving ? 'Enregistrement…' : 'Continuer' }}
+      </button>
+    </form>
+  </div>
+</div>
+
 <section class="dashboard">
   <div *ngIf="showProfileWarning" class="dashboard__profile-warning">
     <div>

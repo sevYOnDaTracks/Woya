@@ -1,23 +1,32 @@
-<ng-container *ngIf="showPublicShell(); else adminShell">
-  <div class="min-h-screen bg-[#FFF7EB] flex flex-col">
-    <app-navbar></app-navbar>
+<ng-container *ngIf="appInitialized(); else appBoot">
+  <ng-container *ngIf="showPublicShell(); else adminShell">
+    <div class="min-h-screen bg-[#FFF7EB] flex flex-col">
+      <app-navbar></app-navbar>
 
-    <main class="pt-20 flex-1 flex flex-col pb-24 md:pb-0">
-      <router-outlet></router-outlet>
-    </main>
+      <main class="pt-20 flex-1 flex flex-col pb-24 md:pb-0">
+        <router-outlet></router-outlet>
+      </main>
 
-    <app-footer class="pb-24 md:pb-0"></app-footer>
-    <app-chat-fab></app-chat-fab>
-    <app-booking-alerts></app-booking-alerts>
-  </div>
+      <app-footer class="pb-24 md:pb-0"></app-footer>
+      <app-chat-fab></app-chat-fab>
+      <app-booking-alerts></app-booking-alerts>
+    </div>
+  </ng-container>
+
+  <ng-template #adminShell>
+    <div class="min-h-screen bg-slate-50 flex flex-col">
+      <app-admin-navbar></app-admin-navbar>
+      <main class="flex-1">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </ng-template>
 </ng-container>
 
-<ng-template #adminShell>
-  <div class="min-h-screen bg-slate-50 flex flex-col">
-    <app-admin-navbar></app-admin-navbar>
-    <main class="flex-1">
-      <router-outlet></router-outlet>
-    </main>
+<ng-template #appBoot>
+  <div class="app-boot-screen">
+    <div class="app-boot-screen__spinner"></div>
+    <p class="app-boot-screen__text">Chargement de votre espace…</p>
   </div>
 </ng-template>
 

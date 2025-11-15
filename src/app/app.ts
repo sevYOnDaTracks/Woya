@@ -1,4 +1,4 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterOutlet } from '@angular/router';
 import { Navbar } from "./shared/navbar/navbar";
 import { Footer } from "./shared/footer/footer";
@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { LoadingOverlay } from './shared/loading-overlay/loading-overlay';
 import { LoadingIndicatorService } from './core/services/loading-indicator.service';
 import { Subscription } from 'rxjs';
+import { AuthStore } from './core/store/auth.store';
 
 @Component({
   selector: 'app-root',
@@ -16,12 +17,17 @@ import { Subscription } from 'rxjs';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App implements OnDestroy {
+export class App implements OnInit, OnDestroy {
   protected readonly title = signal('woya');
   protected readonly showPublicShell = signal(true);
+  protected readonly appInitialized = signal(false);
   private routerSub?: Subscription;
 
-  constructor(private router: Router, private loadingIndicator: LoadingIndicatorService) {
+  constructor(
+    private router: Router,
+    private loadingIndicator: LoadingIndicatorService,
+    private authStore: AuthStore,
+  ) {
     this.updateShell(this.router.url);
     this.routerSub = this.router.events.subscribe(event => {
       if (event instanceof NavigationStart) {
@@ -35,6 +41,16 @@ export class App implements OnDestroy {
         this.loadingIndicator.hide();
       }
     });
+  }
+
+  async ngOnInit() {
+    this.loadingIndicator.show();
+    try {
+      await this.authStore.waitForInitialAuth();
+    } finally {
+      this.appInitialized.set(true);
+      this.loadingIndicator.hide();
+    }
   }
 
   ngOnDestroy() {

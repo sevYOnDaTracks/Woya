@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { firebaseServices } from '../../app.config';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { filter } from 'rxjs/operators';
+import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc, DocumentSnapshot } from 'firebase/firestore';
 
 export interface AuthUserState {
   uid: string;
@@ -26,6 +27,8 @@ export class AuthStore {
   private unloadHandler?: () => void;
   private visibilityHandler?: () => void;
   private currentUserDoc?: ReturnType<typeof doc>;
+  private profileUnsub?: () => void;
+  private readonly reloadMarkerKey = 'woyaReloadedUid';
   private hydrationToken = 0;
   private initialAuthResolved = false;
   private initialAuthPromise: Promise<void>;
@@ -55,32 +58,35 @@ export class AuthStore {
       this.user$.next(null);
       this.currentUserDoc = undefined;
       this.stopPresence();
+      this.unsubscribeProfile();
+      this.clearReloadMarker();
       this.markInitialAuthDone();
       return;
     }
 
     const fallback = this.buildAuthSnapshot(authUser);
     this.user$.next(fallback);
-    this.markInitialAuthDone();
 
     const ref = doc(firebaseServices.db, 'users', authUser.uid);
     this.currentUserDoc = ref;
 
-    try {
-      const snap = await getDoc(ref);
-      if (token !== this.hydrationToken) {
-        return;
-      }
-      const profile = snap.exists() ? snap.data() ?? {} : {};
-      const hydrated = this.mergeProfileSnapshot(fallback, profile);
-      this.user$.next(hydrated);
-    } catch (error) {
-      console.warn('Impossible de charger le profil Firestore', error);
-      if (token === this.hydrationToken) {
-        this.user$.next({ ...fallback, profileLoading: false });
-        this.markInitialAuthDone();
-      }
-    }
+    this.profileUnsub?.();
+    this.profileUnsub = onSnapshot(
+      ref,
+      snapshot => {
+        if (token !== this.hydrationToken) {
+          return;
+        }
+        void this.processProfileSnapshot(ref, snapshot, fallback, token);
+      },
+      error => {
+        console.warn('Impossible de charger le profil Firestore', error);
+        if (token === this.hydrationToken) {
+          this.user$.next({ ...fallback, profileLoading: false });
+          this.markInitialAuthDone();
+        }
+      },
+    );
 
     if (token === this.hydrationToken) {
       this.startPresence();
@@ -89,6 +95,16 @@ export class AuthStore {
 
   waitForInitialAuth(): Promise<void> {
     return this.initialAuthResolved ? Promise.resolve() : this.initialAuthPromise;
+  }
+
+  async waitForProfileReady() {
+    const current = this.user$.value;
+    if (!current || !current.profileLoading) {
+      return current;
+    }
+    return firstValueFrom(
+      this.user$.pipe(filter(user => !user || !user.profileLoading)),
+    );
   }
 
   isInitialAuthResolved() {
@@ -169,5 +185,94 @@ export class AuthStore {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = undefined;
     }
+  }
+
+  private unsubscribeProfile() {
+    if (this.profileUnsub) {
+      this.profileUnsub();
+      this.profileUnsub = undefined;
+    }
+  }
+
+  private triggerInitialReload(user: AuthUserState | null) {
+    if (!user?.uid) {
+      return;
+    }
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const storage = this.getSessionStorage();
+    if (storage) {
+      const alreadyReloadedUid = storage.getItem(this.reloadMarkerKey);
+      if (alreadyReloadedUid === user.uid) {
+        return;
+      }
+      try {
+        storage.setItem(this.reloadMarkerKey, user.uid);
+      } catch {
+        /* ignore */
+      }
+    }
+    window.location.reload();
+  }
+
+  private clearReloadMarker() {
+    const storage = this.getSessionStorage();
+    if (!storage) return;
+    try {
+      storage.removeItem(this.reloadMarkerKey);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private getSessionStorage(): Storage | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    try {
+      return window.sessionStorage;
+    } catch {
+      return null;
+    }
+  }
+
+  private async processProfileSnapshot(
+    ref: ReturnType<typeof doc>,
+    snapshot: DocumentSnapshot,
+    fallback: AuthUserState,
+    token: number,
+  ) {
+    if (token !== this.hydrationToken) return;
+    let profile = snapshot.exists() ? snapshot.data() ?? {} : {};
+    const fallbackPayload: Record<string, any> = {};
+    const storedEmail = profile['email'] as string | null | undefined;
+    const fallbackEmail = fallback.email?.trim();
+    if (!storedEmail && fallbackEmail) {
+      fallbackPayload['email'] = fallbackEmail;
+      fallbackPayload['emailLowercase'] = fallbackEmail.toLowerCase();
+    }
+    const storedPhoto = profile['photoURL'] as string | null | undefined;
+    const fallbackPhoto = fallback.photoURL?.trim();
+    if (!storedPhoto && fallbackPhoto) {
+      fallbackPayload['photoURL'] = fallbackPhoto;
+    }
+    if (Object.keys(fallbackPayload).length) {
+      try {
+        fallbackPayload['updatedAt'] = Date.now();
+        await setDoc(ref, fallbackPayload, { merge: true });
+        profile = {
+          ...profile,
+          ...fallbackPayload,
+        };
+      } catch (error) {
+        console.warn('Impossible de synchroniser le profil utilisateur', error);
+      }
+    }
+    if (token !== this.hydrationToken) return;
+    const hydrated = this.mergeProfileSnapshot(fallback, profile);
+    this.user$.next(hydrated);
+    this.markInitialAuthDone();
+    this.triggerInitialReload(hydrated);
   }
 }
