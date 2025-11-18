@@ -54,8 +54,24 @@
         </label>
 
         <label class="onboarding-field">
-          <span>Profession</span>
-          <input type="text" name="profession" maxlength="60" [(ngModel)]="profileModalForm.profession" />
+          <span>Profession *</span>
+          <select
+            name="profession"
+            required
+            [(ngModel)]="profileSelectedProfession"
+            (ngModelChange)="onProfileProfessionChange($event)">
+            <option value="" disabled>Choisis ta profession</option>
+            <option *ngFor="let option of professionOptions" [ngValue]="option">{{ option }}</option>
+            <option [ngValue]="professionOtherValue">{{ professionOtherValue }}</option>
+          </select>
+          <input
+            *ngIf="profileSelectedProfession === professionOtherValue"
+            type="text"
+            name="customProfession"
+            [(ngModel)]="profileCustomProfession"
+            placeholder="Precise ta profession"
+            [required]="profileSelectedProfession === professionOtherValue"
+            maxlength="60" />
         </label>
 
         <label class="onboarding-field">

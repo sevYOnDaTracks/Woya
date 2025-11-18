@@ -287,8 +287,25 @@
               <input type="text" [(ngModel)]="userForm.city" name="city" class="form-control" />
             </label>
             <label class="form-field">
-              <span>Profession</span>
-              <input type="text" [(ngModel)]="userForm.profession" name="profession" class="form-control" />
+              <span>Profession *</span>
+              <select
+                [(ngModel)]="userSelectedProfession"
+                name="profession"
+                class="form-control"
+                required
+                (ngModelChange)="onUserProfessionChange($event)">
+                <option value="" disabled>Choisir une profession</option>
+                <option *ngFor="let option of professionOptions" [ngValue]="option">{{ option }}</option>
+                <option [ngValue]="professionOtherValue">{{ professionOtherValue }}</option>
+              </select>
+              <input
+                *ngIf="userSelectedProfession === professionOtherValue"
+                type="text"
+                name="customProfession"
+                [(ngModel)]="userCustomProfession"
+                class="form-control mt-2"
+                placeholder="Preciser la profession"
+                [required]="userSelectedProfession === professionOtherValue" />
             </label>
             <label class="form-field">
               <span>Rôle</span>

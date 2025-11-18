@@ -1,11 +1,11 @@
-<div class="min-h-screen bg-[#FFF7EB] -mt-8 py-16 px-4">
+﻿<div class="min-h-screen bg-[#FFF7EB] -mt-8 py-16 px-4">
   <div class="mx-auto max-w-4xl bg-white rounded-3xl shadow-lg border border-[#FFE0BF] p-6 md:p-10">
 
     <div class="flex items-center justify-between flex-wrap gap-4 mb-8">
       <div>
         <p class="text-sm uppercase tracking-[0.25em] text-[#FFB066]">Espace personnel</p>
         <h1 class="text-3xl font-extrabold text-[#FF7A00] mt-1">Mon compte</h1>
-        <p class="text-sm text-gray-500">Consultez et mettez à jour vos informations personnelles.</p>
+        <p class="text-sm text-gray-500">Consultez et mettez à  jour vos informations personnelles.</p>
       </div>
 
       <button type="button"
@@ -55,9 +55,9 @@
                  tabindex="-1"
                  *ngIf="activeSection === 'photos'">
           <div class="account-section__header">
-            <p class="account-section__eyebrow">Identité visuelle</p>
+            <p class="account-section__eyebrow">IdentitÃ© visuelle</p>
             <h2>Photo de profil & couverture</h2>
-            <p>Personnalise ce que voient les clients avant de réserver.</p>
+            <p>Personnalise ce que voient les clients avant de rÃ©server.</p>
           </div>
           <div class="account-media-grid">
             <div class="rounded-3xl border border-[#FFE0BF] bg-[#FFF9F2] p-6 space-y-4">
@@ -80,7 +80,7 @@
                   <button type="button"
                           (click)="clearCoverSelection()"
                           class="px-4 py-2 rounded-2xl text-xs font-semibold text-gray-600 bg-white/80 hover:bg-white transition">
-                    Réinitialiser
+                    RÃ©initialiser
                   </button>
                   <button *ngIf="coverPreview"
                           type="button"
@@ -132,11 +132,13 @@
           <div class="account-section__header">
             <p class="account-section__eyebrow">Mes informations</p>
             <h2>Informations personnelles</h2>
-            <p>Garde tes coordonnées à jour pour faciliter les échanges avec tes clients.</p>
+            <p>Garde tes coordonnées à  jour pour faciliter les échanges avec tes clients.</p>
           </div>
           <div class="account-section__body space-y-6">
             <div>
-              <label class="field-label" for="pseudo">Pseudo</label>
+              <label class="field-label" for="pseudo">
+                <span class="text-red-500 mr-1" aria-hidden="true">*</span>Pseudo
+              </label>
               <input id="pseudo"
                      name="pseudo"
                      [(ngModel)]="form.pseudo"
@@ -154,9 +156,9 @@
                    'text-orange-600': pseudoStatus === 'error'
                  }">
                 <ng-container [ngSwitch]="pseudoStatus">
-                  <span *ngSwitchCase="'checking'">Vérification du pseudo…</span>
+                  <span *ngSwitchCase="'checking'">Vérification du pseudo ...¦</span>
                   <span *ngSwitchCase="'available'">Pseudo disponible.</span>
-                  <span *ngSwitchCase="'taken'">Ce pseudo est déjà utilisé.</span>
+                  <span *ngSwitchCase="'taken'">Ce pseudo est déja utilisé.</span>
                   <span *ngSwitchCase="'error'">Impossible de vérifier le pseudo.</span>
                 </ng-container>
               </p>
@@ -164,26 +166,51 @@
 
             <div class="grid md:grid-cols-2 gap-5">
               <div>
-                <label class="field-label" for="lastname">Nom</label>
+                <label class="field-label" for="lastname">
+                  <span class="text-red-500 mr-1" aria-hidden="true">*</span>Nom
+                </label>
                 <input id="lastname" name="lastname" [(ngModel)]="form.lastname" required maxlength="60"
                        class="field-input" placeholder="Votre nom" />
               </div>
               <div>
-                <label class="field-label" for="firstname">Prénom</label>
+                <label class="field-label" for="firstname">
+                  <span class="text-red-500 mr-1" aria-hidden="true">*</span>Prénom(s)
+                </label>
                 <input id="firstname" name="firstname" [(ngModel)]="form.firstname" required maxlength="60"
-                       class="field-input" placeholder="Votre prénom" />
+                       class="field-input" placeholder="Votre prÃ©nom" />
               </div>
             </div>
 
             <div>
-              <label class="field-label" for="profession">Profession</label>
-              <input id="profession" name="profession" [(ngModel)]="form.profession" maxlength="60"
-                     class="field-input" placeholder="Ex: Plombier, Designer UX…" />
+              <label class="field-label" for="profession">
+                <span class="text-red-500 mr-1" aria-hidden="true">*</span>Profession
+              </label>
+              <select id="profession"
+                      name="profession"
+                      [(ngModel)]="selectedProfession"
+                      required
+                      (ngModelChange)="onProfessionSelectChange($event)"
+                      class="field-input">
+                <option value="" disabled>Choisis ta profession</option>
+                <option *ngFor="let option of professionOptions" [ngValue]="option">{{ option }}</option>
+                <option [ngValue]="professionOtherValue">{{ professionOtherValue }}</option>
+              </select>
+              <div *ngIf="selectedProfession === professionOtherValue" class="mt-2 space-y-2">
+                <label class="field-label" for="customProfession">
+                  <span class="text-red-500 mr-1" aria-hidden="true">*</span>Précise ta profession
+                </label>
+                <input id="customProfession"
+                       [(ngModel)]="customProfession"
+                       name="customProfession"
+                       placeholder="Precise ta profession"
+                       [required]="selectedProfession === professionOtherValue"
+                       maxlength="60"
+                       class="field-input" />
+              </div>
             </div>
-
             <div class="grid md:grid-cols-2 gap-5">
               <div>
-                <label class="field-label" for="phone">Téléphone</label>
+                <label class="field-label" for="phone">Telephone</label>
                 <input id="phone" name="phone" [(ngModel)]="form.phone" maxlength="30"
                        class="field-input" placeholder="+225 0700000000" />
               </div>
@@ -194,6 +221,7 @@
               </div>
             </div>
 
+
             <div class="grid md:grid-cols-2 gap-5">
               <div>
                 <label class="field-label" for="city">Ville</label>
@@ -203,18 +231,18 @@
               <div>
                 <label class="field-label" for="address">Adresse complète</label>
                 <input id="address" name="address" [(ngModel)]="form.address" maxlength="120"
-                       class="field-input" placeholder="Lot 123, Cocody Angré" />
+                       class="field-input" placeholder="Lot 123, Cocody AngrÃ©" />
               </div>
             </div>
 
             <div>
               <label class="field-label" for="bio">Biographie</label>
               <textarea id="bio" name="bio" [(ngModel)]="form.bio" rows="4" maxlength="300"
-                        class="field-input resize-none" placeholder="Décrivez-vous en quelques lignes..."></textarea>
+                        class="field-input resize-none" placeholder="DÃ©crivez-vous en quelques lignes..."></textarea>
             </div>
 
             <div class="bg-[#FFF9F2] border border-[#FFE0BF] rounded-2xl p-4 text-sm text-gray-600">
-              <p><span class="font-semibold text-[#FF7A00]">Email :</span> {{ user?.email || 'Non renseigné' }}</p>
+              <p><span class="font-semibold text-[#FF7A00]">Email :</span> {{ user?.email || 'Non renseignÃ©' }}</p>
               <p class="text-xs text-gray-400 mt-1">Pour modifier votre email, contactez l'assistance.</p>
             </div>
           </div>
@@ -227,7 +255,7 @@
           <div class="account-section__header">
             <p class="account-section__eyebrow">Galerie</p>
             <h2>Galeries personnelles</h2>
-            <p>Créer plusieurs galeries (5 photos max chacune) pour mettre en avant tes prestations.</p>
+            <p>CrÃ©er plusieurs galeries (5 photos max chacune) pour mettre en avant tes prestations.</p>
           </div>
           <div class="account-section__body space-y-6">
             <div class="gallery-create-card">
@@ -238,7 +266,7 @@
                          name="galleryTitle"
                          [(ngModel)]="newGalleryTitle"
                          class="field-input"
-                         placeholder="Ex: Mariages, Avant / Après" />
+                         placeholder="Ex: Mariages, Avant / AprÃ¨s" />
                 </div>
                 <div>
                   <label class="field-label" for="galleryDescription">Description</label>
@@ -247,14 +275,14 @@
                             [(ngModel)]="newGalleryDescription"
                             rows="2"
                             class="field-input resize-none"
-                            placeholder="Présente ce que les clients verront dans cette galerie"></textarea>
+                            placeholder="PrÃ©sente ce que les clients verront dans cette galerie"></textarea>
                 </div>
               </div>
               <button type="button"
                       (click)="createGallery()"
                       [disabled]="creatingGallery || !newGalleryTitle.trim()"
                       class="gallery-create-btn">
-                {{ creatingGallery ? 'Création...' : 'Créer une galerie' }}
+                {{ creatingGallery ? 'CrÃ©ation...' : 'CrÃ©er une galerie' }}
               </button>
             </div>
 
@@ -262,10 +290,10 @@
               {{ galleryError }}
             </div>
             <div *ngIf="galleryLoading" class="text-sm text-gray-500">
-              Chargement des galeries…
+              Chargement des galeriesâ€¦
             </div>
             <p *ngIf="!galleryLoading && !galleries.length" class="text-sm text-gray-500">
-              Aucune galerie pour le moment. Crée ta première pour inspirer tes futurs clients.
+              Aucune galerie pour le moment. CrÃ©e ta premiÃ¨re pour inspirer tes futurs clients.
             </p>
 
             <div class="gallery-grid" *ngIf="!galleryLoading && galleries.length">
@@ -296,22 +324,22 @@
                     <button type="button"
                             class="gallery-photo__delete"
                             (click)="removeGalleryPhoto(gallery.id, photo.id)">
-                      ✕
+                      âœ•
                     </button>
                   </figure>
                 </div>
                 <ng-template #emptyGallery>
-                  <p class="text-sm text-gray-400">Aucune photo dans cette galerie pour l’instant.</p>
+                  <p class="text-sm text-gray-400">Aucune photo dans cette galerie pour lâ€™instant.</p>
                 </ng-template>
 
                 <div class="gallery-upload" *ngIf="gallery.photos.length < maxPhotosPerGallery">
                   <div class="gallery-upload__fields">
                     <div>
-                      <label class="field-label" [for]="'caption-' + gallery.id">Légende</label>
+                      <label class="field-label" [for]="'caption-' + gallery.id">LÃ©gende</label>
                       <input [id]="'caption-' + gallery.id"
                              [name]="'caption-' + gallery.id"
                              class="field-input"
-                             placeholder="Ex: Résultat avant/après"
+                             placeholder="Ex: RÃ©sultat avant/aprÃ¨s"
                              [(ngModel)]="galleryUploadState(gallery.id).caption" />
                     </div>
                     <div>
@@ -349,7 +377,7 @@
           <button type="button"
                   class="px-4 py-2 rounded-2xl border text-sm font-semibold text-gray-600 hover:bg-gray-50"
                   (click)="resetForm()">
-            Réinitialiser
+            RÃ©initialiser
           </button>
           <button type="submit"
                   [disabled]="loading || accountForm.invalid"
@@ -362,8 +390,8 @@
 
     <ng-template #offline>
       <div class="text-center py-16">
-        <p class="text-lg font-semibold text-gray-700 mb-2">Vous n'êtes pas connecté.</p>
-        <p class="text-sm text-gray-500 mb-6">Connectez-vous pour gérer vos informations personnelles.</p>
+        <p class="text-lg font-semibold text-gray-700 mb-2">Vous n'Ãªtes pas connectÃ©.</p>
+        <p class="text-sm text-gray-500 mb-6">Connectez-vous pour gÃ©rer vos informations personnelles.</p>
         <button (click)="goToLogin()"
                 class="px-6 py-3 rounded-2xl text-white bg-[#FF7A00] font-semibold hover:bg-[#e66d00] transition">
           Se connecter

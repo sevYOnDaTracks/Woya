@@ -307,7 +307,8 @@
 }
 
 .onboarding-field input,
-.onboarding-field textarea {
+.onboarding-field textarea,
+.onboarding-field select {
   border: 1px solid #ffe0bf;
   border-radius: 18px;
   background: #fff;
@@ -319,7 +320,8 @@
 }
 
 .onboarding-field input:focus,
-.onboarding-field textarea:focus {
+.onboarding-field textarea:focus,
+.onboarding-field select:focus {
   border-color: #ff7a00;
   box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.15);
 }

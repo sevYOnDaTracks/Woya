@@ -8,6 +8,7 @@ import { WoyaService } from '../core/models/service.model';
 import { BookingStatus, ServiceBooking } from '../core/models/booking.model';
 import { Category } from '../core/models/category.model';
 import { EmailService } from '../core/services/email';
+import { matchProfessionOption, OTHER_PROFESSION_OPTION, PROFESSION_OPTIONS, resolveProfessionValue } from '../core/constants/professions';
 
 type AdminTab = 'users' | 'services' | 'categories' | 'bookings' | 'reservations';
 
@@ -51,6 +52,10 @@ export default class AdminDashboard implements OnInit {
   savingUser = false;
   userUpdateMessage = '';
   userUpdateState: 'success' | 'error' | '' = '';
+  professionOptions = PROFESSION_OPTIONS;
+  readonly professionOtherValue = OTHER_PROFESSION_OPTION;
+  userSelectedProfession = '';
+  userCustomProfession = '';
   mailModalOpen = false;
   mailTargetUser: AdminUserRecord | null = null;
   mailForm = this.createMailForm();
@@ -361,6 +366,7 @@ export default class AdminDashboard implements OnInit {
       role: user.role ?? '',
       isActive: user.isActive !== false,
     };
+    this.syncUserProfessionSelection(this.userForm.profession);
   }
 
   cancelEditUser() {
@@ -369,14 +375,29 @@ export default class AdminDashboard implements OnInit {
     this.savingUser = false;
     this.userUpdateMessage = '';
     this.userUpdateState = '';
+    this.syncUserProfessionSelection('');
+  }
+
+  onUserProfessionChange(value: string) {
+    this.userSelectedProfession = value;
+    if (value !== this.professionOtherValue) {
+      this.userCustomProfession = '';
+    }
   }
 
   async saveUser() {
     if (!this.selectedUserId) return;
-    const payload = this.buildUserUpdatePayload();
-    this.savingUser = true;
     this.userUpdateMessage = '';
     this.userUpdateState = '';
+    const profession = this.getUserProfession();
+    if (!profession) {
+      this.userUpdateMessage = 'Merci de choisir une profession.';
+      this.userUpdateState = 'error';
+      return;
+    }
+    this.userForm.profession = profession;
+    const payload = this.buildUserUpdatePayload();
+    this.savingUser = true;
     try {
       await this.adminData.updateUser(this.selectedUserId, payload);
       const target = this.users.find(user => user.id === this.selectedUserId);
@@ -477,6 +498,26 @@ export default class AdminDashboard implements OnInit {
         .filter(Boolean)
         .some(field => (field ?? '').toString().toLowerCase().includes(normalized)),
     );
+  }
+
+  private syncUserProfessionSelection(value: string) {
+    const match = matchProfessionOption(value);
+    if (match) {
+      this.userSelectedProfession = match;
+      this.userCustomProfession = '';
+      return;
+    }
+    if (value?.trim()) {
+      this.userSelectedProfession = this.professionOtherValue;
+      this.userCustomProfession = value;
+      return;
+    }
+    this.userSelectedProfession = '';
+    this.userCustomProfession = '';
+  }
+
+  private getUserProfession() {
+    return resolveProfessionValue(this.userSelectedProfession, this.userCustomProfession);
   }
 
   private createEmptyUserForm() {

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+﻿import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -11,6 +11,7 @@ import { ServiceBooking } from '../core/models/booking.model';
 import { Services } from '../core/services/services';
 import { firebaseServices } from '../app.config';
 import { ProfilesService } from '../core/services/profiles';
+import { matchProfessionOption, OTHER_PROFESSION_OPTION, PROFESSION_OPTIONS, resolveProfessionValue } from '../core/constants/professions';
 
 interface DashboardAction {
   id: string;
@@ -62,28 +63,28 @@ const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
   {
     id: 'services',
     title: 'Trouver un service',
-    description: 'Explore les annonces et réserve en quelques clics.',
+    description: 'Explore les annonces et rÃ©serve en quelques clics.',
     route: '/services',
     icon: 'services',
   },
   // {
   //   id: 'providers',
   //   title: 'Voir les prestataires',
-  //   description: 'Découvre les profils vérifiés proches de toi.',
+  //   description: 'DÃ©couvre les profils vÃ©rifiÃ©s proches de toi.',
   //   route: '/prestataires',
   //   icon: 'providers',
   // },
   // {
   //   id: 'my-services',
   //   title: 'Mes services',
-  //   description: 'Gère et mets à jour tes offres publiées.',
+  //   description: 'GÃ¨re et mets Ã  jour tes offres publiÃ©es.',
   //   route: '/mes-services',
   //   icon: 'my-services',
   // },
   // {
   //   id: 'reservations',
   //   title: 'Mon Agenda',
-  //   description: 'Suis tes demandes et interventions à venir.',
+  //   description: 'Suis tes demandes et interventions Ã  venir.',
   //   route: '/agenda',
   //   icon: 'reservations',
   // },
@@ -131,6 +132,10 @@ export default class DashboardPage implements OnInit, OnDestroy {
   showProfileWarning = false;
   requireProfileModal = false;
   profileModalForm: ProfileModalForm = this.createProfileModalForm();
+  professionOptions = PROFESSION_OPTIONS;
+  readonly professionOtherValue = OTHER_PROFESSION_OPTION;
+  profileSelectedProfession = '';
+  profileCustomProfession = '';
   profileModalError = '';
   profileModalSaving = false;
   profilePseudoStatus: 'idle' | 'checking' | 'available' | 'taken' | 'error' = 'idle';
@@ -156,6 +161,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
     private profiles: ProfilesService,
   ) {
     this.refreshActions();
+    this.syncProfileProfessionSelection(this.profileModalForm.profession);
   }
 
   ngOnInit() {
@@ -178,7 +184,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
 
           this.userLoading = false;
 
-          this.userName = 'Invité';
+          this.userName = 'InvitÃ©';
           this.showProfileWarning = false;
 
           this.nextAppointment = null;
@@ -380,7 +386,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
 
   private shouldForceProfileModal(user: any | null | undefined) {
     if (!user || user.profileLoading) return false;
-    const requiredFields: (keyof ProfileModalForm)[] = ['pseudo', 'firstname', 'lastname', 'phone', 'city'];
+    const requiredFields: (keyof ProfileModalForm)[] = ['pseudo', 'firstname', 'lastname', 'phone', 'city', 'profession'];
     const missingRequired = requiredFields.some(field => !this.hasValue(user[field]));
     if (!missingRequired) {
       return false;
@@ -407,7 +413,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
   }
 
   private formatDate(timestamp?: number) {
-    if (!timestamp) return 'Date à confirmer';
+    if (!timestamp) return 'Date Ã  confirmer';
     try {
       return new Intl.DateTimeFormat('fr-FR', {
         weekday: 'long',
@@ -525,6 +531,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
       address: user?.address || '',
       bio: user?.bio || '',
     };
+    this.syncProfileProfessionSelection(this.profileModalForm.profession);
     this.originalProfilePseudo = user?.pseudo || '';
     this.profilePhotoPreview = user?.photoURL || null;
     this.coverPhotoPreview = user?.coverURL || null;
@@ -558,12 +565,19 @@ export default class DashboardPage implements OnInit, OnDestroy {
     }, 400);
   }
 
+  onProfileProfessionChange(value: string) {
+    this.profileSelectedProfession = value;
+    if (value !== this.professionOtherValue) {
+      this.profileCustomProfession = '';
+    }
+  }
+
   onSelectProfilePhoto(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
     if (!this.isImageFile(file)) {
-      this.profileModalError = 'Merci de sélectionner une image valide pour la photo de profil.';
+      this.profileModalError = 'Merci de sÃ©lectionner une image valide pour la photo de profil.';
       input.value = '';
       return;
     }
@@ -578,7 +592,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
     const file = input.files?.[0];
     if (!file) return;
     if (!this.isImageFile(file)) {
-      this.profileModalError = 'Merci de sélectionner une image valide pour la couverture.';
+      this.profileModalError = 'Merci de sÃ©lectionner une image valide pour la couverture.';
       input.value = '';
       return;
     }
@@ -590,10 +604,16 @@ export default class DashboardPage implements OnInit, OnDestroy {
 
   async saveProfileModal() {
     if (!this.currentUid) {
-      this.profileModalError = 'Utilisateur non identifié.';
+      this.profileModalError = 'Utilisateur non identifiÃ©.';
       return;
     }
-    const requiredFields: (keyof ProfileModalForm)[] = ['pseudo', 'firstname', 'lastname', 'phone', 'city'];
+    const profession = this.getProfileProfession();
+    this.profileModalForm.profession = profession;
+    if (!profession) {
+      this.profileModalError = 'Merci de choisir ta profession.';
+      return;
+    }
+    const requiredFields: (keyof ProfileModalForm)[] = ['pseudo', 'firstname', 'lastname', 'phone', 'city', 'profession'];
     const missing = requiredFields.find(field => !this.hasValue(this.profileModalForm[field]));
     if (missing) {
       this.profileModalError = 'Merci de renseigner tous les champs obligatoires.';
@@ -606,12 +626,12 @@ export default class DashboardPage implements OnInit, OnDestroy {
         const available = await this.profiles.isPseudoAvailable(trimmedPseudo, this.currentUid);
         if (!available) {
           this.profilePseudoStatus = 'taken';
-          this.profileModalError = 'Ce pseudo est déjà utilisé.';
+          this.profileModalError = 'Ce pseudo est dÃ©jÃ  utilisÃ©.';
           return;
         }
       } catch (error) {
         console.warn('Unable to verify pseudo', error);
-        this.profileModalError = 'Impossible de vérifier le pseudo.';
+        this.profileModalError = 'Impossible de vÃ©rifier le pseudo.';
         return;
       }
     }
@@ -621,7 +641,7 @@ export default class DashboardPage implements OnInit, OnDestroy {
       pseudoLowercase: trimmedPseudo.toLowerCase(),
       firstname: this.profileModalForm.firstname.trim(),
       lastname: this.profileModalForm.lastname.trim(),
-      profession: this.profileModalForm.profession.trim(),
+      profession,
       phone: this.profileModalForm.phone.trim(),
       birthdate: this.profileModalForm.birthdate || null,
       city: this.profileModalForm.city.trim(),
@@ -690,6 +710,26 @@ export default class DashboardPage implements OnInit, OnDestroy {
     addValue(values.lastname);
     addValue(`${values.firstname ?? ''} ${values.lastname ?? ''}`);
     return Array.from(tokens);
+  }
+
+  private syncProfileProfessionSelection(value: string) {
+    const match = matchProfessionOption(value);
+    if (match) {
+      this.profileSelectedProfession = match;
+      this.profileCustomProfession = '';
+      return;
+    }
+    if (value?.trim()) {
+      this.profileSelectedProfession = this.professionOtherValue;
+      this.profileCustomProfession = value;
+      return;
+    }
+    this.profileSelectedProfession = '';
+    this.profileCustomProfession = '';
+  }
+
+  private getProfileProfession() {
+    return resolveProfessionValue(this.profileSelectedProfession, this.profileCustomProfession);
   }
 
   private isImageFile(file: File) {

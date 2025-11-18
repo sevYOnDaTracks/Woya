@@ -10,6 +10,7 @@ import { AuthStore } from '../../core/store/auth.store';
 import { firebaseServices } from '../../app.config';
 import { ProfilesService, GalleryAlbum } from '../../core/services/profiles';
 import { LoadingIndicatorService } from '../../core/services/loading-indicator.service';
+import { matchProfessionOption, OTHER_PROFESSION_OPTION, PROFESSION_OPTIONS, resolveProfessionValue } from '../../core/constants/professions';
 
 type AccountSection = 'photos' | 'infos' | 'galerie';
 
@@ -55,6 +56,10 @@ export default class UserInfo implements OnInit, OnDestroy {
   loading = false;
   success = '';
   error = '';
+  professionOptions = PROFESSION_OPTIONS;
+  readonly professionOtherValue = OTHER_PROFESSION_OPTION;
+  selectedProfession = '';
+  customProfession = '';
   photoPreview: string | null = null;
   photoFile: File | null = null;
   coverPreview: string | null = null;
@@ -128,6 +133,7 @@ export default class UserInfo implements OnInit, OnDestroy {
       address: user.address || '',
       bio: user.bio || ''
     };
+    this.syncProfessionSelection(this.form.profession);
     this.photoPreview = user.photoURL || null;
     this.coverPreview = user.coverURL || null;
     this.newGalleryTitle = '';
@@ -144,6 +150,13 @@ export default class UserInfo implements OnInit, OnDestroy {
     this.error = '';
     this.photoFile = null;
     this.coverFile = null;
+  }
+
+  onProfessionSelectChange(value: string) {
+    this.selectedProfession = value;
+    if (value !== this.professionOtherValue) {
+      this.customProfession = '';
+    }
   }
 
   async save() {
@@ -174,12 +187,20 @@ export default class UserInfo implements OnInit, OnDestroy {
     }
     this.form.pseudo = trimmedPseudo;
 
+    const profession = this.getResolvedProfession();
+    if (!profession) {
+      this.error = 'Merci de choisir une profession.';
+      this.loading = false;
+      return;
+    }
+    this.form.profession = profession;
+
     const payload: any = {
       firstname: this.form.firstname.trim(),
       lastname: this.form.lastname.trim(),
       pseudo: trimmedPseudo,
       pseudoLowercase: normalizedPseudo,
-      profession: this.form.profession.trim(),
+      profession,
       birthdate: this.form.birthdate || null,
       phone: this.form.phone.trim(),
       city: this.form.city.trim(),
@@ -516,5 +537,25 @@ export default class UserInfo implements OnInit, OnDestroy {
     }
     const extension = file.name ? file.name.toLowerCase() : '';
     return /\.(png|jpe?g|gif|bmp|webp|avif|heic|heif)$/.test(extension);
+  }
+
+  private syncProfessionSelection(value: string) {
+    const match = matchProfessionOption(value);
+    if (match) {
+      this.selectedProfession = match;
+      this.customProfession = '';
+      return;
+    }
+    if (value?.trim()) {
+      this.selectedProfession = this.professionOtherValue;
+      this.customProfession = value;
+      return;
+    }
+    this.selectedProfession = '';
+    this.customProfession = '';
+  }
+
+  private getResolvedProfession() {
+    return resolveProfessionValue(this.selectedProfession, this.customProfession);
   }
 }

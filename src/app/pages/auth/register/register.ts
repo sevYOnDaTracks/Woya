@@ -7,6 +7,7 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvide
 import { doc, setDoc, collection, query, where, getDocs, getDoc, limit } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthStore } from '../../../core/store/auth.store';
+import { matchProfessionOption, OTHER_PROFESSION_OPTION, PROFESSION_OPTIONS, resolveProfessionValue } from '../../../core/constants/professions';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -36,6 +37,10 @@ export default class Register implements OnInit, OnDestroy {
   file: File | null = null;
   loading = false;
   error = '';
+  professionOptions = PROFESSION_OPTIONS;
+  readonly professionOtherValue = OTHER_PROFESSION_OPTION;
+  selectedProfession = '';
+  customProfession = '';
   showBirthdatePicker = false;
   showPassword = false;
   showConfirmPassword = false;
@@ -74,6 +79,7 @@ export default class Register implements OnInit, OnDestroy {
         this.router.navigate(['/mon-espace']);
       }
     });
+    this.syncProfessionSelection(this.form.profession);
   }
 
   ngOnDestroy() {
@@ -132,6 +138,13 @@ export default class Register implements OnInit, OnDestroy {
       return;
     }
 
+    const profession = this.getResolvedProfession();
+    if (!profession) {
+      this.error = 'Merci de choisir ou saisir une profession.';
+      return;
+    }
+    this.form.profession = profession;
+
     this.loading = true;
 
     try {
@@ -160,7 +173,7 @@ export default class Register implements OnInit, OnDestroy {
         ...this.form,
         pseudo: trimmedPseudo,
         pseudoLowercase: pseudoLower,
-        profession: this.form.profession.trim(),
+        profession: this.form.profession,
         phone,
         city: this.form.city,
         address: this.form.address,
@@ -442,6 +455,13 @@ export default class Register implements OnInit, OnDestroy {
     signInWithPopup(firebaseServices.auth, new FacebookAuthProvider());
   }
 
+  onProfessionSelectChange(value: string) {
+    this.selectedProfession = value;
+    if (value !== this.professionOtherValue) {
+      this.customProfession = '';
+    }
+  }
+
   toggleBirthdatePicker() {
     this.showBirthdatePicker = !this.showBirthdatePicker;
   }
@@ -530,13 +550,14 @@ export default class Register implements OnInit, OnDestroy {
     }
     const email = (this.form.email || user.email || '').toLowerCase();
     const existing = snap.data() as Record<string, any> | undefined;
+    const profession = this.getResolvedProfession() || this.form.profession;
     const payload = {
       firstname,
       lastname,
       pseudo: pseudoTrimmed,
       pseudoLowercase: normalizedPseudo,
       email,
-      profession: this.form.profession,
+      profession,
       phone: overrides?.phone || (this.form.phone ? this.buildFullPhoneNumber() : ''),
       city: this.form.city,
       address: this.form.address,
@@ -560,5 +581,25 @@ export default class Register implements OnInit, OnDestroy {
     if (typeof value === 'number') return value;
     if (value.seconds) return value.seconds * 1000;
     return undefined;
+  }
+
+  private syncProfessionSelection(value: string) {
+    const match = matchProfessionOption(value);
+    if (match) {
+      this.selectedProfession = match;
+      this.customProfession = '';
+      return;
+    }
+    if (value?.trim()) {
+      this.selectedProfession = this.professionOtherValue;
+      this.customProfession = value;
+      return;
+    }
+    this.selectedProfession = '';
+    this.customProfession = '';
+  }
+
+  private getResolvedProfession() {
+    return resolveProfessionValue(this.selectedProfession, this.customProfession);
   }
 }
