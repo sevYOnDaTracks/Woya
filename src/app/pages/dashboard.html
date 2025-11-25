@@ -1,4 +1,4 @@
-<div class="onboarding-backdrop" *ngIf="requireProfileModal">
+<div class="onboarding-backdrop" *ngIf="profileStateReady && requireProfileModal">
   <div class="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
     <div class="onboarding-modal__header">
       <p class="onboarding-modal__eyebrow">Premiers pas</p>
@@ -123,6 +123,23 @@
   </div>
 </div>
 
+<div class="onboarding-backdrop" *ngIf="showProfileDialog && !requireProfileModal">
+  <div class="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="quickProfileDialog">
+    <div class="onboarding-modal__header">
+      <h2 id="quickProfileDialog">Renseigne tes infos !</h2>
+      <p>Ajoute ton numéro, ton pseudo, nom & prenom(s) pour faciliter les échanges.</p>
+    </div>
+    <div class="space-y-3">
+      <button type="button"
+              class="onboarding-media__button w-full  text-center"
+              (click)="goToProfileInfo()">
+        Renseigner mes infos
+      </button>
+    </div>
+  </div>
+</div>
+
+
 <section class="dashboard">
   <div *ngIf="showProfileWarning" class="dashboard__profile-warning">
     <div>
@@ -233,6 +250,7 @@
         class="dashboard-card"
         [class.dashboard-card--accent]="action.accent"
         [routerLink]="action.route"
+        (click)="onActionClick($event, action)"
         *ngFor="let action of dashboardActions; trackBy: trackByActionId"
       >
         <span *ngIf="action.badge" class="dashboard-card__badge">{{ action.badge }}</span>

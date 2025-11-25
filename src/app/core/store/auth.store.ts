@@ -145,7 +145,8 @@ export class AuthStore {
 
     const updatePresence = async () => {
       try {
-        await updateDoc(this.currentUserDoc!, { lastSeen: serverTimestamp() });
+        // setDoc with merge to upsert the user doc if it does not exist yet (avoids "No document to update").
+        await setDoc(this.currentUserDoc!, { lastSeen: serverTimestamp() }, { merge: true });
       } catch (error) {
         console.warn('Impossible de mettre a jour la presence', error);
       }

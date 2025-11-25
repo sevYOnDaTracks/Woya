@@ -5,7 +5,6 @@ import { CommonModule } from '@angular/common';  // ✅ ICI
 import { firebaseServices } from '../../../app.config';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { doc, setDoc, collection, query, where, getDocs, getDoc, limit } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { AuthStore } from '../../../core/store/auth.store';
 import { matchProfessionOption, OTHER_PROFESSION_OPTION, PROFESSION_OPTIONS, resolveProfessionValue } from '../../../core/constants/professions';
 import { Subscription } from 'rxjs';
@@ -126,65 +125,51 @@ export default class Register implements OnInit, OnDestroy {
       return;
     }
 
-    const phone = this.buildFullPhoneNumber();
-    if (!this.isValidPhone(phone)) {
-      this.error = 'Numéro de téléphone invalide.';
-      return;
-    }
-
-    const trimmedPseudo = this.form.pseudo.trim();
-    if (!trimmedPseudo) {
-      this.error = 'Merci de choisir un pseudo.';
-      return;
-    }
-
-    const profession = this.getResolvedProfession();
-    if (!profession) {
-      this.error = 'Merci de choisir ou saisir une profession.';
-      return;
-    }
-    this.form.profession = profession;
-
     this.loading = true;
 
     try {
       const auth = firebaseServices.auth;
       const db = firebaseServices.db;
-      const storage = getStorage();
       this.form.email = this.form.email.trim().toLowerCase();
-      this.form.pseudo = trimmedPseudo;
 
       await this.ensureUniqueEmail(db, this.form.email);
-      await this.ensureUniquePhone(db, phone);
-      await this.ensureUniquePseudo(db, trimmedPseudo);
 
       const cred = await createUserWithEmailAndPassword(auth, this.form.email, this.form.password);
 
-      let photoURL = '';
-      if (this.file) {
-        const refImg = ref(storage, `users/${cred.user.uid}/profile.jpg`);
-        await uploadBytes(refImg, this.file);
-        photoURL = await getDownloadURL(refImg);
-      }
-
-      const pseudoLower = trimmedPseudo.toLowerCase();
-
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        ...this.form,
-        pseudo: trimmedPseudo,
-        pseudoLowercase: pseudoLower,
-        profession: this.form.profession,
-        phone,
-        city: this.form.city,
-        address: this.form.address,
+      const userPayload = {
+        uid: cred.user.uid,
+        firstname: '',
+        lastname: '',
+        pseudo: '',
+        pseudoLowercase: '',
+        profession: '',
+        birthdate: null,
+        phone: '',
+        city: '',
+        address: '',
+        email: this.form.email,
+        emailLowercase: this.form.email,
         coverURL: '',
+        provider: 'email',
+        onboardingCompleted: false,
         searchKeywords: this.buildSearchKeywords({
-          firstname: this.form.firstname,
-          lastname: this.form.lastname,
-          pseudo: this.form.pseudo,
+          firstname: '',
+          lastname: '',
+          pseudo: '',
         }),
-        photoURL,
-        createdAt: Date.now()
+        photoURL: '',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      await setDoc(doc(db, 'users', cred.user.uid), userPayload, { merge: true });
+
+      // Hydrate local auth state immediately to avoid a blank profile before Firestore snapshot arrives.
+      const current = this.authStore.user$.value;
+      this.authStore.user$.next({
+        ...(current ?? {}),
+        ...userPayload,
+        profileLoading: false,
       });
 
       this.router.navigate(['/mon-espace']);
@@ -551,6 +536,7 @@ export default class Register implements OnInit, OnDestroy {
     const email = (this.form.email || user.email || '').toLowerCase();
     const existing = snap.data() as Record<string, any> | undefined;
     const profession = this.getResolvedProfession() || this.form.profession;
+    const onboardingCompleted = overrides ? true : existing?.['onboardingCompleted'] ?? false;
     const payload = {
       firstname,
       lastname,
@@ -564,6 +550,8 @@ export default class Register implements OnInit, OnDestroy {
       coverURL: '',
       photoURL: user.photoURL ?? '',
       provider: 'google',
+      emailLowercase: email,
+      onboardingCompleted,
       isActive: existing?.['isActive'] ?? true,
       searchKeywords: this.buildSearchKeywords({
         firstname,

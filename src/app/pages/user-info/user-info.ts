@@ -60,6 +60,8 @@ export default class UserInfo implements OnInit, OnDestroy {
   readonly professionOtherValue = OTHER_PROFESSION_OPTION;
   selectedProfession = '';
   customProfession = '';
+  countryCode = '+225';
+  phoneLocal = '';
   photoPreview: string | null = null;
   photoFile: File | null = null;
   coverPreview: string | null = null;
@@ -79,6 +81,9 @@ export default class UserInfo implements OnInit, OnDestroy {
   private sectionSub?: Subscription;
   private pseudoCheckTimeout?: ReturnType<typeof setTimeout>;
   private originalPseudo = '';
+  private lastHydratedUserId: string | null = null;
+  private lastHydratedForm?: UserInfoForm;
+  private galleriesLoadedForUid: string | null = null;
   user: any = null;
 
   constructor(
@@ -92,10 +97,31 @@ export default class UserInfo implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.sub = this.auth.user$.subscribe(user => {
+      const nextUid = user?.uid ?? null;
+      const uidChanged = this.lastHydratedUserId !== nextUid;
+
       this.user = user;
-      if (user) {
-        this.populateForm(user);
+
+      if (!user) {
+        this.lastHydratedForm = undefined;
+        this.lastHydratedUserId = null;
+        this.galleriesLoadedForUid = null;
+        return;
+      }
+
+      const incomingForm = this.mapUserToForm(user);
+      const shouldHydrate =
+        uidChanged ||
+        !this.lastHydratedForm ||
+        !this.formsEqual(incomingForm, this.lastHydratedForm);
+
+      if (shouldHydrate) {
+        this.populateForm(user, incomingForm);
+      }
+
+      if (uidChanged || this.galleriesLoadedForUid !== nextUid) {
         this.loadGalleries();
+        this.galleriesLoadedForUid = nextUid;
       }
     });
 
@@ -121,26 +147,20 @@ export default class UserInfo implements OnInit, OnDestroy {
     return !!this.user;
   }
 
-  private populateForm(user: any) {
-    this.form = {
-      firstname: user.firstname || '',
-      lastname: user.lastname || '',
-      pseudo: user.pseudo || '',
-      profession: user.profession || '',
-      birthdate: user.birthdate || '',
-      phone: user.phone || '',
-      city: user.city || '',
-      address: user.address || '',
-      bio: user.bio || ''
-    };
+  private populateForm(user: any, values?: UserInfoForm) {
+    const formValues = values ?? this.mapUserToForm(user);
+    this.form = { ...formValues };
+    this.syncPhoneSplit(formValues.phone || '');
     this.syncProfessionSelection(this.form.profession);
     this.photoPreview = user.photoURL || null;
     this.coverPreview = user.coverURL || null;
     this.newGalleryTitle = '';
     this.newGalleryDescription = '';
     this.galleryUploads = {};
-    this.originalPseudo = user.pseudo || '';
+    this.originalPseudo = formValues.pseudo || '';
     this.pseudoStatus = 'idle';
+    this.lastHydratedUserId = user?.uid ?? null;
+    this.lastHydratedForm = { ...formValues };
   }
 
   resetForm() {
@@ -202,7 +222,7 @@ export default class UserInfo implements OnInit, OnDestroy {
       pseudoLowercase: normalizedPseudo,
       profession,
       birthdate: this.form.birthdate || null,
-      phone: this.form.phone.trim(),
+      phone: this.buildFullPhoneNumber(),
       city: this.form.city.trim(),
       address: this.form.address.trim(),
       bio: this.form.bio.trim(),
@@ -512,6 +532,36 @@ export default class UserInfo implements OnInit, OnDestroy {
     return this.ensureGalleryUploadState(galleryId);
   }
 
+  private mapUserToForm(user: any): UserInfoForm {
+    return {
+      firstname: user.firstname || '',
+      lastname: user.lastname || '',
+      pseudo: user.pseudo || '',
+      profession: user.profession || '',
+      birthdate: user.birthdate || '',
+      phone: user.phone || '',
+      city: user.city || '',
+      address: user.address || '',
+      bio: user.bio || ''
+    };
+  }
+
+  private formsEqual(a?: UserInfoForm, b?: UserInfoForm) {
+    if (!a || !b) return false;
+    const keys: (keyof UserInfoForm)[] = [
+      'firstname',
+      'lastname',
+      'pseudo',
+      'profession',
+      'birthdate',
+      'phone',
+      'city',
+      'address',
+      'bio',
+    ];
+    return keys.every(key => (a[key] || '') === (b[key] || ''));
+  }
+
   private buildSearchKeywords(values: { firstname?: string; lastname?: string; pseudo?: string }) {
     const tokens = new Set<string>();
     const addValue = (value?: string) => {
@@ -557,5 +607,19 @@ export default class UserInfo implements OnInit, OnDestroy {
 
   private getResolvedProfession() {
     return resolveProfessionValue(this.selectedProfession, this.customProfession);
+  }
+
+  private syncPhoneSplit(full: string) {
+    const candidates = ['+225', '+33', '+1'];
+    const match = candidates.find(code => full?.startsWith(code));
+    this.countryCode = match || '+225';
+    const rest = match ? full.slice(match.length) : full;
+    this.phoneLocal = (rest || '').replace(/\D+/g, '');
+    this.form.phone = this.buildFullPhoneNumber();
+  }
+
+  buildFullPhoneNumber() {
+    const digits = (this.phoneLocal || '').replace(/\D+/g, '');
+    return `${this.countryCode}${digits}`;
   }
 }

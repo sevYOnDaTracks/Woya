@@ -1,9 +1,9 @@
-﻿<ng-container *ngIf="!isLoggedIn; else alreadyLoggedRegister">
+<ng-container *ngIf="!isLoggedIn; else alreadyLoggedRegister">
   <div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4 pt-12 py-8 -mt-10 md:-mt-10">
     <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-lg border">
 
       <h1 class="text-2xl font-bold text-center text-[#FF7A00] mb-6">
-        CrÃ©er un compte
+        Créer un compte
       </h1>
 
       <!-- Google -->
@@ -16,59 +16,6 @@
   <div class="my-5 text-center text-gray-500 text-sm">ou</div>
 
       <div *ngIf="error" class="mb-3 text-sm text-red-600 text-center">{{ error }}</div>
-
-      <!-- PrÃ©nom -->
-      <input [(ngModel)]="form.firstname" placeholder="PrÃ©nom"
-        class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
-
-    <!-- Nom -->
-    <input [(ngModel)]="form.lastname" placeholder="Nom"
-      class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
-
-    <!-- Pseudo -->
-    <div class="mb-3">
-      <input [(ngModel)]="form.pseudo"
-             name="registerPseudo"
-             (ngModelChange)="onPseudoChange($event)"
-             placeholder="Pseudo (visible par la communautÃ©)"
-             maxlength="40"
-             required
-             class="w-full border rounded-xl px-4 py-3 outline-none" />
-      <p *ngIf="pseudoStatus !== 'idle'"
-         class="text-xs mt-1"
-         [ngClass]="{
-           'text-gray-500': pseudoStatus === 'checking',
-           'text-green-600': pseudoStatus === 'available',
-           'text-red-600': pseudoStatus === 'taken',
-           'text-orange-600': pseudoStatus === 'error'
-         }">
-        <ng-container [ngSwitch]="pseudoStatus">
-          <span *ngSwitchCase="'checking'">VÃ©rification du pseudoâ€¦</span>
-          <span *ngSwitchCase="'available'">Pseudo disponible.</span>
-          <span *ngSwitchCase="'taken'">Ce pseudo est dÃ©jÃ  utilisÃ©.</span>
-          <span *ngSwitchCase="'error'">Impossible de vÃ©rifier le pseudo.</span>
-        </ng-container>
-      </p>
-    </div>
-
-    <!-- Profession -->
-    <select
-      [(ngModel)]="selectedProfession"
-      name="profession"
-      required
-      (ngModelChange)="onProfessionSelectChange($event)"
-      class="w-full border rounded-xl px-4 py-3 mb-3 outline-none bg-white">
-      <option value="" disabled>Choisis ta profession</option>
-      <option *ngFor="let option of professionOptions" [ngValue]="option">{{ option }}</option>
-      <option [ngValue]="professionOtherValue">{{ professionOtherValue }}</option>
-    </select>
-    <input *ngIf="selectedProfession === professionOtherValue"
-      [(ngModel)]="customProfession"
-      name="customProfession"
-      placeholder="Precise ta profession"
-      [required]="selectedProfession === professionOtherValue"
-      maxlength="60"
-      class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
 
       <!-- Email -->
       <div class="mb-3">
@@ -86,11 +33,11 @@
              'text-orange-600': emailStatus === 'error'
            }">
           <ng-container [ngSwitch]="emailStatus">
-            <span *ngSwitchCase="'checking'">VÃ©rification de l'emailâ€¦</span>
+            <span *ngSwitchCase="'checking'">Vérification de l'email…</span>
             <span *ngSwitchCase="'available'">Adresse disponible.</span>
-            <span *ngSwitchCase="'taken'">Cette adresse e-mail est dÃ©jÃ  utilisÃ©e.</span>
+            <span *ngSwitchCase="'taken'">Cette adresse e-mail est déjà utilisée.</span>
             <span *ngSwitchCase="'invalid'">Adresse e-mail invalide.</span>
-            <span *ngSwitchCase="'error'">Impossible de vÃ©rifier l'adresse pour le moment.</span>
+            <span *ngSwitchCase="'error'">Impossible de vérifier l'adresse pour le moment.</span>
           </ng-container>
         </p>
       </div>
@@ -120,13 +67,13 @@
       </div>
 
       <div class="bg-[#FFF7EB] border border-[#FFE0BF] rounded-xl px-4 py-3 mb-3 text-sm">
-        <p class="text-xs uppercase text-gray-500 tracking-wide mb-2">CritÃ¨res du mot de passe</p>
+        <p class="text-xs uppercase text-gray-500 tracking-wide mb-2">Critères du mot de passe</p>
         <ul class="space-y-1">
           <li class="flex items-center gap-2"
               [ngClass]="passwordCriteria.minLength ? 'text-green-600' : 'text-gray-600'">
             <span class="w-2 h-2 rounded-full"
                   [ngClass]="passwordCriteria.minLength ? 'bg-green-500' : 'bg-gray-300'"></span>
-            6 caractÃ¨res minimum
+            6 caractères minimum
           </li>
           <li class="flex items-center gap-2"
               [ngClass]="passwordCriteria.uppercase ? 'text-green-600' : 'text-gray-600'">
@@ -144,7 +91,7 @@
               [ngClass]="passwordCriteria.special ? 'text-green-600' : 'text-gray-600'">
             <span class="w-2 h-2 rounded-full"
                   [ngClass]="passwordCriteria.special ? 'bg-green-500' : 'bg-gray-300'"></span>
-            Au moins un caractÃ¨re spÃ©cial
+            Au moins un caractère spécial
           </li>
         </ul>
       </div>
@@ -178,67 +125,14 @@
         {{ passwordsMatch ? 'Les mots de passe correspondent.' : 'Les mots de passe ne correspondent pas.' }}
       </p>
 
-      <!-- TÃ©lÃ©phone -->
-      <div class="flex gap-3 flex-wrap mb-1">
-        <select [(ngModel)]="form.countryCode"
-                class="border rounded-xl px-3 py-3 outline-none bg-white flex-none"
-                (ngModelChange)="onPhoneChange()">
-          <option value="+225">ðŸ‡¨ðŸ‡® +225</option>
-          <option value="+33">ðŸ‡«ðŸ‡· +33</option>
-          <option value="+1">ðŸ‡ºðŸ‡¸ +1</option>
-        </select>
-        <input [(ngModel)]="form.phone"
-               placeholder="TÃ©lÃ©phone"
-               class="flex-1 border rounded-xl px-4 py-3 outline-none"
-               (ngModelChange)="onPhoneChange()" />
-      </div>
-      <p *ngIf="phoneStatus !== 'idle'"
-         class="text-xs mb-3"
-         [ngClass]="{
-           'text-gray-500': phoneStatus === 'checking',
-           'text-green-600': phoneStatus === 'available',
-           'text-red-600': phoneStatus === 'taken' || phoneStatus === 'invalid',
-           'text-orange-600': phoneStatus === 'error'
-         }">
-        <ng-container [ngSwitch]="phoneStatus">
-          <span *ngSwitchCase="'checking'">VÃ©rification du numÃ©roâ€¦</span>
-          <span *ngSwitchCase="'available'">NumÃ©ro disponible.</span>
-          <span *ngSwitchCase="'taken'">Ce numÃ©ro est dÃ©jÃ  utilisÃ©.</span>
-          <span *ngSwitchCase="'invalid'">NumÃ©ro invalide.</span>
-          <span *ngSwitchCase="'error'">Impossible de vÃ©rifier le numÃ©ro pour le moment.</span>
-        </ng-container>
-      </p>
-
-      <!-- Date de naissance -->
-      <div class="relative mb-4">
-        <div class="w-full border rounded-xl px-4 py-3 outline-none bg-white cursor-pointer"
-             (click)="toggleBirthdatePicker()">
-          <p class="text-sm text-gray-500" *ngIf="!form.birthdate">Date de naissance</p>
-          <p class="text-base text-[#1A1A1A]" *ngIf="form.birthdate">{{ form.birthdate | date:'dd MMMM yyyy' }}</p>
-        </div>
-        <div *ngIf="showBirthdatePicker"
-             class="absolute z-10 mt-2 w-full rounded-2xl border border-[#FFE0BF] bg-white shadow-lg p-4">
-          <input type="date"
-                 [(ngModel)]="form.birthdate"
-                 class="w-full border rounded-xl px-4 py-3 outline-none"
-                 (change)="toggleBirthdatePicker()" />
-        </div>
-      </div>
-
-      <input [(ngModel)]="form.city" placeholder="Ville"
-        class="w-full border rounded-xl px-4 py-3 mb-3 outline-none" />
-
-      <input [(ngModel)]="form.address" placeholder="Adresse complÃ¨te"
-        class="w-full border rounded-xl px-4 py-3 mb-4 outline-none" />
-
       <!-- Submit -->
       <button (click)="register()" [disabled]="loading"
         class="w-full py-3 bg-[#FF7A00] text-white rounded-xl font-semibold hover:bg-[#e66d00] transition disabled:opacity-60 disabled:cursor-not-allowed">
-        {{ loading ? 'CrÃ©ation...' : 'CrÃ©er un compte' }}
+        {{ loading ? 'Création...' : 'Créer un compte' }}
       </button>
 
       <p class="text-center text-sm mt-6 text-gray-600">
-        DÃ©jÃ  un compte ?
+        Déjà un compte ?
         <a routerLink="/login" class="text-[#FF7A00] font-semibold hover:underline">Se connecter</a>
       </p>
 
@@ -257,13 +151,13 @@
     </button>
     <div class="space-y-2 mb-4">
       <p class="text-xs uppercase tracking-[0.4em] text-[#FF7A00]">Bienvenue</p>
-      <h2 class="text-2xl font-semibold text-gray-900">ComplÃ¨te ton profil</h2>
+      <h2 class="text-2xl font-semibold text-gray-900">Complète ton profil</h2>
       <p class="text-sm text-gray-500">Renseigne au moins ces informations pour finaliser ton inscription.</p>
     </div>
     <form class="space-y-3" (ngSubmit)="submitProfilePrompt()">
       <input [(ngModel)]="profilePrompt.firstname"
              name="promptFirstName"
-             placeholder="PrÃ©nom"
+             placeholder="Prénom"
              class="w-full border rounded-2xl px-4 py-3 outline-none" />
       <input [(ngModel)]="profilePrompt.lastname"
              name="promptLastName"
@@ -284,22 +178,22 @@
              'text-orange-600': profilePromptPseudoStatus === 'error'
            }">
           <ng-container [ngSwitch]="profilePromptPseudoStatus">
-            <span *ngSwitchCase="'checking'">VÃ©rification du pseudoâ€¦</span>
+            <span *ngSwitchCase="'checking'">Vérification du pseudo…</span>
             <span *ngSwitchCase="'available'">Pseudo disponible.</span>
-            <span *ngSwitchCase="'taken'">Ce pseudo est dÃ©jÃ  utilisÃ©.</span>
-            <span *ngSwitchCase="'error'">Impossible de vÃ©rifier le pseudo.</span>
+            <span *ngSwitchCase="'taken'">Ce pseudo est déjà utilisé.</span>
+            <span *ngSwitchCase="'error'">Impossible de vérifier le pseudo.</span>
           </ng-container>
         </p>
       </div>
       <input [(ngModel)]="profilePrompt.phone"
              name="promptPhone"
-             placeholder="TÃ©lÃ©phone (optionnel)"
+             placeholder="Téléphone (optionnel)"
              class="w-full border rounded-2xl px-4 py-3 outline-none" />
       <p *ngIf="profilePromptError" class="text-sm text-red-600">{{ profilePromptError }}</p>
       <button type="submit"
               class="w-full rounded-2xl bg-[#FF7A00] text-white font-semibold py-3"
               [disabled]="loading">
-        {{ loading ? 'Enregistrementâ€¦' : 'Valider' }}
+        {{ loading ? 'Enregistrement…' : 'Valider' }}
       </button>
     </form>
   </div>
@@ -308,7 +202,7 @@
 <ng-template #alreadyLoggedRegister>
   <div class="min-h-screen bg-[#FFF7EB] flex items-center justify-center px-4">
     <div class="bg-white w-full max-w-md p-10 rounded-2xl shadow-lg border text-center space-y-4">
-      <p class="text-lg font-semibold text-[#1A1A1A]">Tu es dÃ©jÃ  connectÃ©.</p>
+      <p class="text-lg font-semibold text-[#1A1A1A]">Tu es déjà connecté.</p>
       <a routerLink="/services"
          class="inline-flex items-center justify-center rounded-full border border-[#FF7A00] px-5 py-2 text-sm font-semibold text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white transition">
         Retour aux services
