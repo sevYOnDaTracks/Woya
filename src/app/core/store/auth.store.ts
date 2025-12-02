@@ -3,7 +3,7 @@ import { firebaseServices } from '../../app.config';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc, DocumentSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc, DocumentSnapshot, getDoc } from 'firebase/firestore';
 
 export interface AuthUserState {
   uid: string;
@@ -88,6 +88,16 @@ export class AuthStore {
         }
       },
     );
+
+    // Hydrate rapidement avec une lecture directe (évite d'attendre une éventuelle latence du snapshot).
+    try {
+      const snap = await getDoc(ref);
+      if (token === this.hydrationToken && snap.exists()) {
+        await this.processProfileSnapshot(ref, snap, fallback, token);
+      }
+    } catch (error) {
+      console.warn('Impossible de charger le profil utilisateur (lecture directe)', error);
+    }
 
     if (token === this.hydrationToken) {
       this.startPresence();

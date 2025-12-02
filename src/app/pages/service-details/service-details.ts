@@ -36,6 +36,8 @@ export class ServiceDetails {
   gallery: string[] = [];
   currentIndex = 0;
   owner: any = null;
+  imageLoading = true;
+  thumbLoading: boolean[] = [];
   contacting = false;
   availabilityDays: ServiceAvailabilityDay[] = [];
   dateOptions: DateOption[] = [];
@@ -118,12 +120,14 @@ export class ServiceDetails {
 
   prev() {
     if (this.gallery.length === 0) return;
+    this.imageLoading = true;
     this.currentIndex = (this.currentIndex - 1 + this.gallery.length) % this.gallery.length;
   }
 
   next() {
     if (this.gallery.length === 0) return;
     this.currentIndex = (this.currentIndex + 1) % this.gallery.length;
+    this.imageLoading = true;
   }
 
   whatsapp() {

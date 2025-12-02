@@ -283,15 +283,18 @@ export default class UserInfo implements OnInit, OnDestroy {
       await setDoc(ref, payload, { merge: true });
 
       this.auth.user$.next({ ...this.user, ...payload });
-      this.success = 'Informations mises à jour avec succès.';
+      this.success = "Informations mises a jour avec succes.";
+      this.showToast(this.success, 'success');
       this.originalPseudo = trimmedPseudo;
       this.pseudoStatus = 'available';
     } catch (err) {
       this.error = "Impossible d'enregistrer les modifications pour le moment.";
+      this.showToast(this.error, 'error');
     } finally {
       this.loading = false;
     }
   }
+
 
   goToLogin() {
     this.router.navigate(['/login']);
@@ -655,5 +658,17 @@ export default class UserInfo implements OnInit, OnDestroy {
   buildFullPhoneNumber() {
     const digits = (this.phoneLocal || '').replace(/\D+/g, '');
     return `${this.countryCode}${digits}`;
+  }
+
+  private showToast(message: string, type: 'success' | 'error') {
+    this.toastMessage = message;
+    this.toastType = type;
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
+    this.toastTimeout = setTimeout(() => {
+      this.toastMessage = '';
+      this.toastType = '';
+    }, 3200);
   }
 }
