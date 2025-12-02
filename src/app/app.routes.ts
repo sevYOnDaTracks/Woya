@@ -50,6 +50,12 @@ export const routes: Routes = [
     { path: 'favoris', component: FavoritesPage, canActivate: [requireAuthGuard] },
     { path: 'recherche', component: GlobalSearch },
     {
+        path: 'annonces',
+        canActivate: [requireAuthGuard],
+        loadComponent: () =>
+            import('./pages/requests/requests').then(c => c.default)
+    },
+    {
         path: 'admin',
         children: [
             { path: '', component: AdminLogin },

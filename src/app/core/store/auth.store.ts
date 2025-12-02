@@ -33,6 +33,7 @@ export class AuthStore {
   private initialAuthResolved = false;
   private initialAuthPromise: Promise<void>;
   private resolveInitialAuth?: () => void;
+  private hasReloadedOnce = false;
 
   constructor() {
     this.initialAuthPromise = new Promise(resolve => {
@@ -196,24 +197,30 @@ export class AuthStore {
   }
 
   private triggerInitialReload(user: AuthUserState | null) {
-    if (!user?.uid) {
-      return;
-    }
-    if (typeof window === 'undefined') {
-      return;
-    }
+    if (this.hasReloadedOnce) return;
+    if (!user?.uid) return;
+    if (typeof window === 'undefined') return;
+
     const storage = this.getSessionStorage();
-    if (storage) {
-      const alreadyReloadedUid = storage.getItem(this.reloadMarkerKey);
-      if (alreadyReloadedUid === user.uid) {
-        return;
-      }
-      try {
-        storage.setItem(this.reloadMarkerKey, user.uid);
-      } catch {
-        /* ignore */
-      }
+    if (!storage) {
+      // Pas de sessionStorage dispo (ex: navigation privée). On évite de boucler sur des reloads.
+      this.hasReloadedOnce = true;
+      return;
     }
+
+    const alreadyReloadedUid = storage.getItem(this.reloadMarkerKey);
+    if (alreadyReloadedUid === user.uid) {
+      this.hasReloadedOnce = true;
+      return;
+    }
+    try {
+      storage.setItem(this.reloadMarkerKey, user.uid);
+    } catch {
+      // Si on ne peut pas écrire, on n'essaie pas de recharger en boucle.
+      this.hasReloadedOnce = true;
+      return;
+    }
+    this.hasReloadedOnce = true;
     window.location.reload();
   }
 
@@ -274,6 +281,7 @@ export class AuthStore {
     const hydrated = this.mergeProfileSnapshot(fallback, profile);
     this.user$.next(hydrated);
     this.markInitialAuthDone();
-    this.triggerInitialReload(hydrated);
+    // Ne pas forcer de rechargement automatique : certains contextes (sessionStorage indispo
+    // ou restrictions navigateur) provoquaient des rafraîchissements inattendus.
   }
 }

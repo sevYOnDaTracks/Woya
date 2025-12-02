@@ -1,0 +1,71 @@
+<div class="requests-page">
+  <div class="requests-hero">
+    <div>
+      <p class="eyebrow">Fil d'annonces</p>
+      <h1>Publie ta demande</h1>
+      <p>Décris ce dont tu as besoin, ajoute jusqu'à 3 photos. Les prestataires pourront te contacter.</p>
+    </div>
+    <div class="filters">
+      <label>
+        <span>Catégorie</span>
+        <select [(ngModel)]="form.category" (ngModelChange)="onCategoryFilterChange($event)">
+          <option value="">Toutes</option>
+          <option *ngFor="let option of categories" [ngValue]="option">{{ option }}</option>
+        </select>
+      </label>
+      <button class="toggle-btn" (click)="showForm = !showForm">{{ showForm ? 'Fermer' : 'Nouvelle annonce' }}</button>
+    </div>
+  </div>
+
+  <div class="request-form" *ngIf="showForm">
+    <div class="form-grid">
+      <label>
+        <span>Catégorie *</span>
+        <select [(ngModel)]="form.category">
+          <option value="" disabled>Choisis une catégorie</option>
+          <option *ngFor="let option of categories" [ngValue]="option">{{ option }}</option>
+        </select>
+      </label>
+      <label class="col-span-2">
+        <span>Description *</span>
+        <textarea [(ngModel)]="form.description" rows="4" placeholder="Ex: Peinture salon 20m2, dispo le week-end..."></textarea>
+      </label>
+      <label>
+        <span>Photos (max 3)</span>
+        <input type="file" accept="image/*" multiple (change)="selectPhotos($event)" />
+      </label>
+      <div class="previews" *ngIf="previewUrls.length">
+        <img *ngFor="let url of previewUrls" [src]="url" alt="Preview" />
+      </div>
+    </div>
+    <p class="form-error" *ngIf="error">{{ error }}</p>
+    <button class="submit-btn" (click)="submit()" [disabled]="loading">
+      {{ loading ? 'Publication...' : 'Publier l\'annonce' }}
+    </button>
+  </div>
+
+  <div class="feed">
+    <div *ngIf="feedError" class="form-error">{{ feedError }}</div>
+    <div *ngIf="requests.length === 0 && !feedLoading" class="empty">
+      <p>Aucune annonce pour le moment.</p>
+    </div>
+    <div class="request-card" *ngFor="let req of requests">
+      <div class="request-header">
+        <div>
+          <p class="eyebrow">{{ req.category }}</p>
+          <h3>{{ req.ownerPseudo || 'Anonyme' }}</h3>
+          <p class="meta">{{ req.ownerCity || 'Ville non renseignée' }} • {{ req.createdAt | date:'mediumDate' }}</p>
+        </div>
+        <button class="contact-btn" (click)="contactOwner(req)">Contacter</button>
+      </div>
+      <p class="description">{{ req.description }}</p>
+      <div class="photos" *ngIf="req.photos.length">
+        <img *ngFor="let photo of req.photos" [src]="photo" alt="Photo annonce" />
+      </div>
+    </div>
+    <div class="feed-actions">
+      <button *ngIf="hasMore && !feedLoading" class="load-more" (click)="loadFeed(true)">Charger plus</button>
+      <p *ngIf="feedLoading">Chargement...</p>
+    </div>
+  </div>
+</div>

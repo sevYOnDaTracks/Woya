@@ -230,7 +230,6 @@ export default class DashboardPage implements OnInit, OnDestroy {
         this.userLoading = !!user?.profileLoading;
 
         this.userName = this.userLoading ? 'Chargement...' : this.displayName(user);
-        this.showProfileWarning = this.shouldShowProfileWarning(user);
         const shouldRequireProfileModal = this.shouldForceProfileModal(user);
         if (shouldRequireProfileModal) {
           if (!this.requireProfileModal || uidChanged || this.profileModalHydratedForUid !== uid) {
@@ -246,10 +245,12 @@ export default class DashboardPage implements OnInit, OnDestroy {
           this.profilePhotoPreview = user?.photoURL || null;
           this.coverPhotoPreview = user?.coverURL || null;
         }
-        this.requireProfileModal = shouldRequireProfileModal;
         this.profileStateReady = !this.userLoading;
-        this.showProfileDialog = true;
-        this.showActionGuardDialog = this.profileStateReady && this.hasCriticalProfileGap(user);
+        this.requireProfileModal = shouldRequireProfileModal;
+        this.showProfileWarning = this.profileStateReady ? this.shouldShowProfileWarning(user) : false;
+        const hasGap = this.profileStateReady ? this.hasCriticalProfileGap(user) : false;
+        this.showProfileDialog = this.profileStateReady && hasGap && !shouldRequireProfileModal;
+        this.showActionGuardDialog = this.profileStateReady && hasGap;
 
 
 

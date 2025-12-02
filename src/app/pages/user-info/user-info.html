@@ -210,9 +210,12 @@
             </div>
             <div class="grid md:grid-cols-2 gap-5">
               <div>
-                <label class="field-label" for="phone">Telephone</label>
+                <label class="field-label" for="phone">
+                  <span class="text-red-500 mr-1" aria-hidden="true">*</span>Telephone
+                </label>
                 <div class="flex gap-3 flex-wrap">
                   <select [(ngModel)]="countryCode"
+                          name="phoneCountryCode"
                           class="field-input w-28 bg-white"
                           (ngModelChange)="form.phone = buildFullPhoneNumber()">
                     <option value="+225">🇨🇮 +225</option>
@@ -222,6 +225,7 @@
                   <input id="phone"
                          name="phone"
                          [(ngModel)]="phoneLocal"
+                         required
                          maxlength="30"
                          class="field-input flex-1"
                          placeholder="0707070707"
@@ -238,8 +242,11 @@
 
             <div class="grid md:grid-cols-2 gap-5">
               <div>
-                <label class="field-label" for="city">Ville</label>
+                <label class="field-label" for="city">
+                  <span class="text-red-500 mr-1" aria-hidden="true">*</span>Ville
+                </label>
                 <input id="city" name="city" [(ngModel)]="form.city" maxlength="80"
+                       required
                        class="field-input" placeholder="Abidjan, Paris..." />
               </div>
               <div>

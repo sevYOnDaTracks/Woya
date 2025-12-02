@@ -76,6 +76,8 @@ export default class UserInfo implements OnInit, OnDestroy {
   maxPhotosPerGallery = 5;
   pseudoStatus: 'idle' | 'checking' | 'available' | 'taken' | 'error' = 'idle';
   activeSection: AccountSection = 'photos';
+  toastMessage = '';
+  toastType: 'success' | 'error' | '' = '';
 
   private sub?: Subscription;
   private sectionSub?: Subscription;
@@ -85,6 +87,7 @@ export default class UserInfo implements OnInit, OnDestroy {
   private lastHydratedForm?: UserInfoForm;
   private galleriesLoadedForUid: string | null = null;
   user: any = null;
+  private toastTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     private auth: AuthStore,
@@ -140,6 +143,9 @@ export default class UserInfo implements OnInit, OnDestroy {
     this.sectionSub?.unsubscribe();
     if (this.pseudoCheckTimeout) {
       clearTimeout(this.pseudoCheckTimeout);
+    }
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
     }
   }
 
@@ -214,23 +220,46 @@ export default class UserInfo implements OnInit, OnDestroy {
       return;
     }
     this.form.profession = profession;
+    const firstname = this.form.firstname.trim();
+    const lastname = this.form.lastname.trim();
+    const city = this.form.city.trim();
+    const phoneDigits = (this.phoneLocal || '').replace(/\D+/g, '');
+
+    if (!firstname || !lastname || !city) {
+      this.error = 'Merci de renseigner prenom, nom et ville.';
+      this.loading = false;
+      return;
+    }
+
+    if (!phoneDigits) {
+      this.error = 'Merci de renseigner un numero de telephone valide.';
+      this.loading = false;
+      return;
+    }
+
+    const fullPhone = `${this.countryCode}${phoneDigits}`;
+    this.form.phone = fullPhone;
+    const address = this.form.address.trim();
+    const bio = this.form.bio.trim();
+    const birthdate = this.form.birthdate || null;
 
     const payload: any = {
-      firstname: this.form.firstname.trim(),
-      lastname: this.form.lastname.trim(),
+      firstname,
+      lastname,
       pseudo: trimmedPseudo,
       pseudoLowercase: normalizedPseudo,
       profession,
-      birthdate: this.form.birthdate || null,
-      phone: this.buildFullPhoneNumber(),
-      city: this.form.city.trim(),
-      address: this.form.address.trim(),
-      bio: this.form.bio.trim(),
+      birthdate,
+      phone: fullPhone,
+      city,
+      address,
+      bio,
       searchKeywords: this.buildSearchKeywords({
-        firstname: this.form.firstname,
-        lastname: this.form.lastname,
-        pseudo: this.form.pseudo,
+        firstname,
+        lastname,
+        pseudo: trimmedPseudo,
       }),
+      onboardingCompleted: true,
       updatedAt: Date.now()
     };
 
@@ -611,9 +640,14 @@ export default class UserInfo implements OnInit, OnDestroy {
 
   private syncPhoneSplit(full: string) {
     const candidates = ['+225', '+33', '+1'];
-    const match = candidates.find(code => full?.startsWith(code));
+    const normalized = (full || '').trim();
+    let match: string | undefined = candidates.find(code => normalized.startsWith(code));
+    if (!match && normalized.startsWith('+')) {
+      const dyn = normalized.match(/^\+\d{1,3}/)?.[0];
+      match = dyn || undefined;
+    }
     this.countryCode = match || '+225';
-    const rest = match ? full.slice(match.length) : full;
+    const rest = match ? normalized.slice(match.length) : normalized;
     this.phoneLocal = (rest || '').replace(/\D+/g, '');
     this.form.phone = this.buildFullPhoneNumber();
   }
