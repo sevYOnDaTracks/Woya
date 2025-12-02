@@ -13,7 +13,7 @@ import { AdminAuthService } from '../core/store/admin-auth.service';
 })
 export default class AdminLogin implements OnInit {
   form = {
-    email: '',
+    email: 'admin@woya.app',
     password: '',
   };
   loading = false;

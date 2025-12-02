@@ -147,8 +147,10 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
   existingExtraImages: string[] = [];
   existingImages: string[] = [];
   imageError = '';
+  private readonly maxPhotos = 3;
+  private readonly maxFileSize = 5 * 1024 * 1024; // 5 Mo
 
-  // ✅ MULTI IMAGE
+  // ?o. MULTI IMAGE
   files: File[] = [];
   previews: string[] = [];
   currentLocation: { lat: number; lng: number } | null = { lat: 5.345317, lng: -4.024429 };
@@ -406,13 +408,30 @@ export default class NewService implements OnInit, AfterViewInit, OnDestroy {
 
   handleFiles(files: File[]) {
     if (!files.length) return;
-    this.files.push(...files);
+    const availableSlots = this.maxPhotos - this.files.length;
+    if (availableSlots <= 0) {
+      this.imageError = `Tu peux ajouter au maximum ${this.maxPhotos} photos.`;
+      return;
+    }
+
+    const validBySize = files.filter(file => file.size <= this.maxFileSize);
+    if (validBySize.length !== files.length) {
+      this.imageError = 'Chaque image doit faire moins de 5 Mo.';
+    }
+
+    const accepted = validBySize.slice(0, availableSlots);
+    if (!accepted.length) return;
+
+    this.files.push(...accepted);
     this.previews = [];
 
     for (let file of this.files) {
       const reader = new FileReader();
       reader.onload = () => this.previews.push(reader.result as string);
       reader.readAsDataURL(file);
+    }
+    if (!this.imageError) {
+      this.imageError = '';
     }
   }
 
