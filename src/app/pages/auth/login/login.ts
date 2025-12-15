@@ -23,12 +23,11 @@ export default class Login implements OnInit {
   constructor(private auth: AuthService , private router : Router, private authStore: AuthStore) {}
 
   ngOnInit() {
-    this.authStore.user$.subscribe(user => {
-      this.isLoggedIn = !!user;
-      if (this.isLoggedIn) {
-        this.router.navigate(['/mon-espace']);
-      }
-    });
+    // Redirige seulement si une session existe deja au moment d'afficher la page.
+    this.isLoggedIn = !!this.authStore.user$.value;
+    if (this.isLoggedIn) {
+      this.router.navigate(['/mon-espace']);
+    }
   }
 
   async login() {
