@@ -15,6 +15,7 @@ import {
   updateDoc,
   setDoc,
 } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firebaseServices } from '../../app.config';
 import { Post, PostVisibility } from '../models/post.model';
 
@@ -30,6 +31,11 @@ export class PostsService {
 
   async createPost(input: {
     body: string;
+    address?: string | null;
+    phone?: string | null;
+    mediaUrls?: string[];
+    category?: string | null;
+    serviceTitle?: string | null;
     serviceId?: string | null;
     city?: string | null;
     visibility?: PostVisibility;
@@ -42,6 +48,11 @@ export class PostsService {
     const payload = {
       authorId: current.uid,
       body: input.body.trim(),
+      address: input.address || null,
+      phone: input.phone || null,
+      mediaUrls: input.mediaUrls || [],
+      category: input.category || null,
+      serviceTitle: input.serviceTitle || null,
       serviceId: input.serviceId || null,
       city: input.city || null,
       visibility: input.visibility || 'public',
@@ -59,6 +70,49 @@ export class PostsService {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
+  }
+
+  async updatePost(
+    postId: string,
+    payload: { body?: string; address?: string | null; phone?: string | null },
+  ) {
+    const current = firebaseServices.auth.currentUser;
+    if (!current) throw new Error('Utilisateur non connecte');
+    const ref = doc(this.db, 'posts', postId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) throw new Error('POST_NOT_FOUND');
+    const data = snap.data() as any;
+    if (data.authorId !== current.uid) throw new Error('NOT_AUTHORIZED');
+
+    const update: Record<string, any> = {
+      updatedAt: serverTimestamp(),
+    };
+    if (payload.body !== undefined) {
+      update['body'] = payload.body.trim();
+    }
+    if (payload.address !== undefined) {
+      update['address'] = payload.address?.trim() || null;
+    }
+    if (payload.phone !== undefined) {
+      update['phone'] = payload.phone?.trim() || null;
+    }
+    await updateDoc(ref, update);
+  }
+
+  async uploadImages(files: File[], authorId: string): Promise<string[]> {
+    if (!files.length) return [];
+    const storage = getStorage();
+    const uploads = files.map(async file => {
+      const fileId =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const path = `posts/${authorId}/${fileId}-${file.name}`;
+      const storageRef = ref(storage, path);
+      await uploadBytes(storageRef, file);
+      return getDownloadURL(storageRef);
+    });
+    return Promise.all(uploads);
   }
 
   async listPosts(limitCount = 10, cursor: any | null = null): Promise<ListPostsResult> {
@@ -136,6 +190,11 @@ export class PostsService {
       id,
       authorId: data.authorId,
       body: data.body,
+      address: data.address,
+      phone: data.phone,
+      mediaUrls: Array.isArray(data.mediaUrls) ? data.mediaUrls : [],
+      category: data.category,
+      serviceTitle: data.serviceTitle,
       serviceId: data.serviceId,
       city: data.city,
       visibility: data.visibility,

@@ -1,36 +1,88 @@
 <div class="posts-page">
   <section class="posts-hero">
     <div>
-      <p class="posts-eyebrow">Communaute</p>
-      <h1>Partage tes publications</h1>
+      <p class="posts-eyebrow">Publication</p>
+      <h1>Besoin d'un coup de main ?</h1>
       <p class="posts-subtitle">
-        Publie tes annonces, actualites ou demandes. Les autres membres peuvent reagir et te contacter.
+        Decris ton besoin, ajoute jusqu'a 2 photos et un contact. Tu seras contacter par les intéressés de ton offre.
       </p>
     </div>
-    <button class="cta" routerLink="/services/new">Publier un service</button>
   </section>
 
   <section class="composer" *ngIf="currentUid; else loginPrompt">
-    <div class="composer__header">
-      <div class="avatar">{{ currentAuthorLabel ? (currentAuthorLabel | slice:0:1) : '?' }}</div>
-      <div>
-        <p class="composer__author">{{ currentAuthorLabel || 'Utilisateur' }}</p>
-        <p class="composer__hint">Exprime-toi en quelques lignes (500 caracteres max)</p>
+    <button type="button" class="composer__toggle" (click)="toggleComposer()" [disabled]="!hasServices">
+      <div class="composer__header">
+        <div class="avatar">+</div>
+        <div>
+          <p class="composer__author">Publier une demande</p>
+          <p class="composer__hint">
+            Besoin (500 caracteres) + adresse et numero.
+            <span *ngIf="!hasServices" class="composer__hint-warning">Ajoute un service pour activer.</span>
+          </p>
+        </div>
       </div>
+      <span class="chevron" [class.open]="showComposer">▼</span>
+    </button>
+
+    <p class="composer__warning" *ngIf="!hasServices">
+      Aucun service disponible. Cree un service pour pouvoir publier un besoin.
+    </p>
+
+    <div *ngIf="showComposer && hasServices" class="composer__body">
+      <textarea
+        [(ngModel)]="newPostBody"
+        [maxLength]="500"
+        rows="3"
+        placeholder="Ex: Urgent, robinet qui fuit dans la cuisine. Je suis dispo en fin de journee."
+      ></textarea>
+      <div class="composer__fields">
+        <label>
+          Categorie
+          <select [(ngModel)]="selectedCategory" (ngModelChange)="onCategoryChange($event)">
+            <option value="">Choisir une categorie</option>
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+        </label>
+        <label>
+          Titre du service
+          <select [(ngModel)]="selectedServiceId">
+            <option value="">Choisir un titre</option>
+            <option *ngFor="let svc of filteredServiceOptions()" [value]="svc.id">
+              {{ svc.title }}
+            </option>
+          </select>
+        </label>
+      </div>
+      <div class="composer__fields">
+        <label>
+          Adresse du besoin
+          <input type="text" [(ngModel)]="newPostAddress" placeholder="Ex: Cocody, Riviera 2, lot 12" />
+        </label>
+        <label>
+          Numero de telephone
+          <input type="tel" [(ngModel)]="newPostPhone" placeholder="Ex: 0102030405" />
+        </label>
+      </div>
+      <div class="composer__uploads">
+        <label class="upload-tile">
+          <input type="file" accept="image/*" multiple (change)="onFilesSelected($event)" hidden />
+          <span>+ Ajouter des photos (max 2)</span>
+        </label>
+        <div class="upload-previews" *ngIf="attachments.length">
+          <div class="preview" *ngFor="let att of attachments; let i = index">
+            <img [src]="att.preview" alt="piece jointe" />
+            <button type="button" (click)="removeAttachment(i)">Retirer</button>
+          </div>
+        </div>
+      </div>
+      <div class="composer__footer">
+        <span class="counter">{{ newPostBody.length }}/500</span>
+        <button type="button" (click)="createPost()" [disabled]="creating || !newPostBody.trim()">
+          {{ creating ? 'Publication...' : 'Publier' }}
+        </button>
+      </div>
+      <p class="error" *ngIf="error">{{ error }}</p>
     </div>
-    <textarea
-      [(ngModel)]="newPostBody"
-      [maxLength]="500"
-      rows="3"
-      placeholder="Que veux-tu partager aujourd'hui ?"
-    ></textarea>
-    <div class="composer__footer">
-      <span class="counter">{{ newPostBody.length }}/500</span>
-      <button type="button" (click)="createPost()" [disabled]="creating || !newPostBody.trim()">
-        {{ creating ? 'Publication...' : 'Publier' }}
-      </button>
-    </div>
-    <p class="error" *ngIf="error">{{ error }}</p>
   </section>
 
   <ng-template #loginPrompt>
@@ -56,21 +108,59 @@
         </div>
       </header>
       <p class="post__body">{{ post.body }}</p>
-      <footer class="post__footer">
-        <button type="button" class="post__action" (click)="toggleLike(post)">
-          <span [class.liked]="post.likedByUser">Jaime</span>
-          {{ post.likeCount || 0 }}
-        </button>
-        <span class="post__action">
-          Commentaires : {{ post.commentCount || 0 }}
-        </span>
-      </footer>
+      <div class="post__details">
+        <p class="post__address" *ngIf="post.address">Adresse : {{ post.address }}</p>
+        <p class="post__phone" *ngIf="post.phone">Contact : {{ post.phone }}</p>
+        <p class="post__meta-line" *ngIf="post.category || post.serviceTitle">
+          <span *ngIf="post.category" class="pill pill--category">{{ post.category }}</span>
+          <span *ngIf="post.serviceTitle" class="pill pill--title">{{ post.serviceTitle }}</span>
+        </p>
+        <div class="post__gallery" *ngIf="post.mediaUrls?.length">
+          <img *ngFor="let url of post.mediaUrls" [src]="url" alt="photo besoin" />
+        </div>
+      </div>
+      <ng-container *ngIf="editingPostId === post.id; else postActions">
+        <div class="edit-form">
+          <textarea [(ngModel)]="editBody" [maxLength]="500" rows="3"></textarea>
+          <div class="composer__fields">
+            <label>
+              Adresse du besoin
+              <input type="text" [(ngModel)]="editAddress" />
+            </label>
+            <label>
+              Numero de telephone
+              <input type="tel" [(ngModel)]="editPhone" />
+            </label>
+          </div>
+          <div class="edit-actions">
+            <button type="button" class="secondary" (click)="cancelEdit()">Annuler</button>
+            <button type="button" (click)="saveEdit(post)">Enregistrer</button>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #postActions>
+        <footer class="post__footer">
+          <button type="button" class="post__action" (click)="toggleLike(post)">
+            <span class="thumb" [class.liked]="post.likedByUser">👍</span>
+            <span>{{ post.likeCount || 0 }}</span>
+          </button>
+          <span class="post__action">
+            Commentaires : {{ post.commentCount || 0 }}
+          </span>
+          <span class="spacer"></span>
+          <button *ngIf="!isOwner(post)" type="button" class="post__action link" (click)="contactAuthor(post)">
+            Contacter
+          </button>
+          <button *ngIf="isOwner(post)" type="button" class="post__action link" (click)="startEdit(post)">
+            Modifier
+          </button>
+          <button *ngIf="isOwner(post)" type="button" class="post__action link danger" (click)="deletePost(post)">
+            Supprimer
+          </button>
+        </footer>
+      </ng-template>
     </article>
 
-    <div class="feed__more" *ngIf="hasMore && posts.length">
-      <button type="button" (click)="loadMore()" [disabled]="loadingMore">
-        {{ loadingMore ? 'Chargement...' : 'Charger plus' }}
-      </button>
-    </div>
+    <div #infiniteAnchor class="feed__sentinel" *ngIf="hasMore"></div>
   </section>
 </div>

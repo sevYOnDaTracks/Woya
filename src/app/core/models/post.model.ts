@@ -13,6 +13,11 @@ export interface Post {
     profession?: string;
   };
   body: string;
+  address?: string | null;
+  phone?: string | null;
+  mediaUrls?: string[];
+  category?: string | null;
+  serviceTitle?: string | null;
   serviceId?: string | null;
   city?: string | null;
   visibility?: PostVisibility;

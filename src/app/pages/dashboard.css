@@ -148,12 +148,13 @@
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     padding-bottom: 0.5rem;
+    padding-left: 0.25rem;
   }
   .dashboard__grid::-webkit-scrollbar {
     display: none;
   }
   .dashboard-card {
-    min-width: calc(50% - 0.75rem);
+    min-width: 75%;
     scroll-snap-align: start;
   }
 }
