@@ -1,0 +1,249 @@
+.posts-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.posts-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #fff2e5, #ffe8d4);
+  border: 1px solid #ffe0bf;
+  border-radius: 1.5rem;
+  box-shadow: 0 12px 30px rgba(255, 122, 0, 0.12);
+}
+
+.posts-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ff7a00;
+  margin: 0 0 0.25rem 0;
+}
+
+.posts-hero h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #1a1a1a;
+}
+
+.posts-subtitle {
+  margin: 0.35rem 0 0;
+  color: #475569;
+}
+
+.cta {
+  background: #ff7a00;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(255, 122, 0, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(255, 122, 0, 0.3);
+}
+
+.composer {
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  padding: 1rem 1rem 0.75rem;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(26, 26, 26, 0.05);
+}
+
+.composer--locked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.composer__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #ffe5cc;
+  color: #d9480f;
+  font-weight: 700;
+}
+
+.composer__author {
+  margin: 0;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.composer__hint {
+  margin: 0.1rem 0 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.composer textarea {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 0.75rem 0.9rem;
+  resize: vertical;
+  min-height: 100px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.composer textarea:focus {
+  border-color: #ffb26b;
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.15);
+}
+
+.composer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.composer__footer button {
+  background: #ff7a00;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.composer__footer button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.counter {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.post {
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  padding: 1rem;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(26, 26, 26, 0.04);
+}
+
+.post__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.post__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #475569;
+}
+
+.post__author {
+  margin: 0;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.post__meta {
+  margin: 0.05rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.post__body {
+  margin: 0.5rem 0 0.75rem;
+  color: #1f2937;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.post__footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #475569;
+}
+
+.post__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.post__action span.liked {
+  color: #ef4444;
+}
+
+.feed__more {
+  display: flex;
+  justify-content: center;
+}
+
+.feed__more button {
+  border: 1px solid #e2e8f0;
+  padding: 0.7rem 1.4rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.loading,
+.empty,
+.error {
+  padding: 1rem;
+  text-align: center;
+  color: #475569;
+}
+
+.error {
+  color: #dc2626;
+}
+
+@media (max-width: 700px) {
+  .posts-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -63,7 +63,7 @@ const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
   {
     id: 'services',
     title: 'Trouver un service',
-    description: 'Explore les annonces et réserve en quelques clics.',
+    description: 'Explore les annonces et reserve en quelques clics.',
     route: '/services',
     icon: 'services',
   },
@@ -102,6 +102,13 @@ const BASE_DASHBOARD_ACTIONS: ReadonlyArray<Omit<DashboardAction, 'badge'>> = [
   //   route: '/notifications',
   //   icon: 'notifications',
   // },
+  {
+    id: 'posts',
+    title: 'Publications',
+    description: 'Partage des updates ou decouvre celles de la communaute.',
+    route: '/publications',
+    icon: 'messages',
+  },
   {
     id: 'publish',
     title: 'Publier un service',
@@ -826,3 +833,6 @@ export default class DashboardPage implements OnInit, OnDestroy {
     return ['/services', '/agenda', '/services/new'].some(path => routeStr.includes(path));
   }
 }
+
+
+

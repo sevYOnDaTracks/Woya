@@ -19,6 +19,7 @@ import { requireAuthGuard } from './core/store/auth.guard';
 import AdminLogin from './pages/admin-login';
 import AdminDashboard from './pages/admin-dashboard';
 import { requireAdminGuard } from './core/store/admin.guard';
+import PostsPage from './pages/posts/posts';
 
 export const routes: Routes = [
     { path: '', component: Landing },
@@ -49,6 +50,7 @@ export const routes: Routes = [
     { path: 'mes-reservations', redirectTo: 'agenda?tab=client', pathMatch: 'full' },
     { path: 'favoris', component: FavoritesPage, canActivate: [requireAuthGuard] },
     { path: 'recherche', component: GlobalSearch },
+    { path: 'publications', component: PostsPage },
     {
         path: 'annonces',
         canActivate: [requireAuthGuard],

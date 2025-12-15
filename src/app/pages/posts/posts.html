@@ -1,0 +1,76 @@
+<div class="posts-page">
+  <section class="posts-hero">
+    <div>
+      <p class="posts-eyebrow">Communaute</p>
+      <h1>Partage tes publications</h1>
+      <p class="posts-subtitle">
+        Publie tes annonces, actualites ou demandes. Les autres membres peuvent reagir et te contacter.
+      </p>
+    </div>
+    <button class="cta" routerLink="/services/new">Publier un service</button>
+  </section>
+
+  <section class="composer" *ngIf="currentUid; else loginPrompt">
+    <div class="composer__header">
+      <div class="avatar">{{ currentAuthorLabel ? (currentAuthorLabel | slice:0:1) : '?' }}</div>
+      <div>
+        <p class="composer__author">{{ currentAuthorLabel || 'Utilisateur' }}</p>
+        <p class="composer__hint">Exprime-toi en quelques lignes (500 caracteres max)</p>
+      </div>
+    </div>
+    <textarea
+      [(ngModel)]="newPostBody"
+      [maxLength]="500"
+      rows="3"
+      placeholder="Que veux-tu partager aujourd'hui ?"
+    ></textarea>
+    <div class="composer__footer">
+      <span class="counter">{{ newPostBody.length }}/500</span>
+      <button type="button" (click)="createPost()" [disabled]="creating || !newPostBody.trim()">
+        {{ creating ? 'Publication...' : 'Publier' }}
+      </button>
+    </div>
+    <p class="error" *ngIf="error">{{ error }}</p>
+  </section>
+
+  <ng-template #loginPrompt>
+    <div class="composer composer--locked">
+      <p>Connecte-toi pour publier.</p>
+      <button class="cta" routerLink="/login" [queryParams]="{ redirect: '/publications' }">Connexion</button>
+    </div>
+  </ng-template>
+
+  <section class="feed">
+    <div *ngIf="loading" class="loading">Chargement des publications...</div>
+    <div *ngIf="!loading && !posts.length" class="empty">Aucune publication pour le moment.</div>
+
+    <article class="post" *ngFor="let post of posts; trackBy: trackByPostId">
+      <header class="post__header">
+        <div class="post__avatar">{{ authorName(post) | slice:0:1 }}</div>
+        <div>
+          <p class="post__author">{{ authorName(post) }}</p>
+          <p class="post__meta">
+            {{ formatDate(post.createdAt) }}
+            <span *ngIf="post.city">- {{ post.city }}</span>
+          </p>
+        </div>
+      </header>
+      <p class="post__body">{{ post.body }}</p>
+      <footer class="post__footer">
+        <button type="button" class="post__action" (click)="toggleLike(post)">
+          <span [class.liked]="post.likedByUser">Jaime</span>
+          {{ post.likeCount || 0 }}
+        </button>
+        <span class="post__action">
+          Commentaires : {{ post.commentCount || 0 }}
+        </span>
+      </footer>
+    </article>
+
+    <div class="feed__more" *ngIf="hasMore && posts.length">
+      <button type="button" (click)="loadMore()" [disabled]="loadingMore">
+        {{ loadingMore ? 'Chargement...' : 'Charger plus' }}
+      </button>
+    </div>
+  </section>
+</div>
